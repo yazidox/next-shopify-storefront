@@ -3,99 +3,157 @@
 import { useCart } from "@shopify/hydrogen-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
-import { Menu, ShoppingBag, ShoppingCart } from "@esmate/shadcn/pkgs/lucide-react";
-import { Button } from "@esmate/shadcn/components/ui/button";
+import { useEffect, useState } from "react";
+import { Menu, ShoppingBag, Search, User } from "@esmate/shadcn/pkgs/lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@esmate/shadcn/components/ui/sheet";
-import { Badge } from "@esmate/shadcn/components/ui/badge";
 
 const mainMenuItems: { text: string; href: string }[] = [
-  {
-    text: "Home",
-    href: "/",
-  },
-  {
-    text: "Products",
-    href: "/products",
-  },
-  {
-    text: "Cart",
-    href: "/cart",
-  },
+  { text: "Collection", href: "/products" },
+  { text: "Custom Strap", href: "/custom-strap" },
+  { text: "Maison", href: "/about" },
+  { text: "Journal", href: "/journal" },
 ];
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
   const { totalQuantity } = useCart();
 
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   function isMenuItemActive(href: string) {
     const url = new URL(`https://x${href}`);
-    return pathname.startsWith(url.pathname);
+    return pathname === url.pathname;
   }
 
   return (
-    <header className="border-b">
-      <nav className="mx-auto flex max-w-7xl items-center justify-between p-6 lg:px-8" aria-label="Global">
-        <div className="flex lg:flex-1">
-          <Link href="/" className="-m-1.5 p-1.5">
-            <span className="sr-only">Next Shopify Storefront</span>
-            <ShoppingBag className="h-6 w-6" />
-          </Link>
-        </div>
-
-        <div className="hidden lg:flex lg:gap-x-5">
-          {mainMenuItems.map(({ text, href }) => (
-            <Link
-              className={`text-sm leading-6 font-semibold transition-colors hover:text-primary ${
-                isMenuItemActive(href) ? "text-primary" : "text-foreground"
-              }`}
-              key={href}
-              href={href}
-            >
-              {text}
-            </Link>
-          ))}
-        </div>
-
-        <div className="flex flex-1 items-center justify-end gap-4">
-          <Link href="/cart" className="relative">
-            <span className="sr-only">Cart</span>
-            <ShoppingCart className="h-6 w-6" />
-            {!!totalQuantity && (
-              <Badge
-                variant="destructive"
-                className="absolute -top-2 -right-2 h-5 min-w-5 rounded-full px-1 text-xs font-bold"
-              >
-                {totalQuantity}
-              </Badge>
-            )}
-          </Link>
-
+    <header
+      className={`fixed top-3 right-3 left-3 z-50 rounded-full border backdrop-blur-2xl backdrop-saturate-150 transition-all duration-300 lg:top-4 lg:right-4 lg:left-4 ${
+        scrolled ? "border-black/10 bg-cream/60" : "border-white/25 bg-cream/25"
+      }`}
+      style={{
+        boxShadow: scrolled
+          ? "inset 0 1px 0 0 rgba(255,255,255,0.55), 0 10px 32px rgba(0,0,0,0.08)"
+          : "inset 0 1px 0 0 rgba(255,255,255,0.45), 0 4px 18px rgba(0,0,0,0.05)",
+      }}
+    >
+      {/* glass sheen */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-x-6 top-0 h-1/2 rounded-t-full"
+        style={{
+          background: "linear-gradient(to bottom, rgba(255,255,255,0.22), rgba(255,255,255,0))",
+        }}
+      />
+      <nav
+        className="relative mx-auto flex max-w-[1800px] items-center justify-between px-4 py-2.5 lg:px-7 lg:py-3"
+        aria-label="Global"
+      >
+        {/* LEFT — burger (mobile) / nav (desktop) */}
+        <div className="flex flex-1 items-center gap-1">
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-            <SheetTrigger asChild className="lg:hidden">
-              <Button variant="ghost" size="icon">
-                <span className="sr-only">Open main menu</span>
-                <Menu className="h-6 w-6" />
-              </Button>
+            <SheetTrigger
+              className="rounded-full p-2 text-ink transition-colors hover:bg-ink/5 lg:hidden"
+              aria-label="Open menu"
+            >
+              <Menu className="h-5 w-5" strokeWidth={2} />
             </SheetTrigger>
-            <SheetContent side="right" className="w-full sm:max-w-sm">
-              <div className="flex flex-col gap-6 pt-6">
-                {mainMenuItems.map(({ text, href }) => (
-                  <Link
-                    className={`rounded-lg px-3 py-2 text-base font-semibold transition-colors hover:bg-accent ${
-                      isMenuItemActive(href) ? "text-primary" : "text-foreground"
-                    }`}
-                    key={href}
-                    href={href}
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {text}
-                  </Link>
-                ))}
+            <SheetContent side="left" className="w-full border-r border-black/10 bg-cream sm:max-w-md">
+              <div className="flex h-full flex-col justify-between p-8 pt-16">
+                <div className="flex flex-col">
+                  <span className="tracking-luxury mb-6 text-[10px] font-bold text-ink/40 uppercase">Maison</span>
+                  {mainMenuItems.map(({ text, href }, i) => (
+                    <Link
+                      key={href}
+                      href={href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-baseline gap-4 border-b border-ink/10 py-5 font-display text-3xl uppercase transition-colors hover:text-pop ${
+                        isMenuItemActive(href) ? "text-pop" : "text-ink"
+                      }`}
+                    >
+                      <span className="tracking-luxury text-[10px] font-bold text-ink/30">
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                      <span>{text}</span>
+                    </Link>
+                  ))}
+                </div>
+                <div className="tracking-luxury flex flex-col gap-1 text-xs text-ink/40 uppercase">
+                  <span>ChronoStrap · Geneva 2026</span>
+                  <span>Manufacture & Atelier</span>
+                </div>
               </div>
             </SheetContent>
           </Sheet>
+
+          <div className="hidden items-center gap-8 lg:flex">
+            {mainMenuItems.map(({ text, href }) => {
+              const active = isMenuItemActive(href);
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className={`group relative text-[11px] font-medium tracking-[0.2em] uppercase transition-colors ${
+                    active ? "text-ink" : "text-ink/70 hover:text-ink"
+                  }`}
+                >
+                  {text}
+                  <span
+                    className={`absolute -bottom-1 left-1/2 h-px -translate-x-1/2 bg-pop transition-all duration-300 ${
+                      active ? "w-full" : "w-0 group-hover:w-full"
+                    }`}
+                  />
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* CENTER — logo */}
+        <Link
+          href="/"
+          aria-label="ChronoStrap"
+          className="absolute left-1/2 flex -translate-x-1/2 items-center transition-opacity hover:opacity-70"
+        >
+          <img src="/logo.png" alt="ChronoStrap" className="h-9 w-auto brightness-0 lg:h-11" />
+        </Link>
+
+        {/* RIGHT — utility */}
+        <div className="flex flex-1 items-center justify-end gap-1 lg:gap-2">
+          <button
+            type="button"
+            aria-label="Search"
+            className="hidden rounded-full p-2 text-ink/80 transition-colors hover:bg-ink/5 hover:text-ink lg:inline-flex"
+          >
+            <Search className="h-4 w-4" strokeWidth={2} />
+          </button>
+          <Link
+            href="/account"
+            aria-label="Account"
+            className="hidden rounded-full p-2 text-ink/80 transition-colors hover:bg-ink/5 hover:text-ink lg:inline-flex"
+          >
+            <User className="h-4 w-4" strokeWidth={2} />
+          </Link>
+          <span className="mx-1 hidden h-4 w-px bg-ink/15 lg:inline-block" />
+          <Link
+            href="/cart"
+            className="group relative flex items-center gap-2 rounded-full px-3 py-2 text-ink transition-colors hover:bg-ink/5"
+            aria-label="Cart"
+          >
+            <ShoppingBag className="h-4 w-4" strokeWidth={2} />
+            <span className="hidden text-[11px] font-medium tracking-[0.2em] uppercase lg:inline">Bag</span>
+            {!!totalQuantity && (
+              <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-pop px-1 text-[9px] font-bold text-white">
+                {totalQuantity}
+              </span>
+            )}
+          </Link>
         </div>
       </nav>
     </header>

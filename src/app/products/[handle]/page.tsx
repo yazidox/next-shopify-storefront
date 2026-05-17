@@ -22,5 +22,9 @@ export default async function Page({ params }: Props) {
   const { handle } = await params;
   const data = await getProductSingle(handle);
 
-  return <ProductSingle data={data} />;
+  return (
+    <div className="mx-auto max-w-7xl px-6 pt-32 pb-20 lg:px-12">
+      <ProductSingle data={data} />
+    </div>
+  );
 }

@@ -12,5 +12,9 @@ export const metadata: Metadata = {
 export default async function Page() {
   const data = await getProductList();
 
-  return <ProductList data={data} />;
+  return (
+    <div className="mx-auto max-w-7xl px-6 pt-32 pb-20 lg:px-12">
+      <ProductList data={data} />
+    </div>
+  );
 }

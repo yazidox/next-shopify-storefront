@@ -7,5 +7,9 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  return <Cart />;
+  return (
+    <div className="mx-auto max-w-7xl px-6 pt-32 pb-20 lg:px-12">
+      <Cart />
+    </div>
+  );
 }
