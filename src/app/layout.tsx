@@ -63,7 +63,14 @@ export const metadata: Metadata = {
     googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 },
   },
   alternates: { canonical: "/" },
-  icons: { icon: "/favicon.ico", apple: "/logo.png" },
+  icons: {
+    icon: [
+      { url: "/favico.png", type: "image/png" },
+      { url: "/favicon.ico", type: "image/x-icon" },
+    ],
+    apple: "/favico.png",
+    shortcut: "/favico.png",
+  },
 };
 
 const structuredData = {

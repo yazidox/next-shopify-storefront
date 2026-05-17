@@ -1,12 +1,14 @@
 "use client";
 
 import { ChangeEvent, ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useCart } from "@shopify/hydrogen-react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { DecalGeometry } from "three/examples/jsm/geometries/DecalGeometry.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { Check, RotateCcw, ShoppingBag, Upload } from "@esmate/shadcn/pkgs/lucide-react";
+import { Check, Loader2, RotateCcw, ShoppingBag, Upload } from "@esmate/shadcn/pkgs/lucide-react";
 
 type HeroTextureStyle = "hero-pink" | "hero-white" | "hero-orange" | "hero-black" | "hero-green" | "hero-yellow";
 type TextureStyle = HeroTextureStyle | "smooth" | "saffiano" | "rally" | "checker" | "wave" | "uploaded";
@@ -77,11 +79,11 @@ type StudioView = {
 };
 
 const INITIAL_CONFIG: StrapConfig = {
-  baseHeroStyle: "hero-green",
-  textureStyle: "hero-green",
-  baseColor: "#10b981",
-  accentColor: "#ecf0c2",
-  initialsColor: "#ecf0c2",
+  baseHeroStyle: "hero-white",
+  textureStyle: "hero-white",
+  baseColor: "#f4efe6",
+  accentColor: "#e5e2e5",
+  initialsColor: "#e5e2e5",
   finish: "matte",
   textureScale: 1,
   emboss: "CS",
@@ -93,49 +95,89 @@ const HERO_TEXTURE_OPTIONS: {
   src: string;
   colors: string[];
   detail: string;
+  shopify: {
+    handle: string;
+    variantId: string;
+  };
 }[] = [
   {
     id: "hero-pink",
-    name: "Pink Pop",
+    name: "Royal Purple",
     src: "/wristwatch.opt.glb",
     colors: ["#f15bb5", "#941843"],
-    detail: "Full GLB finish",
+    detail: "Official case color",
+    shopify: {
+      handle: "chronostrap-case-royal-purple",
+      variantId: "gid://shopify/ProductVariant/52654604943584",
+    },
   },
   {
     id: "hero-white",
-    name: "Huit Blanc",
+    name: "Arctic White",
     src: "/huit-blanc.opt.glb",
     colors: ["#f4efe6", "#e5e2e5"],
-    detail: "Full GLB finish",
+    detail: "Official case color",
+    shopify: {
+      handle: "chronostrap-case-arctic-white",
+      variantId: "gid://shopify/ProductVariant/52654605009120",
+    },
   },
   {
     id: "hero-orange",
-    name: "Orenji Hachi",
+    name: "Hyper Yellow",
     src: "/orenji-hachi.opt.glb",
     colors: ["#ff7a1a", "#cd3c30"],
-    detail: "Full GLB finish",
+    detail: "Official strap color",
+    shopify: {
+      handle: "chronostrap-strap-hyper-yellow",
+      variantId: "gid://shopify/ProductVariant/52654605107424",
+    },
   },
-  { id: "hero-black", name: "Noir", src: "/black.opt.glb", colors: ["#0a0a0a", "#ffffff"], detail: "Full GLB finish" },
-  { id: "hero-green", name: "Vert", src: "/green.opt.glb", colors: ["#10b981", "#ecf0c2"], detail: "Full GLB finish" },
+  {
+    id: "hero-black",
+    name: "Stealth Black",
+    src: "/black.opt.glb",
+    colors: ["#0a0a0a", "#ffffff"],
+    detail: "Official case color",
+    shopify: {
+      handle: "chronostrap-case-stealth-black",
+      variantId: "gid://shopify/ProductVariant/52654604976352",
+    },
+  },
+  {
+    id: "hero-green",
+    name: "Teal",
+    src: "/green.opt.glb",
+    colors: ["#10b981", "#ecf0c2"],
+    detail: "Official strap color",
+    shopify: {
+      handle: "chronostrap-strap-teal",
+      variantId: "gid://shopify/ProductVariant/52654605074656",
+    },
+  },
   {
     id: "hero-yellow",
-    name: "Yellow Sky",
+    name: "Sky Blue",
     src: "/yellow-sky.opt.glb",
     colors: ["#fde047", "#dae8ea"],
-    detail: "Full GLB finish",
+    detail: "Official case color",
+    shopify: {
+      handle: "chronostrap-case-sky-blue",
+      variantId: "gid://shopify/ProductVariant/52654605041888",
+    },
   },
 ];
 
 const CUSTOM_TEXTURE_OPTIONS: { id: TextureStyle; name: string; colors: string[]; detail: string }[] = [
-  { id: "smooth", name: "Fine Smooth", colors: ["#f04f42", "#f6d7cf"], detail: "Single-tone matte surface" },
-  { id: "saffiano", name: "Saffiano Grain", colors: ["#101820", "#d8dee5"], detail: "Crosshatch leather texture" },
-  { id: "rally", name: "Racing Stripe", colors: ["#0a0a0a", "#ff3b30"], detail: "Twin stripe performance line" },
-  { id: "checker", name: "Grand Check", colors: ["#f4efe6", "#1f6f8b"], detail: "Graphic repeat pattern" },
-  { id: "wave", name: "Guilloche Wave", colors: ["#3349ff", "#fbdb52"], detail: "Soft engraved linework" },
-  { id: "uploaded", name: "Bespoke Artwork", colors: ["#c8f7dc", "#7c3aed"], detail: "Upload a custom image" },
+  { id: "smooth", name: "Daily Smooth", colors: ["#ff3b30", "#f6d7cf"], detail: "Clean solid strap" },
+  { id: "saffiano", name: "Solana Fade", colors: ["#111827", "#14f195"], detail: "Black mint violet fade" },
+  { id: "rally", name: "Bitcoin Noir", colors: ["#0a0a0a", "#f7931a"], detail: "Black with amber edge" },
+  { id: "checker", name: "Campus Check", colors: ["#f4efe6", "#1f6f8b"], detail: "Small clean check" },
+  { id: "wave", name: "Neon Pulse", colors: ["#151225", "#9945ff"], detail: "Thin electric lines" },
+  { id: "uploaded", name: "Upload Image", colors: ["#f4efe6", "#7c3aed"], detail: "PNG or JPG from your device" },
 ];
 
-const COLOR_PRESETS = ["#ff3b30", "#0a0a0a", "#f4efe6", "#1f6f8b", "#f7c948", "#5a3bff", "#0fa36b", "#f15bb5"];
+const COLOR_PRESETS = ["#ff3b30", "#0a0a0a", "#f4efe6", "#1f6f8b", "#f7931a", "#9945ff", "#14f195", "#f15bb5"];
 
 const DEFAULT_MODEL_VIEW = {
   maxAxis: 1.65,
@@ -149,6 +191,7 @@ const DEFAULT_CAMERA_VIEW = {
 };
 
 const CUSTOM_TEXTURE_MODEL_ID: HeroTextureStyle = "hero-yellow";
+const MAX_INITIALS_LENGTH = 2;
 
 const INITIALS_PLACEMENTS: Record<HeroTextureStyle, InitialsPlacementSnapshot> = {
   "hero-pink": {
@@ -352,10 +395,13 @@ const INITIALS_PLACEMENTS: Record<HeroTextureStyle, InitialsPlacementSnapshot> =
 };
 
 export function CustomStrapStudio() {
+  const cart = useCart();
+  const router = useRouter();
   const [config, setConfig] = useState<StrapConfig>(INITIAL_CONFIG);
   const [uploadName, setUploadName] = useState("");
   const [modelStatus, setModelStatus] = useState<"loading" | "ready" | "error">("loading");
   const [initialsPlaced, setInitialsPlaced] = useState(false);
+  const [addingBuild, setAddingBuild] = useState(false);
   const [debug, setDebug] = useState(false);
   const [debugSnapshot, setDebugSnapshot] = useState<StudioView | null>(null);
   const [copiedDebug, setCopiedDebug] = useState(false);
@@ -686,7 +732,7 @@ export function CustomStrapStudio() {
   }
 
   function applySavedInitialsPlacement(activeParts: SceneParts, activeConfig: StrapConfig) {
-    const text = activeConfig.emboss.trim().slice(0, 4);
+    const text = activeConfig.emboss.trim().slice(0, MAX_INITIALS_LENGTH);
     if (!text) return;
 
     const placementSnapshot = getInitialsPlacementSnapshot(activeConfig);
@@ -718,6 +764,43 @@ export function CustomStrapStudio() {
     reader.readAsDataURL(file);
   }
 
+  function reviewCustomBuild() {
+    if (addingBuild || !selectedModel.shopify.variantId) return;
+
+    const activeMaterial =
+      HERO_TEXTURE_OPTIONS.find((item) => item.id === config.textureStyle) ??
+      CUSTOM_TEXTURE_OPTIONS.find((item) => item.id === config.textureStyle);
+    const initials = config.emboss.trim().slice(0, MAX_INITIALS_LENGTH) || "None";
+    const attributes = [
+      { key: "Build", value: "Custom Strap Studio" },
+      { key: "Reference", value: selectedModel.name },
+      { key: "Material", value: activeMaterial?.name ?? "Custom" },
+      { key: "Material source", value: isHeroTextureStyle(config.textureStyle) ? "Official GLB" : "Atelier" },
+      { key: "Base color", value: config.baseColor.toUpperCase() },
+      { key: "Accent color", value: config.accentColor.toUpperCase() },
+      { key: "Initials", value: initials },
+      { key: "Initials color", value: config.initialsColor.toUpperCase() },
+      { key: "Finish", value: "Matte" },
+      ...(config.textureStyle === "uploaded"
+        ? [{ key: "Uploaded artwork", value: uploadName || "Customer upload" }]
+        : []),
+    ];
+
+    setAddingBuild(true);
+    cart.linesAdd([
+      {
+        merchandiseId: selectedModel.shopify.variantId,
+        quantity: 1,
+        attributes,
+      },
+    ]);
+
+    window.setTimeout(() => {
+      setAddingBuild(false);
+      router.push("/cart");
+    }, 650);
+  }
+
   async function copyDebugView() {
     if (!debugSnapshot) return;
 
@@ -727,9 +810,9 @@ export function CustomStrapStudio() {
   }
 
   return (
-    <div className="min-h-screen bg-cream text-ink">
-      <section className="grid min-h-screen grid-cols-1 lg:grid-cols-[minmax(0,1fr)_560px] xl:grid-cols-[minmax(0,1fr)_620px] 2xl:grid-cols-[minmax(0,1fr)_660px]">
-        <div className="relative min-h-[620px] overflow-hidden bg-[#e9edf0] sm:min-h-[680px] lg:min-h-screen">
+    <div className="min-h-[100svh] overflow-x-hidden bg-cream text-ink">
+      <section className="grid min-h-[100svh] grid-cols-1 lg:min-h-screen lg:grid-cols-[minmax(0,1fr)_560px] xl:grid-cols-[minmax(0,1fr)_620px] 2xl:grid-cols-[minmax(0,1fr)_660px]">
+        <div className="relative h-[58svh] max-h-[620px] min-h-[430px] overflow-hidden bg-[#e9edf0] sm:h-[64svh] sm:max-h-[720px] sm:min-h-[560px] lg:h-auto lg:max-h-none lg:min-h-screen">
           <div
             aria-hidden
             className="pointer-events-none absolute inset-0"
@@ -738,18 +821,18 @@ export function CustomStrapStudio() {
                 "radial-gradient(70% 55% at 45% 42%, rgba(255,255,255,0.78), rgba(255,255,255,0) 62%), linear-gradient(135deg, #f4efe6 0%, #d8edf1 45%, #f7dd80 100%)",
             }}
           />
-          <div ref={mountRef} className="absolute inset-y-0 left-0 w-full lg:w-[62%]" />
+          <div ref={mountRef} className="absolute inset-y-10 left-0 w-full sm:inset-y-6 lg:inset-y-0 lg:w-[62%]" />
 
-          <div className="pointer-events-none absolute top-24 left-5 max-w-[420px] sm:left-8 lg:top-28 lg:left-12">
+          <div className="pointer-events-none absolute top-20 left-4 max-w-[320px] sm:top-24 sm:left-8 sm:max-w-[420px] lg:top-28 lg:left-12">
             <p className="tracking-luxury text-[10px] font-bold text-ink/55 uppercase">Live customizer</p>
-            <h1 className="mt-4 text-4xl leading-[0.95] font-black tracking-normal text-ink uppercase sm:text-6xl lg:text-7xl">
+            <h1 className="mt-3 text-4xl leading-[0.95] font-black tracking-normal text-ink uppercase sm:mt-4 sm:text-6xl lg:text-7xl">
               Custom
               <br />
               Strap
             </h1>
           </div>
 
-          <div className="pointer-events-none absolute right-5 bottom-5 left-5 flex flex-wrap items-center gap-2 lg:right-auto lg:left-12">
+          <div className="pointer-events-none absolute right-4 bottom-4 left-4 flex flex-wrap items-center gap-1.5 sm:right-5 sm:bottom-5 sm:left-5 sm:gap-2 lg:right-auto lg:left-12">
             <BuildChip label={summary} />
             {modelStatus !== "ready" && <BuildChip label={modelStatus} />}
             <BuildChip
@@ -765,12 +848,14 @@ export function CustomStrapStudio() {
           {debug && <CameraDebugPanel snapshot={debugSnapshot} copied={copiedDebug} onCopy={copyDebugView} />}
         </div>
 
-        <aside className="border-t border-ink/10 bg-cream px-5 py-7 lg:max-h-screen lg:overflow-y-auto lg:border-t-0 lg:border-l lg:px-8 lg:pt-28 2xl:px-10">
+        <aside className="border-t border-ink/10 bg-cream px-4 pt-5 pb-0 lg:max-h-screen lg:overflow-y-auto lg:border-t-0 lg:border-l lg:px-8 lg:pt-28 2xl:px-10">
           <div className="mx-auto flex min-h-full w-full max-w-[680px] flex-col">
-            <div className="mb-7 flex items-start justify-between gap-6">
+            <div className="mb-5 flex items-start justify-between gap-6 sm:mb-7">
               <div>
                 <p className="tracking-luxury text-[10px] font-bold text-ink/45 uppercase">ChronoStrap Studio</p>
-                <h2 className="mt-2 text-3xl leading-none font-black tracking-normal uppercase">Configure</h2>
+                <h2 className="mt-2 text-2xl leading-none font-black tracking-normal uppercase sm:text-3xl">
+                  Configure
+                </h2>
               </div>
               <button
                 type="button"
@@ -783,11 +868,11 @@ export function CustomStrapStudio() {
               </button>
             </div>
 
-            <div className="mb-7 rounded-[8px] border border-ink/10 bg-white/55 p-4 shadow-[0_18px_45px_rgba(10,10,10,0.04)]">
+            <div className="mb-5 rounded-[8px] border border-ink/10 bg-white/55 p-3 shadow-[0_18px_45px_rgba(10,10,10,0.04)] sm:mb-7 sm:p-4">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="tracking-luxury text-[10px] font-bold text-ink/42 uppercase">Current build</p>
-                  <h3 className="mt-2 text-xl leading-none font-black tracking-normal text-ink uppercase">
+                  <h3 className="mt-2 text-lg leading-none font-black tracking-normal text-ink uppercase sm:text-xl">
                     {activeTextureName}
                   </h3>
                   <p className="mt-2 text-sm font-medium text-ink/55">{activeSource} / Matte finish</p>
@@ -797,7 +882,7 @@ export function CustomStrapStudio() {
             </div>
 
             <ConfigSection step="01" title="Reference" meta="Official GLB models">
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <div className="grid grid-cols-2 gap-2">
                 {HERO_TEXTURE_OPTIONS.map((look) => {
                   const active = config.baseHeroStyle === look.id && config.textureStyle === look.id;
                   return (
@@ -822,25 +907,35 @@ export function CustomStrapStudio() {
             </ConfigSection>
 
             <ConfigSection step="02" title="Material" meta="Atelier textures">
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <div className="grid grid-cols-2 gap-2">
                 {CUSTOM_TEXTURE_OPTIONS.map((texture) => {
                   const active = config.textureStyle === texture.id;
+                  if (texture.id === "uploaded") {
+                    return (
+                      <div key={texture.id} className="col-span-2 sm:col-span-1">
+                        <UploadTextureButton
+                          active={active}
+                          fileName={uploadName}
+                          onClick={() => fileInputRef.current?.click()}
+                        />
+                      </div>
+                    );
+                  }
+
                   return (
                     <TextureChoiceButton
                       key={texture.id}
                       option={texture}
                       active={active}
-                      source={texture.id === "uploaded" ? "Bespoke artwork" : "Atelier surface"}
+                      source="Atelier surface"
                       onClick={() =>
-                        texture.id === "uploaded"
-                          ? fileInputRef.current?.click()
-                          : updateConfig({
-                              baseHeroStyle: CUSTOM_TEXTURE_MODEL_ID,
-                              textureStyle: texture.id,
-                              baseColor: texture.colors[0],
-                              accentColor: texture.colors[1] ?? config.accentColor,
-                              initialsColor: texture.colors[1] ?? config.initialsColor,
-                            })
+                        updateConfig({
+                          baseHeroStyle: CUSTOM_TEXTURE_MODEL_ID,
+                          textureStyle: texture.id,
+                          baseColor: texture.colors[0],
+                          accentColor: texture.colors[1] ?? config.accentColor,
+                          initialsColor: texture.colors[1] ?? config.initialsColor,
+                        })
                       }
                     />
                   );
@@ -848,20 +943,10 @@ export function CustomStrapStudio() {
               </div>
 
               <input ref={fileInputRef} type="file" accept="image/*" className="sr-only" onChange={handleUpload} />
-              {uploadName && (
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="mt-3 flex h-12 w-full items-center justify-between rounded-[8px] border border-ink/10 bg-white px-4 text-left transition-colors hover:border-ink/25"
-                >
-                  <span className="truncate text-sm font-semibold text-ink">{uploadName}</span>
-                  <Upload className="h-4 w-4 shrink-0 text-ink/55" strokeWidth={2.2} />
-                </button>
-              )}
             </ConfigSection>
 
             <ConfigSection step="03" title="Tone" meta="For atelier materials">
-              <div className="grid grid-cols-8 gap-2">
+              <div className="grid grid-cols-8 gap-1.5 sm:gap-2">
                 {COLOR_PRESETS.map((color) => (
                   <button
                     key={color}
@@ -890,7 +975,7 @@ export function CustomStrapStudio() {
               </div>
             </ConfigSection>
 
-            <ConfigSection step="04" title="Monogram" meta="Optional initials">
+            <ConfigSection step="04" title="Monogram" meta="Two letters max">
               <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_180px]">
                 <label>
                   <span className="tracking-luxury mb-2 block text-[10px] font-bold text-ink/45 uppercase">
@@ -898,10 +983,12 @@ export function CustomStrapStudio() {
                   </span>
                   <input
                     value={config.emboss}
-                    onChange={(event) => updateConfig({ emboss: event.target.value.slice(0, 4).toUpperCase() })}
+                    onChange={(event) =>
+                      updateConfig({ emboss: event.target.value.slice(0, MAX_INITIALS_LENGTH).toUpperCase() })
+                    }
                     className="h-12 w-full rounded-[8px] border border-ink/15 bg-white px-4 text-sm font-bold tracking-[0.22em] text-ink uppercase transition-colors outline-none focus:border-ink"
                     placeholder="CS"
-                    maxLength={4}
+                    maxLength={MAX_INITIALS_LENGTH}
                     aria-label="Texture mark"
                   />
                 </label>
@@ -931,14 +1018,20 @@ export function CustomStrapStudio() {
               </div>
             </ConfigSection>
 
-            <div className="sticky bottom-0 mt-auto border-t border-ink/10 bg-cream pt-5 pb-2">
-              <a
-                href="/products?tag=strap"
-                className="tracking-luxury inline-flex w-full items-center justify-center gap-2 rounded-[8px] bg-ink px-5 py-4 text-[10px] font-bold text-cream uppercase transition-colors hover:bg-pop active:bg-pop"
+            <div className="sticky bottom-0 z-40 -mx-4 mt-auto border-t border-ink/10 bg-cream/95 px-4 pt-4 pb-[calc(0.5rem+env(safe-area-inset-bottom))] shadow-[0_-16px_38px_rgba(10,10,10,0.08)] backdrop-blur-xl lg:-mx-8 lg:px-8">
+              <button
+                type="button"
+                onClick={reviewCustomBuild}
+                disabled={addingBuild || cart.status === "creating" || cart.status === "updating"}
+                className="tracking-luxury inline-flex w-full items-center justify-center gap-2 rounded-[8px] bg-ink px-5 py-4 text-[10px] font-bold text-cream uppercase transition-colors hover:bg-pop active:bg-pop disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <ShoppingBag className="h-4 w-4" strokeWidth={2.2} />
-                Review Custom Build
-              </a>
+                {addingBuild || cart.status === "creating" || cart.status === "updating" ? (
+                  <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2.2} />
+                ) : (
+                  <ShoppingBag className="h-4 w-4" strokeWidth={2.2} />
+                )}
+                {addingBuild ? "Preparing Build" : "Review Custom Build"}
+              </button>
             </div>
           </div>
         </aside>
@@ -949,7 +1042,7 @@ export function CustomStrapStudio() {
 
 function BuildChip({ label }: { label: string }) {
   return (
-    <span className="rounded-full border border-white/45 bg-white/35 px-3 py-2 text-[10px] font-bold tracking-[0.18em] text-ink uppercase shadow-[0_8px_24px_rgba(10,10,10,0.08)] backdrop-blur-xl">
+    <span className="rounded-full border border-white/45 bg-white/35 px-2.5 py-1.5 text-[9px] font-bold tracking-[0.16em] text-ink uppercase shadow-[0_8px_24px_rgba(10,10,10,0.08)] backdrop-blur-xl sm:px-3 sm:py-2 sm:text-[10px]">
       {label}
     </span>
   );
@@ -970,7 +1063,7 @@ function TextureChoiceButton({
     <button
       type="button"
       onClick={onClick}
-      className={`group relative grid min-h-[92px] grid-cols-[10px_minmax(0,1fr)] overflow-hidden rounded-[8px] border text-left transition-all ${
+      className={`group relative grid min-h-[86px] grid-cols-[8px_minmax(0,1fr)] overflow-hidden rounded-[8px] border text-left transition-all sm:min-h-[92px] sm:grid-cols-[10px_minmax(0,1fr)] ${
         active
           ? "border-ink bg-white shadow-[0_10px_26px_rgba(10,10,10,0.08)]"
           : "border-ink/10 bg-white/45 hover:border-ink/25 hover:bg-white"
@@ -978,14 +1071,59 @@ function TextureChoiceButton({
       aria-pressed={active}
     >
       <span aria-hidden className="block h-full w-full border-r border-ink/10" style={getTexturePreviewStyle(option)} />
-      <span className="flex min-w-0 flex-col justify-between gap-3 p-3 pr-10">
+      <span className="flex min-w-0 flex-col justify-between gap-2 p-2.5 pr-8 sm:gap-3 sm:p-3 sm:pr-10">
         <span className="min-w-0">
-          <span className="block truncate text-sm font-black tracking-normal text-ink uppercase">{option.name}</span>
-          <span className="mt-1 block truncate text-xs font-medium text-ink/52">{option.detail}</span>
+          <span className="block truncate text-[11px] font-black tracking-normal text-ink uppercase sm:text-sm">
+            {option.name}
+          </span>
+          <span className="mt-1 block truncate text-[10px] font-medium text-ink/52 sm:text-xs">{option.detail}</span>
         </span>
         <span className="flex items-center justify-between gap-3">
           <SwatchLine colors={option.colors} />
-          <span className="truncate text-[10px] font-bold text-ink/38">{source}</span>
+          <span className="hidden truncate text-[10px] font-bold text-ink/38 sm:block">{source}</span>
+        </span>
+      </span>
+      {active && (
+        <span className="absolute top-2 right-2 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-ink text-cream sm:top-3 sm:right-3 sm:h-6 sm:w-6">
+          <Check className="h-3 w-3" strokeWidth={2.4} />
+        </span>
+      )}
+    </button>
+  );
+}
+
+function UploadTextureButton({
+  active,
+  fileName,
+  onClick,
+}: {
+  active: boolean;
+  fileName: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`group relative flex min-h-[86px] w-full items-center gap-3 rounded-[8px] border border-dashed px-3 text-left transition-all sm:min-h-[92px] sm:gap-4 sm:px-4 ${
+        active
+          ? "border-ink bg-white shadow-[0_10px_26px_rgba(10,10,10,0.08)]"
+          : "border-ink/25 bg-white/45 hover:border-ink/45 hover:bg-white"
+      }`}
+      aria-pressed={active}
+    >
+      <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ink text-cream sm:h-12 sm:w-12">
+        <Upload className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={2.2} />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-xs font-black tracking-normal text-ink uppercase sm:text-sm">
+          Upload Image
+        </span>
+        <span className="mt-1 block truncate text-[11px] font-medium text-ink/52 sm:text-xs">
+          {fileName || "PNG or JPG from your device"}
+        </span>
+        <span className="tracking-luxury mt-3 inline-flex rounded-full border border-ink/15 px-3 py-1.5 text-[9px] font-bold text-ink uppercase">
+          {fileName ? "Change file" : "Choose file"}
         </span>
       </span>
       {active && (
@@ -1003,7 +1141,7 @@ function SwatchLine({ colors }: { colors: string[] }) {
       {colors.slice(0, 3).map((color) => (
         <span
           key={color}
-          className="-ml-1 block h-4 w-4 rounded-full border border-white shadow-[0_0_0_1px_rgba(10,10,10,0.12)] first:ml-0"
+          className="-ml-1 block h-3.5 w-3.5 rounded-full border border-white shadow-[0_0_0_1px_rgba(10,10,10,0.12)] first:ml-0 sm:h-4 sm:w-4"
           style={{ backgroundColor: color }}
         />
       ))}
@@ -1017,7 +1155,7 @@ function SwatchStack({ colors }: { colors: string[] }) {
       {colors.slice(0, 3).map((color) => (
         <span
           key={color}
-          className="-ml-2 block h-10 w-10 rounded-full border-2 border-white shadow-[0_8px_18px_rgba(10,10,10,0.12)] first:ml-0"
+          className="-ml-2 block h-8 w-8 rounded-full border-2 border-white shadow-[0_8px_18px_rgba(10,10,10,0.12)] first:ml-0 sm:h-10 sm:w-10"
           style={{ backgroundColor: color }}
         />
       ))}
@@ -1026,16 +1164,35 @@ function SwatchStack({ colors }: { colors: string[] }) {
 }
 
 function getTexturePreviewStyle(option: { id: TextureStyle; colors: string[] }) {
-  if (option.id === "checker") {
+  if (option.id === "smooth") {
     return {
-      background: `linear-gradient(45deg, ${option.colors[0]} 25%, ${option.colors[1]} 25% 50%, ${option.colors[0]} 50% 75%, ${option.colors[1]} 75%)`,
-      backgroundSize: "18px 18px",
+      background: `linear-gradient(135deg, ${option.colors[0]} 0 78%, ${option.colors[1]} 78% 100%)`,
+    };
+  }
+
+  if (option.id === "saffiano") {
+    return {
+      background: "linear-gradient(135deg, #111827 0 42%, #14f195 42% 50%, #9945ff 50% 58%, #111827 58% 100%)",
     };
   }
 
   if (option.id === "rally") {
     return {
-      background: `linear-gradient(90deg, ${option.colors[0]} 0 34%, ${option.colors[1]} 34% 44%, ${option.colors[0]} 44% 56%, ${option.colors[1]} 56% 66%, ${option.colors[0]} 66%)`,
+      background: "linear-gradient(90deg, #0a0a0a 0 64%, #f7931a 64% 76%, #211406 76% 100%)",
+    };
+  }
+
+  if (option.id === "checker") {
+    return {
+      background: `linear-gradient(45deg, ${option.colors[0]} 25%, ${option.colors[1]} 25% 50%, ${option.colors[0]} 50% 75%, ${option.colors[1]} 75%)`,
+      backgroundSize: "14px 14px",
+    };
+  }
+
+  if (option.id === "wave") {
+    return {
+      background:
+        "repeating-linear-gradient(0deg, transparent 0 10px, rgba(20,241,149,0.52) 10px 12px, transparent 12px 22px), linear-gradient(135deg, #151225, #26154d 48%, #111827)",
     };
   }
 
@@ -1238,7 +1395,7 @@ function placementFromSnapshot(snapshot: InitialsPlacementSnapshot, mesh: any): 
 function applyInitialsDecal(parts: SceneParts, placement: InitialsPlacement, text: string, accentColor: string) {
   clearInitialsDecal(parts);
 
-  const trimmed = text.trim().slice(0, 4);
+  const trimmed = text.trim().slice(0, MAX_INITIALS_LENGTH);
   if (!trimmed) return;
 
   const texture = createInitialsDecalTexture(trimmed, accentColor);
@@ -1350,13 +1507,13 @@ async function createModelTexture(config: StrapConfig) {
     context.globalCompositeOperation = "source-over";
     context.globalAlpha = 1;
   } else if (config.textureStyle === "saffiano") {
-    drawSaffiano(context, config.baseColor, config.accentColor, size);
+    drawSolanaAurora(context, config.baseColor, config.accentColor, size);
   } else if (config.textureStyle === "rally") {
-    drawRally(context, config.baseColor, config.accentColor, size);
+    drawBitcoinEmber(context, config.baseColor, config.accentColor, size);
   } else if (config.textureStyle === "checker") {
-    drawChecker(context, config.baseColor, size);
+    drawChecker(context, config.baseColor, config.accentColor, size);
   } else if (config.textureStyle === "wave") {
-    drawWave(context, config.baseColor, config.accentColor, size);
+    drawSolanaPulse(context, config.baseColor, config.accentColor, size);
   }
 
   drawGrain(context, size);
@@ -1371,58 +1528,90 @@ async function createModelTexture(config: StrapConfig) {
   return texture;
 }
 
-function drawSaffiano(context: CanvasRenderingContext2D, baseColor: string, accentColor: string, size: number) {
-  context.fillStyle = baseColor;
+function drawSolanaAurora(context: CanvasRenderingContext2D, baseColor: string, accentColor: string, size: number) {
+  const gradient = context.createLinearGradient(0, 0, size, size);
+  gradient.addColorStop(0, "#111827");
+  gradient.addColorStop(0.44, baseColor);
+  gradient.addColorStop(0.58, accentColor);
+  gradient.addColorStop(0.72, "#9945ff");
+  gradient.addColorStop(1, "#111827");
+  context.fillStyle = gradient;
   context.fillRect(0, 0, size, size);
-  context.lineWidth = 3;
 
-  for (let i = -size; i < size * 2; i += 22) {
-    context.strokeStyle = withAlpha("#ffffff", 0.16);
-    context.beginPath();
-    context.moveTo(i, 0);
-    context.lineTo(i + size, size);
-    context.stroke();
+  context.globalCompositeOperation = "screen";
+  context.lineWidth = 28;
+  context.strokeStyle = withAlpha("#14f195", 0.22);
+  context.beginPath();
+  context.moveTo(size * 0.1, size);
+  context.lineTo(size * 0.56, 0);
+  context.stroke();
 
-    context.strokeStyle = withAlpha(accentColor, 0.18);
-    context.beginPath();
-    context.moveTo(i + 12, size);
-    context.lineTo(i + size + 12, 0);
-    context.stroke();
-  }
+  context.lineWidth = 18;
+  context.strokeStyle = withAlpha("#9945ff", 0.24);
+  context.beginPath();
+  context.moveTo(size * 0.36, size);
+  context.lineTo(size * 0.82, 0);
+  context.stroke();
+
+  context.globalCompositeOperation = "multiply";
+  context.fillStyle = withAlpha("#0a0a0a", 0.18);
+  context.fillRect(0, 0, size, size);
+  context.globalCompositeOperation = "source-over";
 }
 
-function drawRally(context: CanvasRenderingContext2D, baseColor: string, accentColor: string, size: number) {
-  context.fillStyle = baseColor;
+function drawBitcoinEmber(context: CanvasRenderingContext2D, baseColor: string, accentColor: string, size: number) {
+  const gradient = context.createLinearGradient(0, 0, size, size);
+  gradient.addColorStop(0, baseColor);
+  gradient.addColorStop(0.72, "#0a0a0a");
+  gradient.addColorStop(1, "#1f1406");
+  context.fillStyle = gradient;
   context.fillRect(0, 0, size, size);
-  context.fillStyle = withAlpha(accentColor, 0.88);
-  context.fillRect(size * 0.44, 0, size * 0.045, size);
-  context.fillRect(size * 0.515, 0, size * 0.045, size);
-  context.fillStyle = withAlpha("#ffffff", 0.14);
-  context.fillRect(size * 0.34, 0, size * 0.02, size);
-  context.fillRect(size * 0.64, 0, size * 0.02, size);
+
+  context.globalCompositeOperation = "screen";
+  context.fillStyle = withAlpha(accentColor, 0.82);
+  context.fillRect(size * 0.73, 0, size * 0.075, size);
+  context.fillStyle = withAlpha("#ffcf70", 0.24);
+  context.fillRect(size * 0.82, 0, size * 0.025, size);
+  context.globalCompositeOperation = "source-over";
 }
 
-function drawChecker(context: CanvasRenderingContext2D, baseColor: string, size: number) {
-  const alternate = shadeColor(baseColor, -34);
-  const square = 96;
+function drawChecker(context: CanvasRenderingContext2D, baseColor: string, accentColor: string, size: number) {
+  const alternate = withAlpha(accentColor, 0.82);
+  const square = 84;
   for (let y = 0; y < size; y += square) {
     for (let x = 0; x < size; x += square) {
       context.fillStyle = (x / square + y / square) % 2 === 0 ? baseColor : alternate;
       context.fillRect(x, y, square, square);
     }
   }
+
+  context.strokeStyle = withAlpha("#ffffff", 0.28);
+  context.lineWidth = 2;
+  for (let line = 0; line <= size; line += square) {
+    context.beginPath();
+    context.moveTo(line, 0);
+    context.lineTo(line, size);
+    context.moveTo(0, line);
+    context.lineTo(size, line);
+    context.stroke();
+  }
 }
 
-function drawWave(context: CanvasRenderingContext2D, baseColor: string, accentColor: string, size: number) {
-  context.fillStyle = baseColor;
+function drawSolanaPulse(context: CanvasRenderingContext2D, baseColor: string, accentColor: string, size: number) {
+  const gradient = context.createLinearGradient(size, 0, 0, size);
+  gradient.addColorStop(0, baseColor);
+  gradient.addColorStop(0.56, "#151225");
+  gradient.addColorStop(1, "#111827");
+  context.fillStyle = gradient;
   context.fillRect(0, 0, size, size);
-  context.lineWidth = 7;
-  context.strokeStyle = withAlpha(accentColor, 0.45);
 
-  for (let row = -40; row < size + 80; row += 70) {
+  context.globalCompositeOperation = "screen";
+  for (let row = -40; row < size + 80; row += 118) {
+    context.lineWidth = 7;
+    context.strokeStyle = withAlpha(accentColor, 0.64);
     context.beginPath();
     for (let x = 0; x <= size; x += 16) {
-      const y = row + Math.sin(x / 52) * 18;
+      const y = row + Math.sin(x / 54) * 16;
       if (x === 0) {
         context.moveTo(x, y);
       } else {
@@ -1431,6 +1620,16 @@ function drawWave(context: CanvasRenderingContext2D, baseColor: string, accentCo
     }
     context.stroke();
   }
+
+  context.lineWidth = 3;
+  context.strokeStyle = withAlpha("#14f195", 0.5);
+  for (let row = 24; row < size + 80; row += 118) {
+    context.beginPath();
+    context.moveTo(0, row);
+    context.lineTo(size, row + 34);
+    context.stroke();
+  }
+  context.globalCompositeOperation = "source-over";
 }
 
 function drawGrain(context: CanvasRenderingContext2D, size: number) {

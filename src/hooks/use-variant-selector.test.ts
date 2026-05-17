@@ -59,7 +59,7 @@ const simpleProduct = {
 };
 
 describe("useVariantSelector", () => {
-  it("should initialize options correctly", () => {
+  it("should initialize with the first available variant pre-selected", () => {
     const { result } = renderHook(() => useVariantSelector(mockProduct));
 
     const options = result.current.options;
@@ -67,15 +67,19 @@ describe("useVariantSelector", () => {
 
     expect(options[0].name).toBe("Color");
     expect(options[0].values).toHaveLength(2);
-    // First option values should not be disabled initially ???
-    // Looking at logic: disabled: optionIndex === 0 ? false : true
-    // So option 0 is enabled, others disabled.
-    expect(options[0].values[0].disabled).toBe(false);
-    expect(options[0].values[0].selected).toBe(false);
+
+    // Hook now pre-selects the first available variant's options so the page lands
+    // with a valid variantId — Add to Bag works without an extra click.
+    // First available variant is var-1 (Red / S, availableForSale: true).
+    const redValue = options[0].values.find((v) => v.value === "Red");
+    expect(redValue?.selected).toBe(true);
 
     expect(options[1].name).toBe("Size");
-    // Dependent options should be disabled initially
-    expect(options[1].values[0].disabled).toBe(true);
+    const sizeS = options[1].values.find((v) => v.value === "S");
+    expect(sizeS?.selected).toBe(true);
+
+    // Pre-selection also yields a valid variantId immediately.
+    expect(result.current.variantId).toBe("var-1");
   });
 
   it("should select an option and enable next options based on availability", () => {

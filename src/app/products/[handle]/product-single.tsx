@@ -1,113 +1,613 @@
 "use client";
 
-import { useEffect } from "react";
-import { AddToCartButton, ProductPrice, ProductProvider } from "@shopify/hydrogen-react";
-import { useVariantSelector } from "@/hooks/use-variant-selector";
-import { getProductSingle } from "./service";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import { Button } from "@esmate/shadcn/components/ui/button";
-import { Card, CardContent } from "@esmate/shadcn/components/ui/card";
-import { Separator } from "@esmate/shadcn/components/ui/separator";
+import Link from "next/link";
+import { AddToCartButton, Money, ProductProvider } from "@shopify/hydrogen-react";
+import {
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+  Heart,
+  Minus,
+  Plus,
+  Share2,
+  Star,
+  Truck,
+  RotateCcw,
+  Shield,
+  Gift,
+  Package,
+} from "@esmate/shadcn/pkgs/lucide-react";
+import { useVariantSelector } from "@/hooks/use-variant-selector";
+import { getProductSingle, getSiblingProducts } from "./service";
 import { analytics } from "@/lib/analytics";
+import { titleize } from "@esmate/utils/string";
 
 interface Props {
   data: Awaited<ReturnType<typeof getProductSingle>>;
+  siblings: Awaited<ReturnType<typeof getSiblingProducts>>;
 }
 
-export function ProductSingle(props: Props) {
-  const { variantId, options, selectOption } = useVariantSelector(props.data);
+// ╔═══════════════════════════════════════════════════════════════════╗
+// ║ Swatch-style PDP — FULL WIDTH                                       ║
+// ║ - Gallery: edge-to-edge left ~65%                                   ║
+// ║ - Aside: fixed-ish right column ~35%, padded                        ║
+// ║ - Bottom tabs: Description / Features / Specifications              ║
+// ╚═══════════════════════════════════════════════════════════════════╝
 
-  // Fire Meta Pixel ViewContent once per product page view.
+export function ProductSingle({ data, siblings }: Props) {
+  const { variantId, options, selectOption } = useVariantSelector(data);
+  const [active, setActive] = useState(0);
+  const [qty, setQty] = useState(1);
+  const [tab, setTab] = useState<"description" | "features" | "specifications">("description");
+
+  const images = data.images.nodes.filter((n) => n?.url);
+  const main = images[active] ?? images[0];
+
+  const activeVariant = data.variants?.nodes?.find((v) => v?.id === variantId) ?? data.variants?.nodes?.[0];
+  const price = activeVariant?.priceV2 ?? data.priceRange.minVariantPrice;
+  const availableForSale = activeVariant?.availableForSale !== false;
+
+  const colorOption = useMemo(() => options.find((o) => /col/i.test(o.name)), [options]);
+  const otherOptions = useMemo(() => options.filter((o) => o !== colorOption), [options, colorOption]);
+
   useEffect(() => {
-    const variant = props.data.variants?.nodes?.[0];
     analytics.viewContent({
-      id: props.data.id,
-      name: props.data.title,
-      category: props.data.productType ?? undefined,
-      price: variant?.price ? { amount: variant.price.amount, currencyCode: variant.price.currencyCode } : undefined,
+      id: data.id,
+      name: data.title,
+      category: data.productType ?? undefined,
+      price: { amount: price.amount, currencyCode: price.currencyCode },
     });
-  }, [props.data]);
+  }, [data, price]);
+
+  const specs = buildSpecs(data);
 
   return (
-    <ProductProvider data={props.data}>
-      <section className="container mx-auto">
-        <Card className="overflow-hidden border-0 p-0 shadow-lg">
-          <div className="grid gap-4 md:grid-cols-2">
-            {/* Product Image */}
-            <div className="relative overflow-hidden rounded-lg bg-muted">
-              <Image
-                src={props.data.images.nodes[0].url}
-                alt={props.data.images.nodes[0].altText || ""}
-                width={props.data.images.nodes[0].width as number}
-                height={props.data.images.nodes[0].height as number}
-                className="h-full w-full object-cover object-center transition-transform hover:scale-105"
-                priority
-              />
+    <ProductProvider data={data}>
+      {/* ─── MAIN: full-width split ─────────────────── */}
+      <section className="grid grid-cols-1 lg:grid-cols-[1fr_440px] xl:grid-cols-[1fr_520px]">
+        {/* GALLERY — edge-to-edge */}
+        <div className="bg-white">
+          <Gallery images={images} active={active} setActive={setActive} main={main} title={data.title} />
+        </div>
+
+        {/* ASIDE — padded panel */}
+        <aside className="px-6 pt-10 pb-12 lg:px-10 lg:pt-12 lg:pb-16">
+          <div className="flex flex-col gap-5 lg:sticky lg:top-28">
+            {/* Brand badge + stock */}
+            <div className="flex items-center gap-2">
+              <span className="rounded-md bg-ink px-3 py-1.5 text-[11px] font-extrabold tracking-[0.18em] text-cream uppercase">
+                {data.vendor || "ChronoStrap"}
+              </span>
+              {availableForSale ? (
+                <span className="inline-flex items-center gap-1.5 rounded-sm bg-line/40 px-2.5 py-1.5 text-[10px] font-medium tracking-[0.18em] text-ink uppercase">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
+                  In stock
+                </span>
+              ) : (
+                <span className="rounded-sm bg-line/40 px-2.5 py-1.5 text-[10px] font-medium tracking-[0.18em] text-muted uppercase">
+                  Sold out
+                </span>
+              )}
             </div>
 
-            {/* Product Details */}
-            <CardContent className="flex flex-col justify-center space-y-6">
-              <div className="space-y-2">
-                <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{props.data.title}</h1>
-                <p className="leading-relaxed text-muted-foreground">{props.data.description}</p>
-              </div>
+            <h1 className="font-display text-3xl leading-[0.95] uppercase md:text-4xl lg:text-5xl">
+              {titleize(data.title)}
+            </h1>
 
-              <Separator />
+            {/* Highlight pills */}
+            {specs.length > 0 && (
+              <ul className="flex flex-wrap gap-1.5">
+                {specs.slice(0, 4).map((h, i) => (
+                  <li key={i} className="rounded-sm bg-line/40 px-2.5 py-1.5 text-[13px] leading-[14px] text-ink">
+                    <span className="text-muted">{h.label}</span>
+                    <span className="ml-1.5 font-medium">{h.value}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
 
-              <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-bold">
-                  <ProductPrice data={props.data} />
-                </span>
-              </div>
+            {/* Price */}
+            <p className="font-display text-3xl leading-none text-ink lg:text-4xl">
+              <Money data={price} />
+            </p>
 
-              {/* Product Options */}
-              {options.length > 0 && (
-                <div className="space-y-4">
-                  {options.map(({ name, values }) => (
-                    <div key={name} className="space-y-3">
-                      <h3 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">{name}</h3>
-                      <div className="flex flex-wrap gap-2">
-                        {values.map(({ value, selected, disabled }) => (
-                          <Button
-                            key={value}
-                            variant={selected ? "default" : "outline"}
-                            size="sm"
-                            disabled={disabled}
-                            onClick={() => selectOption(name, value)}
-                            className="min-w-[60px]"
-                          >
-                            {value}
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
+            <div className="h-px w-full bg-line" />
+
+            {/* Color swatches — only render when there's a real choice to make */}
+            {colorOption && colorOption.values.length > 1 && (
+              <div className="flex flex-col gap-3">
+                <p className="text-[11px] font-extrabold tracking-[0.18em] text-muted uppercase">
+                  Color · <span className="text-ink">{colorOption.values.find((v) => v.selected)?.value}</span>
+                </p>
+                <div className="flex flex-wrap gap-2.5">
+                  {colorOption.values.map(({ value, selected, disabled }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      disabled={disabled}
+                      onClick={() => selectOption(colorOption.name, value)}
+                      aria-label={value}
+                      title={value}
+                      className={`relative h-9 w-9 rounded-full border-2 transition-all ${
+                        selected ? "scale-110 border-ink" : "border-line opacity-80 hover:border-ink/40 hover:opacity-100"
+                      } disabled:cursor-not-allowed disabled:opacity-30`}
+                      style={{ backgroundColor: nameToHex(value) }}
+                    >
+                      {selected && <span className="absolute -inset-1 rounded-full border border-ink/30" />}
+                    </button>
                   ))}
                 </div>
-              )}
+              </div>
+            )}
 
-              <Separator />
+            {/* Other options — same rule: only show when >1 value */}
+            {otherOptions
+              .filter((o) => o.values.length > 1)
+              .map(({ name, values }) => (
+                <div key={name} className="flex flex-col gap-3">
+                  <p className="text-[11px] font-extrabold tracking-[0.18em] text-muted uppercase">
+                    {name} · <span className="text-ink">{values.find((v) => v.selected)?.value}</span>
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {values.map(({ value, selected, disabled }) => (
+                      <button
+                        type="button"
+                        key={value}
+                        disabled={disabled}
+                        onClick={() => selectOption(name, value)}
+                        className={`min-w-[56px] rounded-md border px-4 py-2.5 text-sm font-medium transition-all ${
+                          selected ? "border-ink bg-ink text-cream" : "border-line bg-surface text-ink hover:border-ink"
+                        } disabled:cursor-not-allowed disabled:opacity-40 disabled:line-through`}
+                      >
+                        {value}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
 
-              {/* Add to Cart */}
-              <AddToCartButton
-                variantId={variantId}
-                disabled={!variantId}
-                onClick={() => {
-                  const variant = props.data.variants?.nodes?.find((v) => v?.id === variantId) ?? props.data.variants?.nodes?.[0];
-                  analytics.addToCart({
-                    id: props.data.id,
-                    name: props.data.title,
-                    quantity: 1,
-                    price: variant?.price ? { amount: variant.price.amount, currencyCode: variant.price.currencyCode } : undefined,
-                  });
-                }}
-                className="inline-flex h-11 w-full items-center justify-center rounded-md bg-primary px-8 text-base font-semibold text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
-              >
-                Add to Cart
-              </AddToCartButton>
-            </CardContent>
+            {/* Quantity */}
+            <div className="flex items-center justify-between gap-4">
+              <p className="text-[11px] font-extrabold tracking-[0.18em] text-muted uppercase">Quantity</p>
+              <div className="inline-flex items-center rounded-md border border-line bg-surface">
+                <button
+                  type="button"
+                  onClick={() => setQty((q) => Math.max(1, q - 1))}
+                  disabled={qty <= 1}
+                  aria-label="Decrease quantity"
+                  className="flex h-10 w-10 items-center justify-center text-ink transition-colors hover:bg-line/30 disabled:opacity-30"
+                >
+                  <Minus className="h-3.5 w-3.5" strokeWidth={2} />
+                </button>
+                <span className="w-10 text-center text-sm font-semibold tabular-nums text-ink">{qty}</span>
+                <button
+                  type="button"
+                  onClick={() => setQty((q) => q + 1)}
+                  aria-label="Increase quantity"
+                  className="flex h-10 w-10 items-center justify-center text-ink transition-colors hover:bg-line/30"
+                >
+                  <Plus className="h-3.5 w-3.5" strokeWidth={2} />
+                </button>
+              </div>
+            </div>
+
+            {/* PRIMARY CTA */}
+            <AddToCartButton
+              variantId={variantId}
+              quantity={qty}
+              disabled={!variantId || !availableForSale}
+              onClick={() => {
+                analytics.addToCart({
+                  id: data.id,
+                  name: data.title,
+                  quantity: qty,
+                  price: activeVariant?.priceV2
+                    ? { amount: activeVariant.priceV2.amount, currencyCode: activeVariant.priceV2.currencyCode }
+                    : undefined,
+                });
+              }}
+              className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-md bg-ink p-4 text-[11px] font-extrabold tracking-[0.18em] text-cream uppercase transition-colors hover:bg-pop disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {!availableForSale ? "Sold Out" : "Add to Bag"}
+              {availableForSale && <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} />}
+            </AddToCartButton>
+
+            {/* Secondary — full-width outlined */}
+            <button
+              type="button"
+              className="inline-flex h-12 w-full items-center justify-between gap-2 rounded-md border border-line bg-surface px-4 text-[11px] font-extrabold tracking-[0.18em] text-ink uppercase transition-colors hover:border-ink"
+            >
+              <span>Find it in store</span>
+              <Store className="h-4 w-4" strokeWidth={1.5} />
+            </button>
+
+            {/* Sibling carousel */}
+            {siblings.length > 0 && (
+              <SiblingCarousel siblings={siblings} currentHandle={data.handle ?? ""} />
+            )}
+
+            {/* Trust strip */}
+            <ul className="grid grid-cols-1 gap-3 border-t border-line pt-5 sm:grid-cols-3">
+              <Trust Icon={Truck} label="Free shipping" sub="Over $150" />
+              <Trust Icon={RotateCcw} label="30-day returns" sub="No hassle" />
+              <Trust Icon={Shield} label="2-year warranty" sub="Worldwide" />
+            </ul>
           </div>
-        </Card>
+        </aside>
       </section>
+
+      {/* ─── BOTTOM TABS — Description / Features / Specifications ─── */}
+      <section className="mt-12 border-t border-line bg-cream/50 lg:mt-16">
+        <div className="mx-auto max-w-[900px] px-6 py-12 lg:px-10 lg:py-16">
+          <nav className="flex items-center justify-center gap-8 border-b border-line lg:gap-12">
+            <TabButton active={tab === "description"} onClick={() => setTab("description")}>
+              Description
+            </TabButton>
+            <TabButton active={tab === "features"} onClick={() => setTab("features")}>
+              Features
+            </TabButton>
+            <TabButton active={tab === "specifications"} onClick={() => setTab("specifications")}>
+              Specifications
+            </TabButton>
+          </nav>
+
+          <div className="pt-10">
+            {tab === "description" && (
+              <div className="prose prose-sm max-w-none text-ink/85">
+                <p className="text-[15px] leading-[1.7] whitespace-pre-line text-ink/85">
+                  {data.description || "No description available."}
+                </p>
+              </div>
+            )}
+
+            {tab === "features" && (
+              <ul className="grid grid-cols-1 gap-x-8 gap-y-3 sm:grid-cols-2">
+                {(data.tags ?? [])
+                  .filter((t) => !t.includes(":"))
+                  .map((t, i) => (
+                    <li key={i} className="flex items-start gap-2 text-[14px] text-ink/85">
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-pop" />
+                      {titleize(t.replace(/[-_]/g, " "))}
+                    </li>
+                  ))}
+                {(data.tags ?? []).filter((t) => !t.includes(":")).length === 0 && (
+                  <li className="text-[14px] text-muted">No additional features listed.</li>
+                )}
+              </ul>
+            )}
+
+            {tab === "specifications" && (
+              <dl className="grid grid-cols-1 gap-x-10 sm:grid-cols-2">
+                {specs.map((s, i) => (
+                  <div key={i} className="flex justify-between gap-4 border-b border-line py-3">
+                    <dt className="text-[13px] text-muted">{s.label}</dt>
+                    <dd className="text-[13px] font-medium text-ink">{s.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Mobile sticky CTA */}
+      <MobileStickyCTA
+        title={data.title}
+        price={price}
+        available={availableForSale}
+        variantId={variantId}
+        qty={qty}
+        onAdd={() => {
+          analytics.addToCart({
+            id: data.id,
+            name: data.title,
+            quantity: qty,
+            price: activeVariant?.priceV2
+              ? { amount: activeVariant.priceV2.amount, currencyCode: activeVariant.priceV2.currencyCode }
+              : undefined,
+          });
+        }}
+      />
     </ProductProvider>
   );
+}
+
+// ────────────────────────────────────────────────────────────────────
+
+function TabButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`relative pb-4 text-[15px] font-medium transition-colors ${
+        active ? "text-ink" : "text-muted hover:text-ink"
+      }`}
+    >
+      {children}
+      <span
+        className={`absolute inset-x-0 -bottom-px h-0.5 transition-all ${
+          active ? "bg-ink" : "bg-transparent"
+        }`}
+      />
+    </button>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────
+// GALLERY — thumbnails on the LEFT, edge-to-edge white image
+// ────────────────────────────────────────────────────────────────────
+
+function Gallery({
+  images,
+  active,
+  setActive,
+  main,
+  title,
+}: {
+  images: Props["data"]["images"]["nodes"];
+  active: number;
+  setActive: (i: number) => void;
+  main: Props["data"]["images"]["nodes"][number] | undefined;
+  title: string;
+}) {
+  if (!main) return null;
+
+  return (
+    <div className="flex flex-col gap-3 lg:flex-row lg:gap-4 lg:p-4">
+      {/* Thumbnails — vertical LEFT on desktop, horizontal scroll on mobile */}
+      <div className="order-2 flex shrink-0 gap-2 overflow-x-auto px-4 pb-2 lg:order-1 lg:flex-col lg:gap-2 lg:overflow-visible lg:px-0 lg:pb-0">
+        {images.slice(0, 8).map((img, i) => {
+          const isActive = i === active;
+          return (
+            <button
+              key={img?.id ?? i}
+              type="button"
+              onClick={() => setActive(i)}
+              className={`relative h-16 w-16 shrink-0 overflow-hidden bg-white transition-all ${
+                isActive ? "border-2 border-ink" : "border border-line opacity-70 hover:opacity-100"
+              }`}
+              aria-label={`Show image ${i + 1}`}
+            >
+              <Image
+                src={img!.url as string}
+                alt={img!.altText || `${title} thumbnail ${i + 1}`}
+                fill
+                sizes="64px"
+                className="object-contain p-1"
+              />
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Main image — edge-to-edge */}
+      <div className="group relative order-1 flex-1 overflow-hidden bg-white lg:order-2">
+        <div className="relative aspect-3/2 w-full">
+          <Image
+            src={main.url as string}
+            alt={main.altText || title}
+            fill
+            sizes="(min-width: 1024px) 1000px, 100vw"
+            className="object-contain"
+            priority
+          />
+        </div>
+        {images.length > 1 && (
+          <>
+            <button
+              type="button"
+              aria-label="Previous image"
+              onClick={() => setActive(active === 0 ? images.length - 1 : active - 1)}
+              className="absolute top-1/2 left-3 -translate-y-1/2 rounded-full border border-line bg-white/95 p-2 text-ink shadow-sm transition-all hover:scale-110 lg:opacity-0 lg:group-hover:opacity-100"
+            >
+              <ChevronLeft className="h-4 w-4" strokeWidth={2} />
+            </button>
+            <button
+              type="button"
+              aria-label="Next image"
+              onClick={() => setActive((active + 1) % images.length)}
+              className="absolute top-1/2 right-3 -translate-y-1/2 rounded-full border border-line bg-white/95 p-2 text-ink shadow-sm transition-all hover:scale-110 lg:opacity-0 lg:group-hover:opacity-100"
+            >
+              <ChevronRight className="h-4 w-4" strokeWidth={2} />
+            </button>
+          </>
+        )}
+        {images.length > 1 && (
+          <span className="absolute top-4 right-4 rounded-sm bg-ink/85 px-2 py-1 text-[10px] font-medium tracking-[0.18em] text-cream uppercase backdrop-blur">
+            {active + 1} / {images.length}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────
+
+function SiblingCarousel({
+  siblings,
+  currentHandle,
+}: {
+  siblings: Props["siblings"];
+  currentHandle: string;
+}) {
+  if (!siblings.length) return null;
+
+  return (
+    <div className="flex flex-col gap-3 border-t border-line pt-5">
+      <p className="text-[13px] text-ink">Available in {siblings.length + 1} unique variations.</p>
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        <span
+          className="relative flex h-14 w-14 shrink-0 items-center justify-center border-2 border-ink bg-white"
+          aria-current="true"
+          title="Current"
+        >
+          <span className="text-[9px] font-extrabold tracking-[0.18em] text-ink uppercase">Now</span>
+        </span>
+        {siblings
+          .map((s) =>
+            s?.handle ? (
+              <Link
+                key={s.id}
+                href={`/products/${s.handle}`}
+                title={s.title}
+                className="relative h-14 w-14 shrink-0 overflow-hidden border border-line bg-white opacity-80 transition-all hover:border-ink hover:opacity-100"
+              >
+                {s.featuredImage?.url && (
+                  <Image
+                    src={s.featuredImage.url as string}
+                    alt={s.featuredImage.altText || s.title}
+                    fill
+                    sizes="56px"
+                    className="object-contain p-0.5"
+                  />
+                )}
+              </Link>
+            ) : null,
+          )
+          .filter(Boolean)}
+      </div>
+      {currentHandle && <span className="sr-only">Currently viewing {currentHandle}</span>}
+    </div>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────
+
+function Trust({ Icon, label, sub }: { Icon: typeof Truck; label: string; sub: string }) {
+  return (
+    <li className="flex items-start gap-2">
+      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-ink" strokeWidth={1.5} />
+      <div className="flex flex-col leading-tight">
+        <span className="text-[12px] font-semibold text-ink">{label}</span>
+        <span className="text-[11px] text-muted">{sub}</span>
+      </div>
+    </li>
+  );
+}
+
+function MobileStickyCTA({
+  title,
+  price,
+  available,
+  variantId,
+  qty,
+  onAdd,
+}: {
+  title: string;
+  price: { amount: string | number; currencyCode: string };
+  available: boolean;
+  variantId?: string;
+  qty: number;
+  onAdd: () => void;
+}) {
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setShow(window.scrollY > 600);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  return (
+    <div
+      className={`fixed inset-x-0 bottom-0 z-40 border-t border-line bg-cream p-3 transition-transform duration-300 lg:hidden ${
+        show ? "translate-y-0" : "translate-y-full"
+      }`}
+    >
+      <div className="flex items-center gap-3">
+        <div className="flex min-w-0 flex-1 flex-col leading-tight">
+          <span className="truncate text-[11px] font-extrabold tracking-[0.18em] text-muted uppercase">
+            {titleize(title)}
+          </span>
+          <span className="font-display text-lg text-ink">
+            <Money data={price} />
+          </span>
+        </div>
+        <AddToCartButton
+          variantId={variantId}
+          quantity={qty}
+          disabled={!variantId || !available}
+          onClick={onAdd}
+          className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-ink px-6 text-[11px] font-extrabold tracking-[0.18em] text-cream uppercase transition-colors hover:bg-pop disabled:opacity-50"
+        >
+          {available ? "Add to Bag" : "Sold Out"}
+          {available && <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} />}
+        </AddToCartButton>
+      </div>
+    </div>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────
+
+function buildSpecs(data: Props["data"]): { label: string; value: string }[] {
+  const out: { label: string; value: string }[] = [];
+  const tags = data.tags ?? [];
+  for (const tag of tags) {
+    const idx = tag.indexOf(":");
+    if (idx <= 0) continue;
+    const key = tag.slice(0, idx).trim();
+    const value = tag.slice(idx + 1).trim();
+    const lookup: Record<string, string> = {
+      material: "Material",
+      "case-material": "Case Material",
+      "case-size": "Case size",
+      diameter: "Diameter",
+      waterproof: "Water resistant",
+      water: "Water resistant",
+      movement: "Movement",
+      crystal: "Crystal",
+      strap: "Strap",
+      origin: "Origin",
+    };
+    const label = lookup[key.toLowerCase()] ?? titleize(key.replace(/[-_]/g, " "));
+    out.push({ label, value });
+  }
+  if (out.length === 0) {
+    out.push(
+      { label: "Case Material", value: "Bioceramic" },
+      { label: "Movement", value: "Mechanical" },
+      { label: "Water resistant", value: "2 Bar" },
+    );
+  }
+  return out;
+}
+
+function nameToHex(name: string): string {
+  const n = name.toLowerCase();
+  const map: Record<string, string> = {
+    black: "#0a0a0a",
+    "stealth black": "#0a0a0a",
+    white: "#f4efe6",
+    "arctic white": "#f4efe6",
+    cream: "#f4efe6",
+    ivory: "#f4efe6",
+    grey: "#6c6a63",
+    gray: "#6c6a63",
+    silver: "#cfcfcf",
+    pink: "#f15bb5",
+    rose: "#f15bb5",
+    "pink pop": "#f15bb5",
+    purple: "#7a3aff",
+    "royal purple": "#7a3aff",
+    violet: "#7a3aff",
+    red: "#cd3c30",
+    wine: "#941843",
+    bordeaux: "#941843",
+    orange: "#ff7a1a",
+    "orenji hachi": "#ff7a1a",
+    "hyper yellow": "#fde047",
+    yellow: "#fde047",
+    "yellow sky": "#fde047",
+    teal: "#0fa3a3",
+    green: "#10b981",
+    vert: "#10b981",
+    blue: "#3b82f6",
+    "sky blue": "#9bd0e8",
+    "royal blue": "#1f4ea8",
+  };
+  return map[n] ?? "#cfcfcf";
 }

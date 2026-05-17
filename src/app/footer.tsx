@@ -6,31 +6,61 @@ const columns: { title: string; links: { text: string; href: string }[] }[] = [
   {
     title: "Shop",
     links: [
-      { text: "All Watches", href: "/products" },
-      { text: "Custom Strap", href: "/custom-strap" },
-      { text: "Limited", href: "/products?tag=limited" },
-      { text: "Archive", href: "/archive" },
+      { text: "All watches", href: "/products" },
+      { text: "Custom strap", href: "/custom-strap" },
+      { text: "Cart", href: "/cart" },
     ],
   },
   {
     title: "Maison",
     links: [
       { text: "Manifesto", href: "/about" },
-      { text: "Journal", href: "/journal" },
-      { text: "Stores", href: "/stores" },
-      { text: "Press", href: "/press" },
+      { text: "Press", href: "mailto:press@chronostrap.com" },
     ],
   },
   {
     title: "Care",
     links: [
-      { text: "Contact", href: "/contact" },
       { text: "Shipping", href: "/shipping" },
       { text: "Returns", href: "/returns" },
       { text: "Warranty", href: "/warranty" },
+      { text: "Contact", href: "/contact" },
+    ],
+  },
+  {
+    title: "Legal",
+    links: [
+      { text: "Privacy", href: "/privacy" },
+      { text: "Terms", href: "/terms" },
+      { text: "Cookies", href: "/cookies" },
+      { text: "Legal notice", href: "/legal" },
     ],
   },
 ];
+
+function FooterLink({ text, href }: { text: string; href: string }) {
+  const isMailto = href.startsWith("mailto:");
+  const isExternal = href.startsWith("http://") || href.startsWith("https://");
+
+  const className =
+    "group inline-flex items-center gap-2 text-sm text-ink/70 transition-colors hover:text-ink";
+
+  if (isMailto || isExternal) {
+    return (
+      <a href={href} className={className} {...(isExternal ? { target: "_blank", rel: "noreferrer" } : {})}>
+        <span className="h-px w-0 bg-pop transition-all duration-300 group-hover:w-3" />
+        {text}
+      </a>
+    );
+  }
+
+  return (
+    <Link href={href} className={className}>
+      <span className="h-px w-0 bg-pop transition-all duration-300 group-hover:w-3" />
+      {text}
+    </Link>
+  );
+}
 
 export function Footer() {
   return (
@@ -54,20 +84,14 @@ export function Footer() {
             <NewsletterForm source="footer" />
           </div>
 
-          <div className="grid grid-cols-2 gap-10 sm:grid-cols-3 lg:col-span-6">
+          <div className="grid grid-cols-2 gap-10 sm:grid-cols-2 lg:col-span-6 lg:grid-cols-4">
             {columns.map((col) => (
               <div key={col.title}>
                 <h3 className="mb-6 text-[10px] font-medium tracking-[0.3em] text-ink/40 uppercase">{col.title}</h3>
                 <ul className="space-y-3.5">
                   {col.links.map((link) => (
-                    <li key={link.href}>
-                      <Link
-                        href={link.href}
-                        className="group inline-flex items-center gap-2 text-sm text-ink/70 transition-colors hover:text-ink"
-                      >
-                        <span className="h-px w-0 bg-pop transition-all duration-300 group-hover:w-3" />
-                        {link.text}
-                      </Link>
+                    <li key={`${col.title}-${link.href}-${link.text}`}>
+                      <FooterLink text={link.text} href={link.href} />
                     </li>
                   ))}
                 </ul>
@@ -78,11 +102,7 @@ export function Footer() {
 
         {/* MIDDLE — big logo wordmark */}
         <div className="mt-24 mb-10 flex items-center justify-center border-y border-ink/10 py-12 lg:py-16">
-          <img
-            src="/logo.png"
-            alt="ChronoStrap"
-            className="h-20 w-auto brightness-0 lg:h-32"
-          />
+          <img src="/logo.png" alt="ChronoStrap" className="h-20 w-auto brightness-0 lg:h-32" />
         </div>
 
         {/* BOTTOM — meta */}
@@ -110,9 +130,7 @@ export function Footer() {
               <Youtube className="h-4 w-4" strokeWidth={1.75} />
             </a>
           </div>
-          <p className="text-[10px] font-medium tracking-[0.3em] text-ink/50 uppercase">
-            Paris · Geneva · Tokyo
-          </p>
+          <p className="text-[10px] font-medium tracking-[0.3em] text-ink/50 uppercase">Paris · Geneva · Tokyo</p>
         </div>
       </div>
     </footer>

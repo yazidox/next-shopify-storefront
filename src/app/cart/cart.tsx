@@ -13,7 +13,6 @@ import {
   Money,
   useCart,
 } from "@shopify/hydrogen-react";
-import { analytics } from "@/lib/analytics";
 
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@esmate/shadcn/components/ui/card";
 import { Button } from "@esmate/shadcn/components/ui/button";
@@ -64,6 +63,21 @@ export function Cart() {
                         </Badge>
                       ))}
                     </div>
+
+                    {Boolean(line?.attributes?.length) && (
+                      <dl className="mt-3 grid gap-1.5 rounded-md border border-ink/10 bg-cream/40 p-3 text-xs">
+                        {line?.attributes
+                          ?.filter((attribute): attribute is NonNullable<typeof attribute> =>
+                            Boolean(attribute?.key && attribute?.value),
+                          )
+                          .map((attribute) => (
+                            <div key={attribute.key} className="flex justify-between gap-4">
+                              <dt className="font-medium text-muted-foreground">{attribute.key}</dt>
+                              <dd className="text-right font-semibold text-ink">{attribute.value}</dd>
+                            </div>
+                          ))}
+                      </dl>
+                    )}
                   </div>
 
                   <div className="flex items-center justify-between text-sm">
@@ -98,18 +112,6 @@ export function Cart() {
 
           <CartCheckoutButton
             disabled={isCartEmpty}
-            onClick={() => {
-              analytics.initiateCheckout({
-                ids: (cart.lines ?? []).map((l) => l?.merchandise?.product?.id ?? "").filter(Boolean),
-                quantity: cart.totalQuantity ?? 0,
-                subtotal: cart.cost?.subtotalAmount
-                  ? {
-                      amount: cart.cost.subtotalAmount.amount,
-                      currencyCode: cart.cost.subtotalAmount.currencyCode,
-                    }
-                  : undefined,
-              });
-            }}
             className="inline-flex h-11 w-full items-center justify-center rounded-md bg-primary text-sm font-medium text-primary-foreground hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
           >
             Checkout

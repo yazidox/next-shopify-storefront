@@ -31,7 +31,19 @@ type Option = {
 type Options = Option[];
 
 export function useVariantSelector(product: Product) {
-  const [selections, setSelections] = useState<Record<string, string>>({});
+  // Initialise with the first available variant's options pre-selected so the page lands
+  // with a valid variantId — no extra click required to enable Add to Bag.
+  const [selections, setSelections] = useState<Record<string, string>>(() => {
+    const initial: Record<string, string> = {};
+    const defaultVariant =
+      product.variants.nodes.find((v) => v.availableForSale) ?? product.variants.nodes[0];
+    if (defaultVariant) {
+      for (const opt of defaultVariant.selectedOptions) {
+        initial[opt.name] = opt.value;
+      }
+    }
+    return initial;
+  });
 
   const options = useMemo(() => {
     const computedOptions: Options = [];

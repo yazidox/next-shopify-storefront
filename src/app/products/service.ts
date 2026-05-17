@@ -12,8 +12,10 @@ export async function getProductList(cursor?: string) {
         edges {
           cursor
           node {
+            id
             handle
             title
+            productType
             priceRange {
               minVariantPrice {
                 amount
@@ -21,10 +23,15 @@ export async function getProductList(cursor?: string) {
               }
             }
             featuredImage {
-              url(transform: { maxWidth: 500 })
+              url(transform: { maxWidth: 900 })
               altText
               width
               height
+            }
+            variants(first: 1) {
+              nodes {
+                id
+              }
             }
           }
         }

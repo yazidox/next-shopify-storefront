@@ -11,7 +11,6 @@ const mainMenuItems: { text: string; href: string }[] = [
   { text: "Collection", href: "/products" },
   { text: "Custom Strap", href: "/custom-strap" },
   { text: "Maison", href: "/about" },
-  { text: "Journal", href: "/journal" },
 ];
 
 export function Header() {

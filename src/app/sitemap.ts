@@ -7,8 +7,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/`, lastModified: now, changeFrequency: "weekly", priority: 1 },
     { url: `${base}/products`, lastModified: now, changeFrequency: "daily", priority: 0.9 },
     { url: `${base}/custom-strap`, lastModified: now, changeFrequency: "weekly", priority: 0.95 },
+    { url: `${base}/cart`, lastModified: now, changeFrequency: "monthly", priority: 0.5 },
     { url: `${base}/about`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
-    { url: `${base}/journal`, lastModified: now, changeFrequency: "weekly", priority: 0.5 },
     { url: `${base}/contact`, lastModified: now, changeFrequency: "yearly", priority: 0.4 },
+    { url: `${base}/shipping`, lastModified: now, changeFrequency: "yearly", priority: 0.4 },
+    { url: `${base}/returns`, lastModified: now, changeFrequency: "yearly", priority: 0.4 },
+    { url: `${base}/warranty`, lastModified: now, changeFrequency: "yearly", priority: 0.4 },
+    { url: `${base}/privacy`, lastModified: now, changeFrequency: "yearly", priority: 0.35 },
+    { url: `${base}/terms`, lastModified: now, changeFrequency: "yearly", priority: 0.35 },
+    { url: `${base}/cookies`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
+    { url: `${base}/legal`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
   ];
 }

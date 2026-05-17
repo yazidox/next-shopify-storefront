@@ -10329,12 +10329,20 @@ export enum WeightUnit {
   Pounds = 'POUNDS'
 }
 
+export type SiblingProductsQueryVariables = Exact<{
+  first: Scalars['Int']['input'];
+  query?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type SiblingProductsQuery = { __typename?: 'QueryRoot', products: { __typename?: 'ProductConnection', nodes: Array<{ __typename?: 'Product', id: string, handle: string, title: string, productType: string, featuredImage?: { __typename?: 'Image', url: any, altText?: string | null } | null }> } };
+
 export type ProductSingleQueryVariables = Exact<{
   handle: Scalars['String']['input'];
 }>;
 
 
-export type ProductSingleQuery = { __typename?: 'QueryRoot', product?: { __typename?: 'Product', title: string, description: string, seo: { __typename?: 'SEO', title?: string | null, description?: string | null }, priceRange: { __typename?: 'ProductPriceRange', minVariantPrice: { __typename?: 'MoneyV2', amount: any, currencyCode: CurrencyCode } }, images: { __typename?: 'ImageConnection', nodes: Array<{ __typename?: 'Image', id?: string | null, url: any, altText?: string | null, width?: number | null, height?: number | null }> }, options: Array<{ __typename?: 'ProductOption', id: string, name: string, values: Array<string> }>, variants: { __typename?: 'ProductVariantConnection', nodes: Array<{ __typename?: 'ProductVariant', id: string, availableForSale: boolean, priceV2: { __typename?: 'MoneyV2', amount: any, currencyCode: CurrencyCode }, selectedOptions: Array<{ __typename?: 'SelectedOption', name: string, value: string }>, image?: { __typename?: 'Image', id?: string | null } | null }> } } | null };
+export type ProductSingleQuery = { __typename?: 'QueryRoot', product?: { __typename?: 'Product', id: string, title: string, description: string, productType: string, vendor: string, tags: Array<string>, seo: { __typename?: 'SEO', title?: string | null, description?: string | null }, priceRange: { __typename?: 'ProductPriceRange', minVariantPrice: { __typename?: 'MoneyV2', amount: any, currencyCode: CurrencyCode } }, images: { __typename?: 'ImageConnection', nodes: Array<{ __typename?: 'Image', id?: string | null, url: any, altText?: string | null, width?: number | null, height?: number | null }> }, options: Array<{ __typename?: 'ProductOption', id: string, name: string, values: Array<string> }>, variants: { __typename?: 'ProductVariantConnection', nodes: Array<{ __typename?: 'ProductVariant', id: string, availableForSale: boolean, priceV2: { __typename?: 'MoneyV2', amount: any, currencyCode: CurrencyCode }, selectedOptions: Array<{ __typename?: 'SelectedOption', name: string, value: string }>, image?: { __typename?: 'Image', id?: string | null } | null }> } } | null };
 
 export type ProductListQueryVariables = Exact<{
   first: Scalars['Int']['input'];
@@ -10342,7 +10350,7 @@ export type ProductListQueryVariables = Exact<{
 }>;
 
 
-export type ProductListQuery = { __typename?: 'QueryRoot', products: { __typename?: 'ProductConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean }, edges: Array<{ __typename?: 'ProductEdge', cursor: string, node: { __typename?: 'Product', handle: string, title: string, priceRange: { __typename?: 'ProductPriceRange', minVariantPrice: { __typename?: 'MoneyV2', amount: any, currencyCode: CurrencyCode } }, featuredImage?: { __typename?: 'Image', url: any, altText?: string | null, width?: number | null, height?: number | null } | null } }> } };
+export type ProductListQuery = { __typename?: 'QueryRoot', products: { __typename?: 'ProductConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean }, edges: Array<{ __typename?: 'ProductEdge', cursor: string, node: { __typename?: 'Product', id: string, handle: string, title: string, productType: string, priceRange: { __typename?: 'ProductPriceRange', minVariantPrice: { __typename?: 'MoneyV2', amount: any, currencyCode: CurrencyCode } }, featuredImage?: { __typename?: 'Image', url: any, altText?: string | null, width?: number | null, height?: number | null } | null, variants: { __typename?: 'ProductVariantConnection', nodes: Array<{ __typename?: 'ProductVariant', id: string }> } } }> } };
 
 export class TypedDocumentString<TResult, TVariables>
   extends String
@@ -10363,11 +10371,31 @@ export class TypedDocumentString<TResult, TVariables>
   }
 }
 
+export const SiblingProductsDocument = new TypedDocumentString(`
+    query SiblingProducts($first: Int!, $query: String) {
+  products(first: $first, query: $query) {
+    nodes {
+      id
+      handle
+      title
+      productType
+      featuredImage {
+        url(transform: {maxWidth: 200})
+        altText
+      }
+    }
+  }
+}
+    `) as unknown as TypedDocumentString<SiblingProductsQuery, SiblingProductsQueryVariables>;
 export const ProductSingleDocument = new TypedDocumentString(`
     query ProductSingle($handle: String!) {
   product(handle: $handle) {
+    id
     title
-    description(truncateAt: 256)
+    description(truncateAt: 600)
+    productType
+    vendor
+    tags
     seo {
       title
       description
@@ -10381,7 +10409,7 @@ export const ProductSingleDocument = new TypedDocumentString(`
     images(first: 250) {
       nodes {
         id
-        url(transform: {maxHeight: 600})
+        url(transform: {maxHeight: 1200})
         altText
         width
         height
@@ -10421,8 +10449,10 @@ export const ProductListDocument = new TypedDocumentString(`
     edges {
       cursor
       node {
+        id
         handle
         title
+        productType
         priceRange {
           minVariantPrice {
             amount
@@ -10430,10 +10460,15 @@ export const ProductListDocument = new TypedDocumentString(`
           }
         }
         featuredImage {
-          url(transform: {maxWidth: 500})
+          url(transform: {maxWidth: 900})
           altText
           width
           height
+        }
+        variants(first: 1) {
+          nodes {
+            id
+          }
         }
       }
     }
