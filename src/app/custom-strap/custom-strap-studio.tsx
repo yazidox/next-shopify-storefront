@@ -116,14 +116,214 @@ const DEFAULT_CAMERA_VIEW = {
   target: { x: 0, y: 0.45, z: 0 },
 };
 
+const CUSTOM_TEXTURE_MODEL_ID: HeroTextureStyle = "hero-yellow";
+
+const INITIALS_PLACEMENTS: Record<HeroTextureStyle, InitialsPlacementSnapshot> = {
+  "hero-pink": {
+    model: {
+      id: "hero-pink",
+      src: "/wristwatch.opt.glb",
+    },
+    mesh: {
+      name: "tripo_node_d87b70e4-0b56-478c-a0bb-4a2197301324",
+    },
+    mark: {
+      text: "CS",
+      color: "#941843",
+    },
+    position: {
+      x: 0.5214,
+      y: 0.9009,
+      z: 0.0119,
+    },
+    normal: {
+      x: 0.8,
+      y: -0.6,
+      z: -0.0096,
+    },
+    rotation: {
+      x: 1.5868,
+      y: 0.9272,
+      z: -1.5908,
+    },
+    size: {
+      x: 0.2,
+      y: 0.105,
+      z: 0.085,
+    },
+  },
+  "hero-white": {
+    model: {
+      id: "hero-white",
+      src: "/huit-blanc.opt.glb",
+    },
+    mesh: {
+      name: "tripo_node_4ff0f721-99b9-4eef-9224-691b4eb4f00a",
+    },
+    mark: {
+      text: "CS",
+      color: "#e5e2e5",
+    },
+    position: {
+      x: 0.5814,
+      y: 0.8799,
+      z: 0.0173,
+    },
+    normal: {
+      x: 0.7318,
+      y: -0.6814,
+      z: 0.0124,
+    },
+    rotation: {
+      x: 1.5527,
+      y: 0.821,
+      z: -1.546,
+    },
+    size: {
+      x: 0.2,
+      y: 0.105,
+      z: 0.085,
+    },
+  },
+  "hero-orange": {
+    model: {
+      id: "hero-orange",
+      src: "/orenji-hachi.opt.glb",
+    },
+    mesh: {
+      name: "tripo_node_8f68349c-c1b1-4ec0-bbf8-71d874f6077c",
+    },
+    mark: {
+      text: "CS",
+      color: "#cd3c30",
+    },
+    position: {
+      x: 0.6237,
+      y: 0.8967,
+      z: 0.0204,
+    },
+    normal: {
+      x: 0.7522,
+      y: -0.6589,
+      z: -0.0041,
+    },
+    rotation: {
+      x: 1.577,
+      y: 0.8514,
+      z: -1.5791,
+    },
+    size: {
+      x: 0.2,
+      y: 0.105,
+      z: 0.085,
+    },
+  },
+  "hero-black": {
+    model: {
+      id: "hero-black",
+      src: "/black.opt.glb",
+    },
+    mesh: {
+      name: "tripo_node_63088077-1cbd-45c8-b7a9-2c73885959d4",
+    },
+    mark: {
+      text: "CS",
+      color: "#ffffff",
+    },
+    position: {
+      x: 0.558,
+      y: 0.8733,
+      z: 0.0191,
+    },
+    normal: {
+      x: 0.8229,
+      y: -0.5682,
+      z: 0,
+    },
+    rotation: {
+      x: 1.5708,
+      y: 0.9665,
+      z: -1.5708,
+    },
+    size: {
+      x: 0.2,
+      y: 0.105,
+      z: 0.085,
+    },
+  },
+  "hero-green": {
+    model: {
+      id: "hero-green",
+      src: "/green.opt.glb",
+    },
+    mesh: {
+      name: "tripo_node_da36bf1e-766b-451a-92e3-019e5886a652",
+    },
+    mark: {
+      text: "CS",
+      color: "#ecf0c2",
+    },
+    position: {
+      x: 0.6951,
+      y: 1.0824,
+      z: 0.0024,
+    },
+    normal: {
+      x: 0.971,
+      y: -0.2387,
+      z: 0.0099,
+    },
+    rotation: {
+      x: 1.5292,
+      y: 1.3296,
+      z: -1.528,
+    },
+    size: {
+      x: 0.2,
+      y: 0.105,
+      z: 0.085,
+    },
+  },
+  "hero-yellow": {
+    model: {
+      id: "hero-yellow",
+      src: "/yellow-sky.opt.glb",
+    },
+    mesh: {
+      name: "tripo_node_bbed0092-3315-44aa-8167-0ac233dbf967",
+    },
+    mark: {
+      text: "CS",
+      color: "#dae8ea",
+    },
+    position: {
+      x: 0.6197,
+      y: 0.9143,
+      z: 0.021,
+    },
+    normal: {
+      x: 0.818,
+      y: -0.5751,
+      z: 0.0128,
+    },
+    rotation: {
+      x: 1.5486,
+      y: 0.9579,
+      z: -1.5436,
+    },
+    size: {
+      x: 0.2,
+      y: 0.105,
+      z: 0.085,
+    },
+  },
+};
+
 export function CustomStrapStudio() {
   const [config, setConfig] = useState<StrapConfig>(INITIAL_CONFIG);
   const [uploadName, setUploadName] = useState("");
   const [modelStatus, setModelStatus] = useState<"loading" | "ready" | "error">("loading");
-  const [placementMode, setPlacementMode] = useState(false);
   const [initialsPlaced, setInitialsPlaced] = useState(false);
-  const [placementSnapshot, setPlacementSnapshot] = useState<InitialsPlacementSnapshot | null>(null);
-  const [copiedPlacement, setCopiedPlacement] = useState(false);
   const [debug, setDebug] = useState(false);
   const [debugSnapshot, setDebugSnapshot] = useState<StudioView | null>(null);
   const [copiedDebug, setCopiedDebug] = useState(false);
@@ -132,7 +332,7 @@ export function CustomStrapStudio() {
   const sceneRef = useRef<SceneParts | null>(null);
   const configRef = useRef(INITIAL_CONFIG);
   const debugRef = useRef(false);
-  const placementModeRef = useRef(false);
+  const initialsPlacedRef = useRef(false);
   const initialsPlacementRef = useRef<InitialsPlacement | null>(null);
 
   const selectedModel = useMemo(
@@ -159,13 +359,8 @@ export function CustomStrapStudio() {
   }, [debug]);
 
   useEffect(() => {
-    placementModeRef.current = placementMode;
-    const parts = sceneRef.current;
-    if (!parts) return;
-
-    parts.controls.enabled = !placementMode;
-    parts.controls.update();
-  }, [placementMode]);
+    initialsPlacedRef.current = initialsPlaced;
+  }, [initialsPlaced]);
 
   useEffect(() => {
     const parts = sceneRef.current;
@@ -174,14 +369,12 @@ export function CustomStrapStudio() {
 
     if (!config.emboss.trim()) {
       clearInitialsDecal(parts);
+      initialsPlacedRef.current = false;
       setInitialsPlaced(false);
-      setPlacementSnapshot(null);
-      setCopiedPlacement(false);
       return;
     }
 
     applyInitialsDecal(parts, placement, config.emboss, config.accentColor);
-    setPlacementSnapshot(createPlacementSnapshot(placement, config));
     setInitialsPlaced(true);
   }, [config.accentColor, config.emboss]);
 
@@ -274,28 +467,6 @@ export function CustomStrapStudio() {
     const resizeObserver = new ResizeObserver(resize);
     resizeObserver.observe(mount);
 
-    const handlePointerDown = (event: PointerEvent) => {
-      if (!placementModeRef.current) return;
-
-      const activeParts = sceneRef.current;
-      if (!activeParts || !configRef.current.emboss.trim()) return;
-
-      event.preventDefault();
-      event.stopPropagation();
-
-      const hit = findModelHit(activeParts, event);
-      if (!hit) return;
-
-      const placement = createInitialsPlacement(hit, configRef.current.emboss);
-      initialsPlacementRef.current = placement;
-      applyInitialsDecal(activeParts, placement, configRef.current.emboss, configRef.current.accentColor);
-      setPlacementSnapshot(createPlacementSnapshot(placement, configRef.current));
-      setInitialsPlaced(true);
-      setPlacementMode(false);
-    };
-
-    renderer.domElement.addEventListener("pointerdown", handlePointerDown);
-
     let raf = 0;
     const animate = () => {
       raf = requestAnimationFrame(animate);
@@ -306,7 +477,6 @@ export function CustomStrapStudio() {
 
     return () => {
       cancelAnimationFrame(raf);
-      renderer.domElement.removeEventListener("pointerdown", handlePointerDown);
       resizeObserver.disconnect();
       clearGroup(modelRoot);
       clearInitialsDecal(sceneRef.current);
@@ -337,12 +507,10 @@ export function CustomStrapStudio() {
           return;
         }
 
+        const shouldRestoreInitials = initialsPlacedRef.current;
         clearInitialsDecal(parts);
         initialsPlacementRef.current = null;
         setInitialsPlaced(false);
-        setPlacementSnapshot(null);
-        setCopiedPlacement(false);
-        setPlacementMode(false);
         clearGroup(parts.modelRoot);
         parts.modelMaterials = [];
 
@@ -367,6 +535,9 @@ export function CustomStrapStudio() {
         fitModelToStudio(model);
         parts.modelRoot.add(model);
         setModelStatus("ready");
+        if (shouldRestoreInitials) {
+          applySavedInitialsPlacement(parts, configRef.current);
+        }
       },
       undefined,
       (error: unknown) => {
@@ -452,10 +623,8 @@ export function CustomStrapStudio() {
     if (parts) clearInitialsDecal(parts);
 
     initialsPlacementRef.current = null;
+    initialsPlacedRef.current = false;
     setInitialsPlaced(false);
-    setPlacementSnapshot(null);
-    setCopiedPlacement(false);
-    setPlacementMode(false);
     setUploadName("");
     setConfig(INITIAL_CONFIG);
   }
@@ -465,10 +634,29 @@ export function CustomStrapStudio() {
     if (parts) clearInitialsDecal(parts);
 
     initialsPlacementRef.current = null;
+    initialsPlacedRef.current = false;
     setInitialsPlaced(false);
-    setPlacementSnapshot(null);
-    setCopiedPlacement(false);
-    setPlacementMode(false);
+  }
+
+  function addInitialsMark() {
+    const parts = sceneRef.current;
+    if (!parts || modelStatus !== "ready") return;
+    applySavedInitialsPlacement(parts, config);
+  }
+
+  function applySavedInitialsPlacement(activeParts: SceneParts, activeConfig: StrapConfig) {
+    const text = activeConfig.emboss.trim().slice(0, 4);
+    if (!text) return;
+
+    const placementSnapshot = getInitialsPlacementSnapshot(activeConfig);
+    const targetMesh = findInitialsTargetMesh(activeParts, placementSnapshot.mesh.name);
+    if (!targetMesh) return;
+
+    const placement = placementFromSnapshot(placementSnapshot, targetMesh);
+    initialsPlacementRef.current = placement;
+    applyInitialsDecal(activeParts, placement, text, activeConfig.accentColor || placementSnapshot.mark.color);
+    initialsPlacedRef.current = true;
+    setInitialsPlaced(true);
   }
 
   function handleUpload(event: ChangeEvent<HTMLInputElement>) {
@@ -479,7 +667,11 @@ export function CustomStrapStudio() {
     reader.onload = () => {
       if (typeof reader.result !== "string") return;
       setUploadName(file.name);
-      updateConfig({ uploadedTexture: reader.result, textureStyle: "uploaded" });
+      updateConfig({
+        baseHeroStyle: CUSTOM_TEXTURE_MODEL_ID,
+        uploadedTexture: reader.result,
+        textureStyle: "uploaded",
+      });
     };
     reader.readAsDataURL(file);
   }
@@ -490,14 +682,6 @@ export function CustomStrapStudio() {
     await navigator.clipboard.writeText(JSON.stringify(debugSnapshot, null, 2));
     setCopiedDebug(true);
     window.setTimeout(() => setCopiedDebug(false), 1400);
-  }
-
-  async function copyPlacementJson() {
-    if (!placementSnapshot) return;
-
-    await navigator.clipboard.writeText(JSON.stringify(placementSnapshot, null, 2));
-    setCopiedPlacement(true);
-    window.setTimeout(() => setCopiedPlacement(false), 1400);
   }
 
   return (
@@ -512,10 +696,7 @@ export function CustomStrapStudio() {
                 "radial-gradient(70% 55% at 45% 42%, rgba(255,255,255,0.78), rgba(255,255,255,0) 62%), linear-gradient(135deg, #f4efe6 0%, #d8edf1 45%, #f7dd80 100%)",
             }}
           />
-          <div
-            ref={mountRef}
-            className={`absolute inset-y-0 left-0 w-full lg:w-[62%] ${placementMode ? "cursor-crosshair" : ""}`}
-          />
+          <div ref={mountRef} className="absolute inset-y-0 left-0 w-full lg:w-[62%]" />
 
           <div className="pointer-events-none absolute top-24 left-5 max-w-[420px] sm:left-8 lg:top-28 lg:left-12">
             <p className="tracking-luxury text-[10px] font-bold text-ink/55 uppercase">Live customizer</p>
@@ -536,7 +717,6 @@ export function CustomStrapStudio() {
                   : "No mark"
               }
             />
-            {placementMode && <BuildChip label="Click strap" />}
             {debug && <BuildChip label="Debug Camera" />}
           </div>
 
@@ -601,6 +781,7 @@ export function CustomStrapStudio() {
                       texture.id === "uploaded"
                         ? fileInputRef.current?.click()
                         : updateConfig({
+                            baseHeroStyle: CUSTOM_TEXTURE_MODEL_ID,
                             textureStyle: texture.id,
                             baseColor: texture.colors[0],
                             accentColor: texture.colors[1] ?? config.accentColor,
@@ -620,7 +801,9 @@ export function CustomStrapStudio() {
                 <button
                   key={color}
                   type="button"
-                  onClick={() => updateConfig({ baseColor: color, textureStyle: "smooth" })}
+                  onClick={() =>
+                    updateConfig({ baseHeroStyle: CUSTOM_TEXTURE_MODEL_ID, baseColor: color, textureStyle: "smooth" })
+                  }
                   className={`h-10 rounded-full border transition-transform hover:scale-105 ${
                     config.baseColor === color ? "border-ink ring-2 ring-ink/20" : "border-ink/15"
                   }`}
@@ -635,7 +818,9 @@ export function CustomStrapStudio() {
               <ColorInput
                 label="Custom color"
                 value={config.baseColor}
-                onChange={(baseColor) => updateConfig({ baseColor, textureStyle: "smooth" })}
+                onChange={(baseColor) =>
+                  updateConfig({ baseHeroStyle: CUSTOM_TEXTURE_MODEL_ID, baseColor, textureStyle: "smooth" })
+                }
               />
               {uploadName && (
                 <button
@@ -662,11 +847,11 @@ export function CustomStrapStudio() {
             <div className="mt-3 grid grid-cols-[1fr_auto] gap-2">
               <button
                 type="button"
-                onClick={() => setPlacementMode(true)}
+                onClick={addInitialsMark}
                 disabled={!config.emboss.trim() || modelStatus !== "ready"}
                 className="tracking-luxury inline-flex h-12 items-center justify-center rounded-[8px] border border-ink/10 bg-white px-4 text-[10px] font-bold text-ink uppercase transition-colors hover:border-ink/25 disabled:cursor-not-allowed disabled:opacity-40"
               >
-                {placementMode ? "Click Strap" : initialsPlaced ? "Move Mark" : "Place Mark"}
+                {initialsPlaced ? "Refresh Initial" : "Add Initial"}
               </button>
               <button
                 type="button"
@@ -677,23 +862,6 @@ export function CustomStrapStudio() {
                 Clear
               </button>
             </div>
-            {placementSnapshot && (
-              <div className="mt-3 rounded-[8px] border border-ink/10 bg-white p-3">
-                <div className="mb-2 flex items-center justify-between gap-3">
-                  <span className="tracking-luxury text-[10px] font-bold text-ink/45 uppercase">Placement JSON</span>
-                  <button
-                    type="button"
-                    onClick={copyPlacementJson}
-                    className="tracking-luxury rounded-[6px] bg-ink px-3 py-2 text-[9px] font-bold text-cream uppercase transition-colors hover:bg-pop"
-                  >
-                    {copiedPlacement ? "Copied" : "Copy JSON"}
-                  </button>
-                </div>
-                <pre className="max-h-32 overflow-auto rounded-[6px] bg-ink p-3 font-mono text-[10px] leading-relaxed text-cream">
-                  {JSON.stringify(placementSnapshot, null, 2)}
-                </pre>
-              </div>
-            )}
           </ControlGroup>
 
           <div className="sticky bottom-0 mt-8 border-t border-ink/10 bg-cream pt-5 pb-2">
@@ -934,64 +1102,45 @@ function disposeObject(object: any) {
   });
 }
 
-function findModelHit(parts: SceneParts, event: PointerEvent) {
-  const rect = parts.renderer.domElement.getBoundingClientRect();
-  const pointer = new THREE.Vector2(
-    ((event.clientX - rect.left) / rect.width) * 2 - 1,
-    -((event.clientY - rect.top) / rect.height) * 2 + 1,
-  );
-  const raycaster = new THREE.Raycaster();
-  raycaster.setFromCamera(pointer, parts.camera);
+function getInitialsPlacementSnapshot(config: StrapConfig) {
+  const placementId = isHeroTextureStyle(config.textureStyle) ? config.baseHeroStyle : CUSTOM_TEXTURE_MODEL_ID;
+  return INITIALS_PLACEMENTS[placementId];
+}
 
-  const meshes: any[] = [];
+function findInitialsTargetMesh(parts: SceneParts, preferredMeshName: string) {
+  let preferred: any = null;
+  let largest: any = null;
+  let largestVolume = -1;
+
   parts.modelRoot.traverse((object: any) => {
-    if (object.isMesh) meshes.push(object);
+    if (!object.isMesh) return;
+
+    if (object.name === preferredMeshName || object.parent?.name === preferredMeshName) {
+      preferred = object;
+      return;
+    }
+
+    const box = new THREE.Box3().setFromObject(object);
+    const size = new THREE.Vector3();
+    box.getSize(size);
+    const volume = size.x * size.y * size.z;
+    if (volume > largestVolume) {
+      largest = object;
+      largestVolume = volume;
+    }
   });
 
-  return raycaster.intersectObjects(meshes, true)[0];
+  return preferred ?? largest;
 }
 
-function createInitialsPlacement(hit: any, text: string): InitialsPlacement {
-  const normalMatrix = new THREE.Matrix3().getNormalMatrix(hit.object.matrixWorld);
-  const normal = hit.face.normal.clone().applyNormalMatrix(normalMatrix).normalize();
-  const position = hit.point.clone().add(normal.clone().multiplyScalar(0.006));
-
-  const helper = new THREE.Object3D();
-  helper.position.copy(position);
-  helper.lookAt(position.clone().add(normal));
-
-  const initials = text.trim().slice(0, 4);
-  const width = Math.min(0.34, Math.max(0.2, initials.length * 0.085));
-
+function placementFromSnapshot(snapshot: InitialsPlacementSnapshot, mesh: any): InitialsPlacement {
   return {
-    mesh: hit.object,
-    meshName: hit.object.name || hit.object.parent?.name || "unnamed-mesh",
-    position,
-    normal,
-    orientation: helper.rotation.clone(),
-    size: new THREE.Vector3(width, 0.105, 0.085),
-  };
-}
-
-function createPlacementSnapshot(placement: InitialsPlacement, config: StrapConfig): InitialsPlacementSnapshot {
-  const model = HERO_TEXTURE_OPTIONS.find((option) => option.id === config.baseHeroStyle) ?? HERO_TEXTURE_OPTIONS[0];
-
-  return {
-    model: {
-      id: model.id,
-      src: model.src,
-    },
-    mesh: {
-      name: placement.meshName,
-    },
-    mark: {
-      text: config.emboss.trim().slice(0, 4),
-      color: config.accentColor,
-    },
-    position: vectorToObject(placement.position),
-    normal: vectorToObject(placement.normal),
-    rotation: vectorToObject(placement.orientation),
-    size: vectorToObject(placement.size),
+    mesh,
+    meshName: mesh.name || mesh.parent?.name || snapshot.mesh.name,
+    position: new THREE.Vector3(snapshot.position.x, snapshot.position.y, snapshot.position.z),
+    normal: new THREE.Vector3(snapshot.normal.x, snapshot.normal.y, snapshot.normal.z),
+    orientation: new THREE.Euler(snapshot.rotation.x, snapshot.rotation.y, snapshot.rotation.z),
+    size: new THREE.Vector3(snapshot.size.x, snapshot.size.y, snapshot.size.z),
   };
 }
 
