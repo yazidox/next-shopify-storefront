@@ -28,8 +28,12 @@ const MODEL_URLS = [
 
 let started = false;
 
+function shouldSkipModelPrefetch(): boolean {
+  return typeof window !== "undefined" && window.matchMedia("(max-width: 1023px)").matches;
+}
+
 export function prefetchAllModels(): void {
-  if (started || typeof window === "undefined") return;
+  if (started || typeof window === "undefined" || shouldSkipModelPrefetch()) return;
   started = true;
 
   const run = () => {
@@ -43,9 +47,11 @@ export function prefetchAllModels(): void {
     }
   };
 
-  const idle = (window as Window & {
-    requestIdleCallback?: (cb: () => void, opts?: { timeout?: number }) => number;
-  }).requestIdleCallback;
+  const idle = (
+    window as Window & {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout?: number }) => number;
+    }
+  ).requestIdleCallback;
   if (typeof idle === "function") {
     idle(run, { timeout: 3000 });
   } else {

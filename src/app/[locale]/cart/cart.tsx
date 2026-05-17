@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import {
   CartCheckoutButton,
@@ -27,6 +27,7 @@ import {
   X,
 } from "@esmate/shadcn/pkgs/lucide-react";
 import { titleize } from "@esmate/utils/string";
+import { Link } from "@/i18n/navigation";
 
 const STRAP_HANDLE = "chronostrap-custom-strap";
 const CART_ID_STORAGE_KEY = "shopifyCartId";
@@ -152,6 +153,7 @@ async function repairCart(cart: CartLike, shop: ShopLike) {
 }
 
 export function Cart() {
+  const t = useTranslations("Cart");
   const cart = useCart();
   const shop = useShop();
   const lines = cart.lines ?? [];
@@ -193,15 +195,15 @@ export function Cart() {
       <header className="mb-8 flex items-end justify-between gap-6 border-b border-line pb-6 lg:mb-12 lg:pb-8">
         <div className="flex flex-col gap-3">
           <span className="text-[11px] font-extrabold tracking-[0.18em] text-muted uppercase">
-            {itemCount} {itemCount === 1 ? "item" : "items"}
+            {itemCount} {itemCount === 1 ? t("item") : t("items")}
           </span>
-          <h1 className="font-display text-3xl leading-[0.95] uppercase md:text-4xl lg:text-5xl">Your Bag</h1>
+          <h1 className="font-display text-3xl leading-[0.95] uppercase md:text-4xl lg:text-5xl">{t("title")}</h1>
         </div>
         <Link
           href="/products"
           className="hidden text-[11px] font-extrabold tracking-[0.18em] text-muted uppercase transition-colors hover:text-ink sm:inline-flex sm:items-center sm:gap-2"
         >
-          ← Continue shopping
+          ← {t("continueShopping")}
         </Link>
       </header>
 
@@ -222,29 +224,29 @@ export function Cart() {
         {/* ─── SUMMARY ──────────────────────────────── */}
         <aside>
           <div className="flex flex-col gap-6 rounded-md border border-line bg-cream p-6 lg:sticky lg:top-28 lg:p-8">
-            <h2 className="text-[11px] font-extrabold tracking-[0.18em] text-muted uppercase">Order Summary</h2>
+            <h2 className="text-[11px] font-extrabold tracking-[0.18em] text-muted uppercase">{t("orderSummary")}</h2>
 
             <dl className="flex flex-col gap-3 text-[14px]">
               <div className="flex items-baseline justify-between">
-                <dt className="text-muted">Subtotal</dt>
+                <dt className="text-muted">{t("subtotal")}</dt>
                 <dd className="font-medium text-ink">
                   <CartCost amountType="subtotal" />
                 </dd>
               </div>
               <div className="flex items-baseline justify-between">
-                <dt className="text-muted">Shipping</dt>
-                <dd className="font-medium text-ink">Calculated at checkout</dd>
+                <dt className="text-muted">{t("shipping")}</dt>
+                <dd className="font-medium text-ink">{t("shippingValue")}</dd>
               </div>
               <div className="flex items-baseline justify-between">
-                <dt className="text-muted">Taxes</dt>
-                <dd className="font-medium text-ink">Included where applicable</dd>
+                <dt className="text-muted">{t("taxes")}</dt>
+                <dd className="font-medium text-ink">{t("taxesValue")}</dd>
               </div>
             </dl>
 
             <div className="h-px w-full bg-line" />
 
             <div className="flex items-baseline justify-between">
-              <span className="text-[11px] font-extrabold tracking-[0.18em] text-ink uppercase">Total</span>
+              <span className="text-[11px] font-extrabold tracking-[0.18em] text-ink uppercase">{t("total")}</span>
               <span className="font-display text-2xl leading-none text-ink lg:text-3xl">
                 <CartCost amountType="subtotal" />
               </span>
@@ -254,7 +256,7 @@ export function Cart() {
               disabled={isCartEmpty}
               className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-md bg-ink p-4 text-[11px] font-extrabold tracking-[0.18em] text-cream uppercase transition-colors hover:bg-pop disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Secure Checkout
+              {t("checkout")}
               <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} />
             </CartCheckoutButton>
 
@@ -262,19 +264,17 @@ export function Cart() {
               href="/products"
               className="-mt-2 inline-flex h-12 w-full items-center justify-center gap-2 rounded-md border border-line bg-surface text-[11px] font-extrabold tracking-[0.18em] text-ink uppercase transition-colors hover:border-ink sm:hidden"
             >
-              Continue shopping
+              {t("continueShopping")}
             </Link>
 
             {/* Trust strip */}
             <ul className="grid grid-cols-1 gap-3 border-t border-line pt-5">
-              <Trust Icon={Truck} label="Free shipping" sub="Over $150" />
-              <Trust Icon={RotateCcw} label="30-day returns" sub="No hassle" />
-              <Trust Icon={Shield} label="2-year warranty" sub="Worldwide" />
+              <Trust Icon={Truck} label={t("freeShipping")} sub={t("freeShippingSub")} />
+              <Trust Icon={RotateCcw} label={t("returns")} sub={t("returnsSub")} />
+              <Trust Icon={Shield} label={t("warranty")} sub={t("warrantySub")} />
             </ul>
 
-            <p className="text-center text-[10px] font-medium tracking-[0.18em] text-muted uppercase">
-              Secured by Shopify · SSL encrypted
-            </p>
+            <p className="text-center text-[10px] font-medium tracking-[0.18em] text-muted uppercase">{t("secured")}</p>
           </div>
         </aside>
       </div>
@@ -287,6 +287,7 @@ export function Cart() {
 // ────────────────────────────────────────────────────────────────────
 
 function CartLineCard() {
+  const t = useTranslations("Cart");
   const line = useCartLine();
 
   const img = line.merchandise?.image;
@@ -359,7 +360,7 @@ function CartLineCard() {
             className="group inline-flex items-center gap-1.5 text-[10px] font-extrabold tracking-[0.18em] text-muted uppercase transition-colors hover:text-pop"
           >
             <X className="h-3 w-3" strokeWidth={2.5} />
-            Remove
+            {t("remove")}
           </CartLineQuantityAdjustButton>
         </div>
       </div>
@@ -394,6 +395,7 @@ function QtyControl() {
 // ────────────────────────────────────────────────────────────────────
 
 function MobileStickyCheckout({ itemCount }: { itemCount: number }) {
+  const t = useTranslations("Cart");
   return (
     <div
       className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-cream/95 px-3 pt-3 backdrop-blur-xl lg:hidden"
@@ -402,14 +404,14 @@ function MobileStickyCheckout({ itemCount }: { itemCount: number }) {
       <div className="flex items-center gap-3">
         <div className="flex min-w-0 flex-1 flex-col leading-tight">
           <span className="text-[11px] font-extrabold tracking-[0.18em] text-muted uppercase">
-            {itemCount} {itemCount === 1 ? "item" : "items"}
+            {itemCount} {itemCount === 1 ? t("item") : t("items")}
           </span>
           <span className="font-display text-lg text-ink">
             <CartCost amountType="subtotal" />
           </span>
         </div>
         <CartCheckoutButton className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-md bg-ink px-5 text-[11px] font-extrabold tracking-[0.18em] text-cream uppercase transition-colors hover:bg-pop disabled:opacity-50">
-          Checkout
+          {t("checkoutShort")}
           <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} />
         </CartCheckoutButton>
       </div>
@@ -422,24 +424,25 @@ function MobileStickyCheckout({ itemCount }: { itemCount: number }) {
 // ────────────────────────────────────────────────────────────────────
 
 function CrossSellCard({ missing }: { missing: "watch" | "strap" }) {
+  const t = useTranslations("Cart");
   const cfg =
     missing === "watch"
       ? {
-          eyebrow: "Complete your set",
-          headline: "Now pick a watch.",
-          subline: "Eight Swiss-made bioceramic cases. Bundle and ship together — save on shipping.",
+          eyebrow: t("completeSet"),
+          headline: t("needWatch"),
+          subline: t("watchUpsellSub"),
           image: "/collection/otto-rosso.png",
           imageAlt: "ChronoStrap watch",
-          cta: "Shop watches",
+          cta: t("shopWatches"),
           href: "/products",
         }
       : {
-          eyebrow: "Complete your set",
-          headline: "Now pick a strap.",
-          subline: "Swap colour anytime. Eight curated colourways — or design your own.",
+          eyebrow: t("completeSet"),
+          headline: t("needStrap"),
+          subline: t("strapUpsellSub"),
           image: "/collection/orenji-hachi.png",
           imageAlt: "ChronoStrap strap",
-          cta: "Shop straps",
+          cta: t("shopStraps"),
           href: "/buy-strap",
         };
 
@@ -491,46 +494,44 @@ function CrossSellCard({ missing }: { missing: "watch" | "strap" }) {
 // ────────────────────────────────────────────────────────────────────
 
 function RepairingCart() {
+  const t = useTranslations("Cart");
   return (
     <section className="mx-auto flex max-w-xl flex-col items-center gap-6 py-20 text-center">
       <div className="flex h-20 w-20 items-center justify-center rounded-full border border-line bg-cream">
         <LoaderIcon />
       </div>
       <div className="flex flex-col gap-3">
-        <h1 className="font-display text-3xl leading-[0.95] uppercase md:text-4xl">Refreshing your bag</h1>
-        <p className="text-[15px] leading-relaxed text-muted">
-          We found stale cart pricing and are rebuilding it with the latest Shopify prices.
-        </p>
+        <h1 className="font-display text-3xl leading-[0.95] uppercase md:text-4xl">{t("repairTitle")}</h1>
+        <p className="text-[15px] leading-relaxed text-muted">{t("repairSubtitle")}</p>
       </div>
     </section>
   );
 }
 
 function EmptyCart() {
+  const t = useTranslations("Cart");
   return (
     <section className="mx-auto flex max-w-xl flex-col items-center gap-6 py-20 text-center">
       <div className="flex h-20 w-20 items-center justify-center rounded-full border border-line bg-cream">
         <ShoppingBag className="h-7 w-7 text-ink" strokeWidth={1.5} />
       </div>
       <div className="flex flex-col gap-3">
-        <h1 className="font-display text-3xl leading-[0.95] uppercase md:text-4xl">Your bag is empty</h1>
-        <p className="text-[15px] leading-relaxed text-muted">
-          Browse the collection or design your own strap from scratch.
-        </p>
+        <h1 className="font-display text-3xl leading-[0.95] uppercase md:text-4xl">{t("emptyTitle")}</h1>
+        <p className="text-[15px] leading-relaxed text-muted">{t("emptySubtitle")}</p>
       </div>
       <div className="mt-2 flex flex-col gap-3 sm:flex-row">
         <Link
           href="/products"
           className="group inline-flex h-12 items-center justify-center gap-2 rounded-md bg-ink px-8 text-[11px] font-extrabold tracking-[0.18em] text-cream uppercase transition-colors hover:bg-pop"
         >
-          Shop the collection
+          {t("shopCollection")}
           <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} />
         </Link>
         <Link
           href="/custom-strap"
           className="inline-flex h-12 items-center justify-center gap-2 rounded-md border border-line bg-surface px-8 text-[11px] font-extrabold tracking-[0.18em] text-ink uppercase transition-colors hover:border-ink"
         >
-          Design a strap
+          {t("designStrap")}
         </Link>
       </div>
     </section>

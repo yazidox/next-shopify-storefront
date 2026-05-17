@@ -1,19 +1,19 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { useTranslations } from "next-intl";
 import { ArrowRight, Check } from "@esmate/shadcn/pkgs/lucide-react";
 import { analytics } from "@/lib/analytics";
 
 export function NewsletterForm({ source = "footer" }: { source?: string }) {
+  const t = useTranslations("Footer");
   const [submitted, setSubmitted] = useState(false);
   const [email, setEmail] = useState("");
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
     if (!email) return;
-    // Fire Meta Pixel Lead event — this is what ad platforms optimize newsletter campaigns on.
     analytics.lead(source);
-    // TODO: POST to Shopify Customer (or Klaviyo / Mailchimp) endpoint here.
     setSubmitted(true);
     setEmail("");
   }
@@ -28,7 +28,7 @@ export function NewsletterForm({ source = "footer" }: { source?: string }) {
         required
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        placeholder="your@email.com"
+        placeholder={t("emailPlaceholder")}
         className="flex-1 bg-transparent text-base tracking-wide text-ink placeholder:text-ink/30 focus:outline-none"
       />
       <button
@@ -38,12 +38,12 @@ export function NewsletterForm({ source = "footer" }: { source?: string }) {
       >
         {submitted ? (
           <>
-            Subscribed
+            {t("subscribed")}
             <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
           </>
         ) : (
           <>
-            Subscribe
+            {t("subscribe")}
             <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" strokeWidth={2} />
           </>
         )}

@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Money, useCart } from "@shopify/hydrogen-react";
 import { ArrowRight, Check, Loader2, RotateCcw, Shield, Truck } from "@esmate/shadcn/pkgs/lucide-react";
 import { analytics } from "@/lib/analytics";
@@ -9,6 +9,7 @@ import { CurrencyCode } from "@/lib/graphql/graphql";
 import { StepModel } from "../../step-model";
 import { ProductProof } from "../../product-proof";
 import { STRAP_COLOURWAYS, type Colourway } from "../colourways";
+import { Link } from "@/i18n/navigation";
 
 type StrapMoney = { amount: string; currencyCode: CurrencyCode };
 
@@ -21,6 +22,9 @@ export function StrapDetail({
   variantId: string | null;
   price: StrapMoney | null;
 }) {
+  const t = useTranslations("BuyStrap");
+  const tc = useTranslations("Common");
+  const tcart = useTranslations("Cart");
   const { linesAdd, status } = useCart();
   const [added, setAdded] = useState(false);
   const [adding, setAdding] = useState(false);
@@ -129,7 +133,7 @@ export function StrapDetail({
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-sm bg-line/40 px-2.5 py-1.5 text-[10px] font-medium tracking-[0.18em] text-ink uppercase">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
-              In stock
+              {tc("inStock")}
             </span>
           </div>
 
@@ -151,7 +155,7 @@ export function StrapDetail({
           {/* Swatch — non-interactive (this IS the colour you're on) */}
           <div className="flex flex-col gap-3">
             <p className="text-[11px] font-extrabold tracking-[0.18em] text-muted uppercase">
-              Colour · <span className="text-ink">{colourway.name}</span>
+              {t("colour")} · <span className="text-ink">{colourway.name}</span>
             </p>
             <div className="flex flex-wrap items-center gap-2.5">
               <span
@@ -159,19 +163,19 @@ export function StrapDetail({
                 style={{ backgroundColor: colourway.swatch }}
                 aria-hidden
               />
-              <span className="text-[12px] text-muted">More colourways below the viewer</span>
+              <span className="text-[12px] text-muted">{t("moreColourways")}</span>
             </div>
           </div>
 
           {/* Quantity */}
           <div className="flex items-center justify-between gap-4">
-            <p className="text-[11px] font-extrabold tracking-[0.18em] text-muted uppercase">Quantity</p>
+            <p className="text-[11px] font-extrabold tracking-[0.18em] text-muted uppercase">{tc("quantity")}</p>
             <div className="inline-flex items-center rounded-md border border-line bg-surface">
               <button
                 type="button"
                 onClick={() => setQty((q) => Math.max(1, q - 1))}
                 disabled={qty <= 1}
-                aria-label="Decrease quantity"
+                aria-label={tc("quantity")}
                 className="flex h-12 w-12 items-center justify-center text-lg text-ink transition-colors hover:bg-line/30 disabled:opacity-30"
               >
                 −
@@ -180,7 +184,7 @@ export function StrapDetail({
               <button
                 type="button"
                 onClick={() => setQty((q) => q + 1)}
-                aria-label="Increase quantity"
+                aria-label={tc("quantity")}
                 className="flex h-12 w-12 items-center justify-center text-lg text-ink transition-colors hover:bg-line/30"
               >
                 +
@@ -198,16 +202,16 @@ export function StrapDetail({
             {busy ? (
               <>
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                Adding…
+                {tc("adding")}
               </>
             ) : added ? (
               <>
-                Added
+                {tc("added")}
                 <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
               </>
             ) : (
               <>
-                Add to Bag
+                {tc("addToBag")}
                 <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} />
               </>
             )}
@@ -218,21 +222,20 @@ export function StrapDetail({
             href="/buy-strap"
             className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-md border border-line bg-surface text-[11px] font-extrabold tracking-[0.18em] text-ink uppercase transition-colors hover:border-ink"
           >
-            ← All colourways
+            ← {t("allColourways")}
           </Link>
 
           {/* Trust strip */}
           <ul className="grid grid-cols-1 gap-3 border-t border-line pt-5 sm:grid-cols-3">
-            <Trust Icon={Truck} label="Free shipping" sub="Over $150" />
-            <Trust Icon={RotateCcw} label="30-day returns" sub="No hassle" />
-            <Trust Icon={Shield} label="2-year warranty" sub="Worldwide" />
+            <Trust Icon={Truck} label={tcart("freeShipping")} sub={tcart("freeShippingSub")} />
+            <Trust Icon={RotateCcw} label={tcart("returns")} sub={tcart("returnsSub")} />
+            <Trust Icon={Shield} label={tcart("warranty")} sub={tcart("warrantySub")} />
           </ul>
 
           {/* Description */}
           <div className="border-t border-line pt-5">
             <p className="text-[14px] leading-normal text-muted">
-              The {colourway.name} strap — a {colourway.tagline.toLowerCase()} bioceramic snap-fit strap, hand-finished
-              in Switzerland. Fits every ChronoStrap watch and swaps in three seconds.
+              {t("descriptionTemplate", { name: colourway.name, tone: colourway.tagline.toLowerCase() })}
             </p>
           </div>
         </div>
@@ -268,16 +271,16 @@ export function StrapDetail({
             {busy ? (
               <>
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                Adding…
+                {tc("adding")}
               </>
             ) : added ? (
               <>
-                Added
+                {tc("added")}
                 <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
               </>
             ) : (
               <>
-                Add to Bag
+                {tc("addToBag")}
                 <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} />
               </>
             )}

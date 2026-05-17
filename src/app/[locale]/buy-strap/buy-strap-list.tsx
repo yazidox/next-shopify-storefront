@@ -1,13 +1,14 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Money, useCart } from "@shopify/hydrogen-react";
 import { ArrowRight, Check, Loader2 } from "@esmate/shadcn/pkgs/lucide-react";
 import { analytics } from "@/lib/analytics";
 import { CurrencyCode } from "@/lib/graphql/graphql";
 import { StepModel } from "../step-model";
 import { STRAP_COLOURWAYS, type Colourway } from "./colourways";
+import { Link } from "@/i18n/navigation";
 
 type StrapMoney = { amount: string; currencyCode: CurrencyCode };
 
@@ -17,22 +18,24 @@ interface Props {
 }
 
 export function BuyStrapList({ variantId, price }: Props) {
+  const t = useTranslations("BuyStrap");
+  const titleLine2Parts = t("titleLine2").split(" ");
   return (
     <section className="mx-auto max-w-[1800px]">
-      <h1 className="sr-only">Official ChronoStrap colourways</h1>
+      <h1 className="sr-only">ChronoStrap — {t("sectionEyebrow")}</h1>
 
       {/* Section header */}
       <div className="mb-12 flex flex-col items-baseline justify-between gap-6 lg:mb-20 lg:flex-row">
         <div className="flex flex-col gap-4 sm:gap-5">
           <div className="flex items-center gap-3 text-muted">
-            <span className="font-display text-[11px] tracking-[0.32em] uppercase">01</span>
+            <span className="font-display text-[11px] tracking-[0.32em] uppercase">{t("sectionNumber")}</span>
             <span className="h-px w-10 bg-line sm:w-12" />
-            <span className="text-[10px] font-medium tracking-[0.3em] uppercase">Official Straps</span>
+            <span className="text-[10px] font-medium tracking-[0.3em] uppercase">{t("sectionEyebrow")}</span>
           </div>
           <h2 className="font-display text-3xl leading-[0.95] text-ink uppercase sm:text-4xl md:text-5xl lg:text-6xl">
-            Eight colourways.
+            {t("titleLine1")}
             <br />
-            One <span className="text-pop">snap.</span>
+            {titleLine2Parts[0]} <span className="text-pop">{t("snap")}</span>
           </h2>
         </div>
         <Link
@@ -40,7 +43,7 @@ export function BuyStrapList({ variantId, price }: Props) {
           className="group inline-flex items-center gap-3 text-[10px] font-medium tracking-[0.3em] text-muted uppercase transition-colors hover:text-ink"
         >
           <span className="h-px w-10 bg-line transition-all group-hover:w-16 group-hover:bg-ink" />
-          Or design your own
+          {t("designOwn")}
         </Link>
       </div>
 
@@ -52,7 +55,7 @@ export function BuyStrapList({ variantId, price }: Props) {
 
       {!variantId && (
         <p className="mt-10 text-center text-[11px] font-medium tracking-[0.18em] text-muted uppercase">
-          Custom Strap product not yet imported in Shopify — Add to Bag is disabled.
+          {t("notImported")}
         </p>
       )}
     </section>
@@ -68,6 +71,8 @@ function StrapCard({
   variantId: string | null;
   price: StrapMoney | null;
 }) {
+  const t = useTranslations("BuyStrap");
+  const tc = useTranslations("Common");
   const { linesAdd, status } = useCart();
   const [added, setAdded] = useState(false);
   const [adding, setAdding] = useState(false);
@@ -187,21 +192,21 @@ function StrapCard({
               onClick={add}
               disabled={!variantId || busy}
               className="pointer-events-auto inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-md bg-ink px-6 text-[11px] font-bold tracking-[0.28em] text-cream uppercase transition-all duration-300 hover:bg-pop disabled:opacity-50"
-              aria-label={`Add ${colourway.name} strap to bag`}
+              aria-label={t("strapAriaLabel", { name: colourway.name })}
             >
               {busy ? (
                 <>
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  Adding…
+                  {tc("adding")}
                 </>
               ) : added ? (
                 <>
-                  Added
+                  {tc("added")}
                   <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
                 </>
               ) : (
                 <>
-                  Add to Bag
+                  {tc("addToBag")}
                   <ArrowRight className="h-3 w-3" strokeWidth={2.5} />
                 </>
               )}
@@ -211,7 +216,7 @@ function StrapCard({
               className="pointer-events-auto inline-flex h-12 items-center justify-center gap-2 rounded-md border px-5 text-[11px] font-bold tracking-[0.28em] uppercase transition-colors hover:opacity-80"
               style={{ borderColor: fgMuted, color: fg }}
             >
-              View
+              {tc("view")}
             </Link>
           </div>
         </div>

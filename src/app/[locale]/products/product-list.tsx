@@ -1,7 +1,7 @@
 "use client";
 import { Money, useCart } from "@shopify/hydrogen-react";
-import Link from "next/link";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { ArrowRight, Loader2, Check } from "@esmate/shadcn/pkgs/lucide-react";
 import { useEffect, useState } from "react";
 import { getProductList } from "./service";
@@ -9,12 +9,14 @@ import { useRequest } from "@esmate/react/ahooks";
 import { titleize } from "@esmate/utils/string";
 import { analytics } from "@/lib/analytics";
 import { useStoreLocalization } from "../store-localization";
+import { Link } from "@/i18n/navigation";
 
 interface Props {
   data: Awaited<ReturnType<typeof getProductList>>;
 }
 
 export function ProductList(props: Props) {
+  const t = useTranslations("Product");
   const { countryCode } = useStoreLocalization();
   const [pages, setPages] = useState([props.data]);
   const lastPage = pages[pages.length - 1];
@@ -36,20 +38,20 @@ export function ProductList(props: Props) {
 
   return (
     <section className="mx-auto max-w-[1800px]">
-      <h1 className="sr-only">The ChronoStrap Collection</h1>
+      <h1 className="sr-only">{t("listSrTitle")}</h1>
 
       {/* Section header — matches landing page */}
       <div className="mb-12 flex flex-col items-baseline justify-between gap-6 lg:mb-20 lg:flex-row">
         <div className="flex flex-col gap-4 sm:gap-5">
           <div className="flex items-center gap-3 text-muted">
-            <span className="font-display text-[11px] tracking-[0.32em] uppercase">01</span>
+            <span className="font-display text-[11px] tracking-[0.32em] uppercase">{t("listSectionNumber")}</span>
             <span className="h-px w-10 bg-line sm:w-12" />
-            <span className="text-[10px] font-medium tracking-[0.3em] uppercase">The Collection</span>
+            <span className="text-[10px] font-medium tracking-[0.3em] uppercase">{t("listSectionEyebrow")}</span>
           </div>
           <h2 className="font-display text-3xl leading-[0.95] text-ink uppercase sm:text-4xl md:text-5xl lg:text-6xl">
-            {allEdges.length} references.
+            {allEdges.length} {t("listTitleSuffix")}
             <br />
-            One <span className="text-pop">obsession.</span>
+            {t("listTitleObsessionLine")} <span className="text-pop">{t("listObsession")}</span>
           </h2>
         </div>
         <Link
@@ -57,7 +59,7 @@ export function ProductList(props: Props) {
           className="group inline-flex items-center gap-3 text-[10px] font-medium tracking-[0.3em] text-muted uppercase transition-colors hover:text-ink"
         >
           <span className="h-px w-10 bg-line transition-all group-hover:w-16 group-hover:bg-ink" />
-          Build your own
+          {t("buildYourOwn")}
         </Link>
       </div>
 
@@ -76,7 +78,7 @@ export function ProductList(props: Props) {
             className="group inline-flex items-center gap-3 rounded-md border border-ink px-8 py-4 text-[11px] font-bold tracking-[0.28em] text-ink uppercase transition-colors hover:bg-ink hover:text-cream disabled:opacity-50"
           >
             {request.loading && <Loader2 className="h-4 w-4 animate-spin" />}
-            {request.loading ? "Loading…" : request.error ? "Try again" : "Load more"}
+            {request.loading ? t("loading") : request.error ? t("tryAgain") : t("loadMore")}
           </button>
         </div>
       )}
@@ -85,6 +87,7 @@ export function ProductList(props: Props) {
 }
 
 function ProductCard({ node, index }: { node: Props["data"]["edges"][number]["node"]; index: number }) {
+  const t = useTranslations("Product");
   const cart = useCart();
   const { checkoutUrl, linesAdd, status, totalQuantity } = cart;
   const [added, setAdded] = useState(false);
@@ -162,7 +165,7 @@ function ProductCard({ node, index }: { node: Props["data"]["edges"][number]["no
       {/* Top — ref label */}
       <div className="pointer-events-none absolute inset-x-0 top-0 flex items-center justify-between px-6 pt-6 lg:px-8 lg:pt-8">
         <span className="rounded-full bg-cream/70 px-3 py-1 text-[10px] font-medium tracking-[0.3em] text-ink uppercase backdrop-blur-md">
-          Ref. {String(index + 1).padStart(2, "0")}
+          {t("refLabel")} {String(index + 1).padStart(2, "0")}
         </span>
       </div>
 
@@ -197,7 +200,7 @@ function ProductCard({ node, index }: { node: Props["data"]["edges"][number]["no
               onClick={add}
               disabled={!variantId || busy}
               className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-ink px-3 text-[10px] font-bold tracking-[0.22em] text-cream uppercase transition-colors hover:bg-pop disabled:opacity-50"
-              aria-label={`Add ${node.title} to bag`}
+              aria-label={t("ariaAddBag", { name: node.title })}
             >
               {adding ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -206,7 +209,7 @@ function ProductCard({ node, index }: { node: Props["data"]["edges"][number]["no
               ) : (
                 <ArrowRight className="h-3 w-3" strokeWidth={2.5} />
               )}
-              {added ? "Added" : "Add Bag"}
+              {added ? t("addedShort") : t("addBag")}
             </button>
 
             <button
@@ -214,14 +217,14 @@ function ProductCard({ node, index }: { node: Props["data"]["edges"][number]["no
               onClick={payNow}
               disabled={!variantId || busy}
               className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-[#ff3b30] px-3 text-[10px] font-bold tracking-[0.22em] text-white uppercase transition-colors hover:bg-[#e03127] disabled:opacity-50"
-              aria-label={`Pay now for ${node.title}`}
+              aria-label={t("ariaPayNow", { name: node.title })}
             >
               {payingNow ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
               ) : (
                 <ArrowRight className="h-3 w-3" strokeWidth={2.5} />
               )}
-              Pay Now
+              {t("payNow")}
             </button>
           </div>
         </div>

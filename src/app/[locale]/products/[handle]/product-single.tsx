@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { AddToCartButton, Money, ProductProvider } from "@shopify/hydrogen-react";
 import {
   ArrowRight,
@@ -24,6 +24,7 @@ import { getProductSingle, getSiblingProducts } from "./service";
 import { analytics } from "@/lib/analytics";
 import { titleize } from "@esmate/utils/string";
 import { ProductProof } from "../../product-proof";
+import { Link } from "@/i18n/navigation";
 
 interface Props {
   data: Awaited<ReturnType<typeof getProductSingle>>;
@@ -40,6 +41,8 @@ type ProductMoney = Props["data"]["priceRange"]["minVariantPrice"];
 // ╚═══════════════════════════════════════════════════════════════════╝
 
 export function ProductSingle({ data, siblings }: Props) {
+  const t = useTranslations("Product");
+  const tc = useTranslations("Common");
   const { variantId, options, selectOption } = useVariantSelector(data);
   const [active, setActive] = useState(0);
   const [qty, setQty] = useState(1);
@@ -86,11 +89,11 @@ export function ProductSingle({ data, siblings }: Props) {
               {availableForSale ? (
                 <span className="inline-flex items-center gap-1.5 rounded-sm bg-line/40 px-2.5 py-1.5 text-[10px] font-medium tracking-[0.18em] text-ink uppercase">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
-                  In stock
+                  {tc("inStock")}
                 </span>
               ) : (
                 <span className="rounded-sm bg-line/40 px-2.5 py-1.5 text-[10px] font-medium tracking-[0.18em] text-muted uppercase">
-                  Sold out
+                  {tc("soldOut")}
                 </span>
               )}
             </div>
@@ -170,13 +173,13 @@ export function ProductSingle({ data, siblings }: Props) {
 
             {/* Quantity */}
             <div className="flex items-center justify-between gap-4">
-              <p className="text-[11px] font-extrabold tracking-[0.18em] text-muted uppercase">Quantity</p>
+              <p className="text-[11px] font-extrabold tracking-[0.18em] text-muted uppercase">{tc("quantity")}</p>
               <div className="inline-flex items-center rounded-md border border-line bg-surface">
                 <button
                   type="button"
                   onClick={() => setQty((q) => Math.max(1, q - 1))}
                   disabled={qty <= 1}
-                  aria-label="Decrease quantity"
+                  aria-label={tc("quantity")}
                   className="flex h-12 w-12 items-center justify-center text-ink transition-colors hover:bg-line/30 disabled:opacity-30"
                 >
                   <Minus className="h-4 w-4" strokeWidth={2} />
@@ -185,7 +188,7 @@ export function ProductSingle({ data, siblings }: Props) {
                 <button
                   type="button"
                   onClick={() => setQty((q) => q + 1)}
-                  aria-label="Increase quantity"
+                  aria-label={tc("quantity")}
                   className="flex h-12 w-12 items-center justify-center text-ink transition-colors hover:bg-line/30"
                 >
                   <Plus className="h-4 w-4" strokeWidth={2} />
@@ -210,7 +213,7 @@ export function ProductSingle({ data, siblings }: Props) {
               }}
               className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-md bg-ink p-4 text-[11px] font-extrabold tracking-[0.18em] text-cream uppercase transition-colors hover:bg-pop disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {!availableForSale ? "Sold Out" : "Add to Bag"}
+              {!availableForSale ? tc("soldOut") : tc("addToBag")}
               {availableForSale && <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} />}
             </AddToCartButton>
 
@@ -223,8 +226,8 @@ export function ProductSingle({ data, siblings }: Props) {
 
             {/* Quick value chips — gift box, dispatch */}
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              <ValueChip Icon={Gift} label="Free gift box" />
-              <ValueChip Icon={Package} label="Ships in 24h" />
+              <ValueChip Icon={Gift} label={t("giftBox")} />
+              <ValueChip Icon={Package} label={t("ships24h")} />
             </div>
 
             {/* Sibling carousel */}
@@ -234,9 +237,9 @@ export function ProductSingle({ data, siblings }: Props) {
 
             {/* Trust strip */}
             <ul className="grid grid-cols-1 gap-3 border-t border-line pt-5 sm:grid-cols-3">
-              <Trust Icon={Truck} label="Free shipping" sub="Over $150" />
-              <Trust Icon={RotateCcw} label="30-day returns" sub="No hassle" />
-              <Trust Icon={Shield} label="2-year warranty" sub="Worldwide" />
+              <Trust Icon={Truck} label={useTranslations("Cart")("freeShipping")} sub={useTranslations("Cart")("freeShippingSub")} />
+              <Trust Icon={RotateCcw} label={useTranslations("Cart")("returns")} sub={useTranslations("Cart")("returnsSub")} />
+              <Trust Icon={Shield} label={useTranslations("Cart")("warranty")} sub={useTranslations("Cart")("warrantySub")} />
             </ul>
           </div>
         </aside>

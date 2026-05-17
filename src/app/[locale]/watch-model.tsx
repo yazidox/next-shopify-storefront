@@ -9,6 +9,7 @@ export interface WatchModelItem {
   src: string;
   color: string; // swatch dot color (strap colour)
   bg?: string; // hero background colour while this model is active
+  poster?: string; // lightweight mobile fallback image
   name?: string;
   durationMs?: number; // override how long this model stays visible
   // Y-shift applied to the shared cameraTarget (in meters). Positive moves the
@@ -33,6 +34,10 @@ function isMobileHeroViewport() {
   return typeof window !== "undefined" && window.matchMedia(MOBILE_HERO_QUERY).matches;
 }
 
+function getHeroRenderMode(): "fallback" | "model" {
+  return isMobileHeroViewport() ? "fallback" : "model";
+}
+
 function useMobileHeroViewport() {
   const [isMobile, setIsMobile] = useState(false);
 
@@ -51,6 +56,26 @@ function useMobileHeroViewport() {
   }, []);
 
   return isMobile;
+}
+
+function useHeroRenderMode() {
+  const [mode, setMode] = useState<"pending" | "fallback" | "model">("pending");
+
+  useEffect(() => {
+    const query = window.matchMedia(MOBILE_HERO_QUERY);
+    const update = () => setMode(getHeroRenderMode());
+
+    update();
+    if (typeof query.addEventListener === "function") {
+      query.addEventListener("change", update);
+      return () => query.removeEventListener("change", update);
+    }
+
+    query.addListener(update);
+    return () => query.removeListener(update);
+  }, []);
+
+  return mode;
 }
 
 type ModelViewerLike = HTMLElement & {
@@ -78,6 +103,8 @@ export function WatchModel({
   const activeViewerRef = useRef<ModelViewerLike | null>(null);
   const firstReadyFiredRef = useRef(false);
   const mobileAutoMotionPaused = useMobileHeroViewport();
+  const heroRenderMode = useHeroRenderMode();
+  const useLightweightFallback = heroRenderMode !== "model";
   // Mirrors `active` so the continuous animation closure can read the latest
   // index without restarting on every model switch.
   const activeRef = useRef(0);
@@ -104,6 +131,12 @@ export function WatchModel({
     setDebug(new URLSearchParams(window.location.search).get("debug") === "1");
   }, []);
 
+  useEffect(() => {
+    if (!useLightweightFallback || heroRenderMode === "pending") return;
+    notifyHeroReady();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [heroRenderMode, useLightweightFallback]);
+
   // Notify parent of active model changes (for adaptive UI like text contrast)
   useEffect(() => {
     if (models[active]) onActiveChange?.(models[active], active);
@@ -113,7 +146,14 @@ export function WatchModel({
   // Continuous global camera animation — plays across ALL models, never restarts.
   // The active model picks up wherever the timeline currently is when it swaps in.
   useEffect(() => {
-    if (debug || mobileAutoMotionPaused || isMobileHeroViewport() || !animation || animation.keyframes.length < 2)
+    if (
+      debug ||
+      useLightweightFallback ||
+      mobileAutoMotionPaused ||
+      isMobileHeroViewport() ||
+      !animation ||
+      animation.keyframes.length < 2
+    )
       return;
     const frames = animation.keyframes;
     const total = animation.durationMs || frames[frames.length - 1].t || 1;
@@ -151,7 +191,7 @@ export function WatchModel({
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [animation, debug, mobileAutoMotionPaused]);
+  }, [animation, debug, mobileAutoMotionPaused, useLightweightFallback]);
 
   const currentSrc = models[active]?.src;
   const currentColor = models[active]?.color;
@@ -159,14 +199,22 @@ export function WatchModel({
 
   // Auto cycle — paused while in debug mode
   useEffect(() => {
-    if (!isLoaded || models.length < 2 || debug || mobileAutoMotionPaused || isMobileHeroViewport()) return;
+    if (
+      !isLoaded ||
+      models.length < 2 ||
+      debug ||
+      useLightweightFallback ||
+      mobileAutoMotionPaused ||
+      isMobileHeroViewport()
+    )
+      return;
     const perModel = models[active]?.durationMs ?? intervalMs;
     const id = window.setTimeout(() => {
       goTo((active + 1) % models.length);
     }, perModel);
     return () => window.clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoaded, active, models.length, intervalMs, debug, mobileAutoMotionPaused]);
+  }, [isLoaded, active, models.length, intervalMs, debug, mobileAutoMotionPaused, useLightweightFallback]);
 
   // Drop outgoing after the crossfade completes
   useEffect(() => {
@@ -177,6 +225,12 @@ export function WatchModel({
 
   // Reset load state when src changes
   useEffect(() => {
+    if (useLightweightFallback) {
+      setProgress(1);
+      setIsLoaded(true);
+      return;
+    }
+
     if (cachedRef.current.has(currentSrc)) {
       setProgress(1);
       setIsLoaded(true);
@@ -184,7 +238,7 @@ export function WatchModel({
       setProgress(0);
       setIsLoaded(false);
     }
-  }, [currentSrc]);
+  }, [currentSrc, useLightweightFallback]);
 
   // Delay the loader so fast-loading (cached) models never flash one.
   const [loaderShown, setLoaderShown] = useState(false);
@@ -199,11 +253,14 @@ export function WatchModel({
 
   function goTo(nextIdx: number) {
     if (nextIdx === active) return;
-    setOutgoing({ src: models[active].src, color: models[active].color });
+    if (!useLightweightFallback) {
+      setOutgoing({ src: models[active].src, color: models[active].color });
+    }
     setActive(nextIdx);
   }
 
   const currentBg = models[active]?.bg;
+  const currentModel = models[active];
 
   return (
     <div className={`relative h-full w-full overflow-hidden ${className ?? ""}`}>
@@ -224,37 +281,43 @@ export function WatchModel({
         }}
       />
 
-      {outgoing && (
-        <ModelSlot key={`out-${outgoing.src}`} src={outgoing.src} alt={alt} state="exiting" autoRotate={false} />
+      {useLightweightFallback ? (
+        <MobileHeroPoster model={currentModel} alt={alt} />
+      ) : (
+        <>
+          {outgoing && (
+            <ModelSlot key={`out-${outgoing.src}`} src={outgoing.src} alt={alt} state="exiting" autoRotate={false} />
+          )}
+
+          <ModelSlot
+            key={`in-${currentSrc}`}
+            src={currentSrc}
+            alt={alt}
+            state={isLoaded ? "in" : "entering"}
+            autoRotate={!debug && !animation && !mobileAutoMotionPaused}
+            onRef={(el) => (activeViewerRef.current = el)}
+            onProgress={(p) => {
+              setProgress(p);
+              if (p >= 1) {
+                cachedRef.current.add(currentSrc);
+                setTimeout(() => setIsLoaded(true), 80);
+                notifyHeroReady();
+              }
+            }}
+            onLoad={() => {
+              setProgress(1);
+              cachedRef.current.add(currentSrc);
+              setTimeout(() => setIsLoaded(true), 80);
+              notifyHeroReady();
+            }}
+          />
+        </>
       )}
 
-      <ModelSlot
-        key={`in-${currentSrc}`}
-        src={currentSrc}
-        alt={alt}
-        state={isLoaded ? "in" : "entering"}
-        autoRotate={!debug && !animation && !mobileAutoMotionPaused}
-        onRef={(el) => (activeViewerRef.current = el)}
-        onProgress={(p) => {
-          setProgress(p);
-          if (p >= 1) {
-            cachedRef.current.add(currentSrc);
-            setTimeout(() => setIsLoaded(true), 80);
-            notifyHeroReady();
-          }
-        }}
-        onLoad={() => {
-          setProgress(1);
-          cachedRef.current.add(currentSrc);
-          setTimeout(() => setIsLoaded(true), 80);
-          notifyHeroReady();
-        }}
-      />
-
       <div
-        aria-hidden={isLoaded || !loaderShown}
+        aria-hidden={useLightweightFallback || isLoaded || !loaderShown}
         className={`pointer-events-none absolute inset-0 flex items-center justify-center transition-opacity duration-500 ${
-          isLoaded || !loaderShown ? "opacity-0" : "opacity-100"
+          useLightweightFallback || isLoaded || !loaderShown ? "opacity-0" : "opacity-100"
         }`}
       >
         <div className="flex flex-col items-center gap-5">
@@ -301,6 +364,40 @@ export function WatchModel({
 }
 
 type SlotState = "entering" | "in" | "exiting";
+
+function MobileHeroPoster({ model, alt }: { model?: WatchModelItem; alt: string }) {
+  const accent = model?.color ?? "#f15bb5";
+
+  return (
+    <div
+      role="img"
+      aria-label={model?.name ? `${alt} ${model.name}` : alt}
+      className="pointer-events-none absolute inset-0 overflow-hidden"
+    >
+      <div
+        aria-hidden
+        className="absolute top-[16%] right-[-18%] h-[54%] w-[70%] rounded-full blur-3xl"
+        style={{ backgroundColor: accent, opacity: 0.24 }}
+      />
+      {model?.poster ? (
+        <img
+          src={model.poster}
+          alt=""
+          aria-hidden
+          loading="eager"
+          decoding="async"
+          className="absolute top-1/2 left-1/2 h-[80%] max-h-[540px] w-auto -translate-x-[44%] -translate-y-[47%] object-contain drop-shadow-[0_28px_48px_rgba(0,0,0,0.24)]"
+        />
+      ) : (
+        <span
+          aria-hidden
+          className="absolute top-1/2 left-1/2 h-[46vh] w-[46vh] -translate-x-1/2 -translate-y-1/2 rounded-full border-[18px] opacity-85 shadow-[0_28px_48px_rgba(0,0,0,0.22)]"
+          style={{ borderColor: accent }}
+        />
+      )}
+    </div>
+  );
+}
 
 function ModelSlot({
   src,
