@@ -10329,6 +10329,14 @@ export enum WeightUnit {
   Pounds = 'POUNDS'
 }
 
+export type CustomStrapInfoQueryVariables = Exact<{
+  handle: Scalars['String']['input'];
+  country?: InputMaybe<CountryCode>;
+}>;
+
+
+export type CustomStrapInfoQuery = { __typename?: 'QueryRoot', product?: { __typename?: 'Product', id: string, variants: { __typename?: 'ProductVariantConnection', nodes: Array<{ __typename?: 'ProductVariant', id: string, priceV2: { __typename?: 'MoneyV2', amount: any, currencyCode: CurrencyCode } }> } } | null };
+
 export type CustomStrapVariantQueryVariables = Exact<{
   handle: Scalars['String']['input'];
 }>;
@@ -10346,6 +10354,7 @@ export type SiblingProductsQuery = { __typename?: 'QueryRoot', products: { __typ
 
 export type ProductSingleQueryVariables = Exact<{
   handle: Scalars['String']['input'];
+  country?: InputMaybe<CountryCode>;
 }>;
 
 
@@ -10354,10 +10363,25 @@ export type ProductSingleQuery = { __typename?: 'QueryRoot', product?: { __typen
 export type ProductListQueryVariables = Exact<{
   first: Scalars['Int']['input'];
   after?: InputMaybe<Scalars['String']['input']>;
+  country?: InputMaybe<CountryCode>;
 }>;
 
 
 export type ProductListQuery = { __typename?: 'QueryRoot', products: { __typename?: 'ProductConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean }, edges: Array<{ __typename?: 'ProductEdge', cursor: string, node: { __typename?: 'Product', id: string, handle: string, title: string, productType: string, priceRange: { __typename?: 'ProductPriceRange', minVariantPrice: { __typename?: 'MoneyV2', amount: any, currencyCode: CurrencyCode } }, featuredImage?: { __typename?: 'Image', url: any, altText?: string | null, width?: number | null, height?: number | null } | null, variants: { __typename?: 'ProductVariantConnection', nodes: Array<{ __typename?: 'ProductVariant', id: string }> } } }> } };
+
+export type SearchProductsQueryVariables = Exact<{
+  query: Scalars['String']['input'];
+  first: Scalars['Int']['input'];
+  country?: InputMaybe<CountryCode>;
+}>;
+
+
+export type SearchProductsQuery = { __typename?: 'QueryRoot', products: { __typename?: 'ProductConnection', nodes: Array<{ __typename?: 'Product', handle: string, title: string, vendor: string, productType: string, featuredImage?: { __typename?: 'Image', url: any, altText?: string | null } | null, priceRange: { __typename?: 'ProductPriceRange', minVariantPrice: { __typename?: 'MoneyV2', amount: any, currencyCode: CurrencyCode } } }> } };
+
+export type StoreLocalizationQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type StoreLocalizationQuery = { __typename?: 'QueryRoot', localization: { __typename?: 'Localization', availableCountries: Array<{ __typename?: 'Country', isoCode: CountryCode, name: string, currency: { __typename?: 'Currency', isoCode: CurrencyCode, name: string, symbol: string } }> }, shop: { __typename?: 'Shop', paymentSettings: { __typename?: 'PaymentSettings', currencyCode: CurrencyCode, enabledPresentmentCurrencies: Array<CurrencyCode> } } };
 
 export class TypedDocumentString<TResult, TVariables>
   extends String
@@ -10378,6 +10402,22 @@ export class TypedDocumentString<TResult, TVariables>
   }
 }
 
+export const CustomStrapInfoDocument = new TypedDocumentString(`
+    query CustomStrapInfo($handle: String!, $country: CountryCode) @inContext(country: $country) {
+  product(handle: $handle) {
+    id
+    variants(first: 1) {
+      nodes {
+        id
+        priceV2 {
+          amount
+          currencyCode
+        }
+      }
+    }
+  }
+}
+    `) as unknown as TypedDocumentString<CustomStrapInfoQuery, CustomStrapInfoQueryVariables>;
 export const CustomStrapVariantDocument = new TypedDocumentString(`
     query CustomStrapVariant($handle: String!) {
   product(handle: $handle) {
@@ -10407,7 +10447,7 @@ export const SiblingProductsDocument = new TypedDocumentString(`
 }
     `) as unknown as TypedDocumentString<SiblingProductsQuery, SiblingProductsQueryVariables>;
 export const ProductSingleDocument = new TypedDocumentString(`
-    query ProductSingle($handle: String!) {
+    query ProductSingle($handle: String!, $country: CountryCode) @inContext(country: $country) {
   product(handle: $handle) {
     id
     handle
@@ -10461,7 +10501,7 @@ export const ProductSingleDocument = new TypedDocumentString(`
 }
     `) as unknown as TypedDocumentString<ProductSingleQuery, ProductSingleQueryVariables>;
 export const ProductListDocument = new TypedDocumentString(`
-    query ProductList($first: Int!, $after: String) {
+    query ProductList($first: Int!, $after: String, $country: CountryCode) @inContext(country: $country) {
   products(first: $first, after: $after) {
     pageInfo {
       hasNextPage
@@ -10495,3 +10535,46 @@ export const ProductListDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<ProductListQuery, ProductListQueryVariables>;
+export const SearchProductsDocument = new TypedDocumentString(`
+    query SearchProducts($query: String!, $first: Int!, $country: CountryCode) @inContext(country: $country) {
+  products(first: $first, query: $query) {
+    nodes {
+      handle
+      title
+      vendor
+      productType
+      featuredImage {
+        url(transform: {maxWidth: 200})
+        altText
+      }
+      priceRange {
+        minVariantPrice {
+          amount
+          currencyCode
+        }
+      }
+    }
+  }
+}
+    `) as unknown as TypedDocumentString<SearchProductsQuery, SearchProductsQueryVariables>;
+export const StoreLocalizationDocument = new TypedDocumentString(`
+    query StoreLocalization {
+  localization {
+    availableCountries {
+      isoCode
+      name
+      currency {
+        isoCode
+        name
+        symbol
+      }
+    }
+  }
+  shop {
+    paymentSettings {
+      currencyCode
+      enabledPresentmentCurrencies
+    }
+  }
+}
+    `) as unknown as TypedDocumentString<StoreLocalizationQuery, StoreLocalizationQueryVariables>;

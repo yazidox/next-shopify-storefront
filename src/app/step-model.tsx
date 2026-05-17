@@ -14,6 +14,8 @@ interface Props {
   autoRotate?: boolean;
   /** Subtle sine-wave sway around the base camera orbit so users see it's a 3D model. */
   breathe?: BreatheConfig;
+  /** When true, lets the user drag to orbit the model (no debug UI). */
+  interactive?: boolean;
   className?: string;
 }
 
@@ -42,6 +44,7 @@ export function StepModel({
   rotationPerSecond = "18deg",
   autoRotate = true,
   breathe,
+  interactive = false,
   className,
 }: Props) {
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -142,7 +145,7 @@ export function StepModel({
             rotationPerSecond={rotationPerSecond}
             visible={i === active && loaded.has(src)}
             autoRotate={!debug && autoRotate && !breathe}
-            cameraControls={debug && i === active}
+            cameraControls={(debug || interactive) && i === active}
             onLoaded={() =>
               setLoaded((prev) => {
                 if (prev.has(src)) return prev;

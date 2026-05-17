@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import { ReactNode } from "react";
 import Script from "next/script";
+import { cookies } from "next/headers";
 import { Header } from "./header";
 import { ConditionalFooter } from "./conditional-footer";
 import TopLoader from "nextjs-toploader";
 import Providers from "./providers";
+import { COUNTRY_COOKIE, resolveCountryCode } from "@/lib/localization";
+import { getShopifyLocalization } from "@/lib/shopify-localization";
 import "./globals.css";
 
 const FB_PIXEL_ID = "2435361760266906";
@@ -118,7 +121,11 @@ interface Props {
   children: ReactNode;
 }
 
-export default function Layout(props: Props) {
+export default async function Layout(props: Props) {
+  const localization = await getShopifyLocalization();
+  const cookieStore = await cookies();
+  const countryCode = resolveCountryCode(cookieStore.get(COUNTRY_COOKIE)?.value, localization.options);
+
   return (
     <html lang="en" className="light">
       <head>
@@ -171,7 +178,7 @@ export default function Layout(props: Props) {
         </noscript>
 
         <TopLoader color="#c2185b" showSpinner={false} />
-        <Providers>
+        <Providers countryCode={countryCode} localizationOptions={localization.options}>
           <Header />
           <main>{props.children}</main>
           <ConditionalFooter />

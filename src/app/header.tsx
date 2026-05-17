@@ -4,20 +4,40 @@ import { useCart } from "@shopify/hydrogen-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Menu, ShoppingBag, Search, User } from "@esmate/shadcn/pkgs/lucide-react";
+import { Menu, Search, ShoppingBag } from "@esmate/shadcn/pkgs/lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@esmate/shadcn/components/ui/sheet";
+import { CountryCurrencyPicker } from "./country-currency-picker";
+import { SearchOverlay } from "./search-overlay";
 
 const mainMenuItems: { text: string; href: string }[] = [
-  { text: "Collection", href: "/products" },
+  { text: "Buy Watch", href: "/products" },
+  { text: "Buy Strap", href: "/buy-strap" },
   { text: "Custom Strap", href: "/custom-strap" },
-  { text: "Maison", href: "/about" },
 ];
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
   const { totalQuantity } = useCart();
+
+  // Cmd/Ctrl+K to open search
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  // Close search on route change
+  useEffect(() => {
+    setSearchOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -125,20 +145,15 @@ export function Header() {
 
         {/* RIGHT — utility */}
         <div className="flex flex-1 items-center justify-end gap-1 lg:gap-2">
+          <CountryCurrencyPicker />
           <button
             type="button"
             aria-label="Search"
-            className="hidden rounded-full p-2 text-ink/80 transition-colors hover:bg-ink/5 hover:text-ink lg:inline-flex"
+            onClick={() => setSearchOpen(true)}
+            className="rounded-full p-2 text-ink/80 transition-colors hover:bg-ink/5 hover:text-ink"
           >
             <Search className="h-4 w-4" strokeWidth={2} />
           </button>
-          <Link
-            href="/account"
-            aria-label="Account"
-            className="hidden rounded-full p-2 text-ink/80 transition-colors hover:bg-ink/5 hover:text-ink lg:inline-flex"
-          >
-            <User className="h-4 w-4" strokeWidth={2} />
-          </Link>
           <span className="mx-1 hidden h-4 w-px bg-ink/15 lg:inline-block" />
           <Link
             href="/cart"
@@ -155,6 +170,8 @@ export function Header() {
           </Link>
         </div>
       </nav>
+
+      <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
     </header>
   );
 }

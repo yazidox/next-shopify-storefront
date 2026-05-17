@@ -3,25 +3,31 @@ import { Money, useCart } from "@shopify/hydrogen-react";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, Loader2, Check } from "@esmate/shadcn/pkgs/lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { getProductList } from "./service";
 import { useRequest } from "@esmate/react/ahooks";
 import { titleize } from "@esmate/utils/string";
 import { analytics } from "@/lib/analytics";
+import { useStoreLocalization } from "../store-localization";
 
 interface Props {
   data: Awaited<ReturnType<typeof getProductList>>;
 }
 
 export function ProductList(props: Props) {
+  const { countryCode } = useStoreLocalization();
   const [pages, setPages] = useState([props.data]);
   const lastPage = pages[pages.length - 1];
   const lastCursor = lastPage.edges[lastPage.edges.length - 1].cursor;
   const hasNextPage = lastPage.pageInfo.hasNextPage;
 
+  useEffect(() => {
+    setPages([props.data]);
+  }, [countryCode, props.data]);
+
   const request = useRequest(
     async () => {
-      setPages([...pages, await getProductList(lastCursor)]);
+      setPages([...pages, await getProductList(lastCursor, countryCode)]);
     },
     { manual: true },
   );
@@ -40,7 +46,7 @@ export function ProductList(props: Props) {
             <span className="h-px w-10 bg-line sm:w-12" />
             <span className="text-[10px] font-medium tracking-[0.3em] uppercase">The Collection</span>
           </div>
-          <h2 className="font-display text-3xl leading-[0.95] uppercase text-ink sm:text-4xl md:text-5xl lg:text-6xl">
+          <h2 className="font-display text-3xl leading-[0.95] text-ink uppercase sm:text-4xl md:text-5xl lg:text-6xl">
             {allEdges.length} references.
             <br />
             One <span className="text-pop">obsession.</span>
@@ -78,23 +84,33 @@ export function ProductList(props: Props) {
   );
 }
 
-function ProductCard({
-  node,
-  index,
-}: {
-  node: Props["data"]["edges"][number]["node"];
-  index: number;
-}) {
-  const { linesAdd, status } = useCart();
+function ProductCard({ node, index }: { node: Props["data"]["edges"][number]["node"]; index: number }) {
+  const cart = useCart();
+  const { checkoutUrl, linesAdd, status, totalQuantity } = cart;
   const [added, setAdded] = useState(false);
   const [adding, setAdding] = useState(false);
+  const [payingNow, setPayingNow] = useState(false);
+  const [checkoutStartQuantity, setCheckoutStartQuantity] = useState<number | null>(null);
   const variantId = node.variants?.nodes?.[0]?.id;
   const price = node.priceRange?.minVariantPrice;
+  const cartBusy = status === "creating" || status === "updating";
+  const busy = adding || payingNow || cartBusy;
+
+  useEffect(() => {
+    if (!payingNow || !checkoutUrl) return;
+    if (status !== "idle") return;
+
+    const before = checkoutStartQuantity ?? 0;
+    const after = totalQuantity ?? 0;
+    if (after <= before) return;
+
+    window.location.href = checkoutUrl;
+  }, [checkoutStartQuantity, checkoutUrl, payingNow, status, totalQuantity]);
 
   async function add(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-    if (!variantId || adding) return;
+    if (!variantId || busy) return;
     setAdding(true);
     try {
       linesAdd([{ merchandiseId: variantId, quantity: 1 }]);
@@ -111,7 +127,21 @@ function ProductCard({
     }
   }
 
-  const busy = adding || status === "creating" || status === "updating";
+  function payNow(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!variantId || busy) return;
+
+    setCheckoutStartQuantity(totalQuantity ?? 0);
+    setPayingNow(true);
+    linesAdd([{ merchandiseId: variantId, quantity: 1 }]);
+    analytics.addToCart({
+      id: node.id,
+      name: node.title,
+      quantity: 1,
+      price: price ? { amount: price.amount, currencyCode: price.currencyCode } : undefined,
+    });
+  }
 
   return (
     <article className="group relative aspect-3/4 overflow-hidden rounded-3xl bg-ink/5">
@@ -154,37 +184,46 @@ function ProductCard({
               {titleize(node.title)}
             </h3>
             {price && (
-              <span className="font-display shrink-0 text-2xl leading-none whitespace-nowrap text-ink md:text-3xl">
+              <span className="shrink-0 font-display text-2xl leading-none whitespace-nowrap text-ink md:text-3xl">
                 <Money data={price} />
               </span>
             )}
           </div>
 
-          {/* Add to Cart — fades in on hover (desktop), always visible on touch */}
-          <button
-            type="button"
-            onClick={add}
-            disabled={!variantId || busy}
-            className="pointer-events-auto inline-flex w-full items-center justify-center gap-2 rounded-md bg-ink px-6 py-3 text-[11px] font-bold tracking-[0.28em] text-cream uppercase opacity-100 transition-all duration-300 hover:bg-pop disabled:opacity-50 md:opacity-0 md:group-hover:opacity-100"
-            aria-label={`Add ${node.title} to bag`}
-          >
-            {busy ? (
-              <>
+          {/* Purchase actions — fade in on hover (desktop), always visible on touch */}
+          <div className="pointer-events-auto grid grid-cols-2 gap-2 opacity-100 transition-all duration-300 md:opacity-0 md:group-hover:opacity-100">
+            <button
+              type="button"
+              onClick={add}
+              disabled={!variantId || busy}
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-ink px-3 text-[10px] font-bold tracking-[0.22em] text-cream uppercase transition-colors hover:bg-pop disabled:opacity-50"
+              aria-label={`Add ${node.title} to bag`}
+            >
+              {adding ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                Adding…
-              </>
-            ) : added ? (
-              <>
-                Added
+              ) : added ? (
                 <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
-              </>
-            ) : (
-              <>
-                Add to Bag
+              ) : (
                 <ArrowRight className="h-3 w-3" strokeWidth={2.5} />
-              </>
-            )}
-          </button>
+              )}
+              {added ? "Added" : "Add Bag"}
+            </button>
+
+            <button
+              type="button"
+              onClick={payNow}
+              disabled={!variantId || busy}
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-[#ff3b30] px-3 text-[10px] font-bold tracking-[0.22em] text-white uppercase transition-colors hover:bg-[#e03127] disabled:opacity-50"
+              aria-label={`Pay now for ${node.title}`}
+            >
+              {payingNow ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <ArrowRight className="h-3 w-3" strokeWidth={2.5} />
+              )}
+              Pay Now
+            </button>
+          </div>
         </div>
       </div>
     </article>

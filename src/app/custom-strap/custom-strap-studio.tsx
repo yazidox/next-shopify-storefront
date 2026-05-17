@@ -9,6 +9,7 @@ import { DecalGeometry } from "three/examples/jsm/geometries/DecalGeometry.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { Check, Loader2, RotateCcw, ShoppingBag, Upload } from "@esmate/shadcn/pkgs/lucide-react";
+import { analytics } from "@/lib/analytics";
 
 type HeroTextureStyle = "hero-pink" | "hero-white" | "hero-orange" | "hero-black" | "hero-green" | "hero-yellow";
 type TextureStyle = HeroTextureStyle | "smooth" | "saffiano" | "rally" | "checker" | "wave" | "uploaded";
@@ -393,6 +394,7 @@ export function CustomStrapStudio({
   const configRef = useRef(INITIAL_CONFIG);
   const debugRef = useRef(false);
   const initialsPlacedRef = useRef(false);
+  const customizeFiredRef = useRef(false);
   const initialsPlacementRef = useRef<InitialsPlacement | null>(null);
 
   const selectedModel = useMemo(
@@ -674,17 +676,13 @@ export function CustomStrapStudio({
     return `${textureName} / ${source} / ${config.finish}`;
   }, [config.finish, config.textureStyle]);
 
-  const activeTexture =
-    HERO_TEXTURE_OPTIONS.find((item) => item.id === config.textureStyle) ??
-    CUSTOM_TEXTURE_OPTIONS.find((item) => item.id === config.textureStyle);
-  const activeTextureName = activeTexture?.name ?? "Custom";
-  const activeSource = isHeroTextureStyle(config.textureStyle) ? "Official reference" : "Atelier material";
-  const activeColors = isHeroTextureStyle(config.textureStyle)
-    ? (activeTexture?.colors ?? [config.baseColor, config.accentColor])
-    : [config.baseColor, config.accentColor];
-
   function updateConfig(next: Partial<StrapConfig>) {
     setConfig((current) => ({ ...current, ...next }));
+    // Fire Meta Pixel CustomizeProduct ONCE per session (the first real config change)
+    if (!customizeFiredRef.current) {
+      customizeFiredRef.current = true;
+      analytics.customizeProduct({ id: "chronostrap-custom-strap", detail: "Custom Strap Studio" });
+    }
   }
 
   function resetStudio() {
@@ -805,7 +803,7 @@ export function CustomStrapStudio({
           />
           <div
             ref={mountRef}
-            className="absolute inset-y-10 -left-[60%] w-[160%] sm:inset-y-6 sm:-left-[38%] sm:w-[138%] lg:inset-y-0 lg:left-0 lg:w-[62%]"
+            className="absolute inset-y-10 left-[-150%] w-[200%] sm:inset-y-6 sm:left-[-90%] sm:w-[160%] lg:inset-y-0 lg:left-0 lg:w-[62%]"
           />
 
           <div className="pointer-events-none absolute top-20 left-4 max-w-[320px] sm:top-24 sm:left-8 sm:max-w-[420px] lg:top-28 lg:left-12">
@@ -851,19 +849,6 @@ export function CustomStrapStudio({
               >
                 <RotateCcw className="h-4 w-4" strokeWidth={2} />
               </button>
-            </div>
-
-            <div className="mb-5 rounded-[8px] border border-ink/10 bg-white/55 p-3 shadow-[0_18px_45px_rgba(10,10,10,0.04)] sm:mb-7 sm:p-4">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="tracking-luxury text-[10px] font-bold text-ink/42 uppercase">Current build</p>
-                  <h3 className="mt-2 text-lg leading-none font-black tracking-normal text-ink uppercase sm:text-xl">
-                    {activeTextureName}
-                  </h3>
-                  <p className="mt-2 text-sm font-medium text-ink/55">{activeSource} / Matte finish</p>
-                </div>
-                <SwatchStack colors={activeColors} />
-              </div>
             </div>
 
             <ConfigSection step="01" title="Reference" meta="Official GLB models">
@@ -1131,20 +1116,6 @@ function SwatchLine({ colors }: { colors: string[] }) {
         />
       ))}
     </span>
-  );
-}
-
-function SwatchStack({ colors }: { colors: string[] }) {
-  return (
-    <div className="flex shrink-0 items-center">
-      {colors.slice(0, 3).map((color) => (
-        <span
-          key={color}
-          className="-ml-2 block h-8 w-8 rounded-full border-2 border-white shadow-[0_8px_18px_rgba(10,10,10,0.12)] first:ml-0 sm:h-10 sm:w-10"
-          style={{ backgroundColor: color }}
-        />
-      ))}
-    </div>
   );
 }
 

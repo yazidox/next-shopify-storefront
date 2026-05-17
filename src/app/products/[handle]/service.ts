@@ -1,4 +1,6 @@
 import { graphql } from "@/lib/graphql";
+import { CountryCode } from "@/lib/graphql/graphql";
+import { DEFAULT_COUNTRY_CODE, normalizeCountryCode } from "@/lib/localization";
 import { storefront } from "@/lib/storefront";
 import { invariant } from "@esmate/utils";
 import { truncate } from "@esmate/utils/lodash";
@@ -30,9 +32,9 @@ export async function getSiblingProducts(handle: string, productType: string | n
   return nodes;
 }
 
-export async function getProductSingle(handle: string) {
+export async function getProductSingle(handle: string, countryCode = DEFAULT_COUNTRY_CODE) {
   const ProductSingleQuery = graphql(`
-    query ProductSingle($handle: String!) {
+    query ProductSingle($handle: String!, $country: CountryCode) @inContext(country: $country) {
       product(handle: $handle) {
         id
         handle
@@ -88,6 +90,7 @@ export async function getProductSingle(handle: string) {
 
   const { data } = await storefront.query(ProductSingleQuery, {
     handle,
+    country: normalizeCountryCode(countryCode) as CountryCode,
   });
 
   invariant(data?.product, "product is not available");

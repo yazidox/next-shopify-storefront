@@ -214,7 +214,11 @@ export function ProductSingle({ data, siblings }: Props) {
             </AddToCartButton>
 
             {/* Secondary actions — Wishlist + Share */}
-            <SecondaryActions title={data.title} />
+            <SecondaryActions
+              productId={data.id}
+              title={data.title}
+              price={price ? { amount: price.amount, currencyCode: price.currencyCode } : undefined}
+            />
 
             {/* Quick value chips — gift box, dispatch */}
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -554,7 +558,15 @@ function DispatchCountdown() {
   );
 }
 
-function SecondaryActions({ title }: { title: string }) {
+function SecondaryActions({
+  productId,
+  title,
+  price,
+}: {
+  productId: string;
+  title: string;
+  price?: { amount: string | number; currencyCode?: string };
+}) {
   const [saved, setSaved] = useState(false);
   useEffect(() => {
     try {
@@ -568,10 +580,14 @@ function SecondaryActions({ title }: { title: string }) {
   function toggleSave() {
     try {
       const list = new Set<string>(JSON.parse(localStorage.getItem("cs_wishlist") || "[]"));
-      if (list.has(title)) list.delete(title);
-      else list.add(title);
+      const willBeSaved = !list.has(title);
+      if (willBeSaved) list.add(title);
+      else list.delete(title);
       localStorage.setItem("cs_wishlist", JSON.stringify([...list]));
-      setSaved(list.has(title));
+      setSaved(willBeSaved);
+      if (willBeSaved) {
+        analytics.addToWishlist({ id: productId, name: title, price });
+      }
     } catch {
       /* noop */
     }

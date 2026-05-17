@@ -1,18 +1,22 @@
 /**
  * Marketing event tracking — Meta Pixel + (optionally) other vendors.
  *
- * Standard Meta events ad platforms use to optimize for sales:
- *   PageView           — every route (fires automatically from layout.tsx)
+ * Implemented standard events (per Meta's spec):
+ *   PageView           — every route, automatic from layout.tsx
  *   ViewContent        — product detail page view
- *   AddToCart          — user adds product to cart
- *   InitiateCheckout   — user clicks Checkout
- *   Lead               — newsletter signup
+ *   AddToCart          — item added to cart
+ *   AddToWishlist      — heart/save button on PDP
+ *   CustomizeProduct   — user changes config in /custom-strap
  *   Search             — search query submitted
- *   Purchase           — fires on Shopify's hosted checkout (configure in
- *                        Shopify admin → Settings → Customer events)
+ *   Lead               — newsletter signup (top of funnel)
+ *   CompleteRegistration — customer account created
+ *   Contact            — contact form submitted
+ *   InitiateCheckout   — Shopify Customer Events (NOT here, lives on checkout.shopify.com)
+ *   AddPaymentInfo     — Shopify Customer Events
+ *   Purchase           — Shopify Customer Events
  *
  * All functions are safe to call before the pixel script has finished loading —
- * fbq queues events automatically. They're also safe on the server (no-op).
+ * fbq queues events. They're also safe on the server (no-op).
  */
 
 type Money = { amount: string | number; currencyCode?: string };
@@ -81,7 +85,43 @@ export const analytics = {
     });
   },
 
-  /** Checkout button clicked. */
+  /** Product saved to wishlist. */
+  addToWishlist({
+    id,
+    name,
+    price,
+  }: {
+    id: string;
+    name: string;
+    price?: Money;
+  }) {
+    const { value, currency } = money(price);
+    fbq("track", "AddToWishlist", {
+      content_ids: [id],
+      content_name: name,
+      content_type: "product",
+      value,
+      currency,
+    });
+  },
+
+  /** User changed a config option in the strap customizer. Debounce in caller. */
+  customizeProduct({
+    id,
+    detail,
+  }: {
+    id: string;
+    detail?: string;
+  }) {
+    fbq("track", "CustomizeProduct", {
+      content_ids: [id],
+      content_name: detail,
+      content_type: "product",
+    });
+  },
+
+  /** Checkout button clicked. NOTE: Shopify Customer Events also fires this on
+   * the hosted checkout page. Don't call from both places to avoid double-count. */
   initiateCheckout({
     ids,
     quantity,
@@ -104,6 +144,19 @@ export const analytics = {
   /** Newsletter form submitted. */
   lead(source: string) {
     fbq("track", "Lead", { content_name: source });
+  },
+
+  /** Customer account created (Shopify account / sign-up). */
+  completeRegistration({ method }: { method?: string } = {}) {
+    fbq("track", "CompleteRegistration", {
+      content_name: method ?? "account",
+      status: true,
+    });
+  },
+
+  /** Contact form submitted / email-to-team event. */
+  contact({ source }: { source?: string } = {}) {
+    fbq("track", "Contact", { content_name: source ?? "contact-form" });
   },
 
   /** Search bar query submitted. */
