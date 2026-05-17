@@ -158,6 +158,20 @@ const CUSTOM_TEXTURE_OPTIONS: { id: TextureStyle; name: string; colors: string[]
 
 const COLOR_PRESETS = ["#ff3b30", "#0a0a0a", "#f4efe6", "#1f6f8b", "#f7931a", "#9945ff", "#14f195", "#f15bb5"];
 
+function pickStudioTextColor(hex?: string) {
+  if (!hex) return { primary: "#0a0a0a", muted: "rgba(10,10,10,0.55)" };
+
+  const h = hex.replace("#", "");
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+
+  return lum > 0.6
+    ? { primary: "#0a0a0a", muted: "rgba(10,10,10,0.55)" }
+    : { primary: "#f4efe6", muted: "rgba(244,239,230,0.72)" };
+}
+
 const DEFAULT_MODEL_VIEW = {
   maxAxis: 1.65,
   offset: { x: -0.0001, y: 1.34, z: 0 },
@@ -373,11 +387,7 @@ const INITIALS_PLACEMENTS: Record<HeroTextureStyle, InitialsPlacementSnapshot> =
   },
 };
 
-export function CustomStrapStudio({
-  customStrapVariantId,
-}: {
-  customStrapVariantId: string | null;
-}) {
+export function CustomStrapStudio({ customStrapVariantId }: { customStrapVariantId: string | null }) {
   const cart = useCart();
   const router = useRouter();
   const [config, setConfig] = useState<StrapConfig>(INITIAL_CONFIG);
@@ -401,6 +411,8 @@ export function CustomStrapStudio({
     () => HERO_TEXTURE_OPTIONS.find((model) => model.id === config.baseHeroStyle) ?? HERO_TEXTURE_OPTIONS[0],
     [config.baseHeroStyle],
   );
+  const previewBackground = selectedModel.colors[1] ?? selectedModel.colors[0];
+  const previewText = pickStudioTextColor(previewBackground);
 
   useEffect(() => {
     setDebug(new URLSearchParams(window.location.search).get("debug") === "1");
@@ -792,23 +804,23 @@ export function CustomStrapStudio({
   return (
     <div className="min-h-[100svh] overflow-x-hidden bg-cream text-ink">
       <section className="grid min-h-[100svh] grid-cols-1 lg:min-h-screen lg:grid-cols-[minmax(0,1fr)_560px] xl:grid-cols-[minmax(0,1fr)_620px] 2xl:grid-cols-[minmax(0,1fr)_660px]">
-        <div className="sticky top-[68px] z-10 h-[55svh] max-h-[620px] min-h-[430px] overflow-hidden bg-canvas sm:h-[60svh] sm:max-h-[720px] sm:min-h-[560px] lg:static lg:top-auto lg:z-auto lg:h-auto lg:max-h-none lg:min-h-screen">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0"
-            style={{
-              background:
-                "radial-gradient(70% 55% at 45% 42%, rgba(255,255,255,0.78), rgba(255,255,255,0) 62%), linear-gradient(135deg, #f4efe6 0%, #d8edf1 45%, #f7dd80 100%)",
-            }}
-          />
+        <div
+          className="relative h-[58svh] max-h-[620px] min-h-[430px] overflow-hidden transition-colors duration-700 sm:h-[64svh] sm:max-h-[720px] sm:min-h-[560px] lg:h-auto lg:max-h-none lg:min-h-screen"
+          style={{ backgroundColor: previewBackground }}
+        >
           <div
             ref={mountRef}
             className="absolute inset-y-10 left-[-150%] w-[200%] sm:inset-y-6 sm:left-[-90%] sm:w-[160%] lg:inset-y-0 lg:left-0 lg:w-[62%]"
           />
 
           <div className="pointer-events-none absolute top-20 left-4 max-w-[320px] sm:top-24 sm:left-8 sm:max-w-[420px] lg:top-28 lg:left-12">
-            <p className="tracking-luxury text-[10px] font-bold text-ink/55 uppercase">Live customizer</p>
-            <h1 className="mt-3 text-4xl leading-[0.95] font-black tracking-normal text-ink uppercase sm:mt-4 sm:text-6xl lg:text-7xl">
+            <p className="tracking-luxury text-[10px] font-bold uppercase" style={{ color: previewText.muted }}>
+              Live customizer
+            </p>
+            <h1
+              className="mt-3 text-4xl leading-[0.95] font-black tracking-normal uppercase sm:mt-4 sm:text-6xl lg:text-7xl"
+              style={{ color: previewText.primary }}
+            >
               Custom
               <br />
               Strap

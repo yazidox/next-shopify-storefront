@@ -84,6 +84,9 @@ export function Header() {
             >
               <Menu className="h-6 w-6" strokeWidth={2} />
             </SheetTrigger>
+            <div className="lg:hidden">
+              <CountryCurrencyPicker />
+            </div>
             <SheetContent side="left" className="w-full border-r border-black/10 bg-cream sm:max-w-md">
               <div className="flex h-full flex-col justify-between p-8 pt-16">
                 <div className="flex flex-col">
@@ -146,7 +149,9 @@ export function Header() {
 
         {/* RIGHT — utility */}
         <div className="flex flex-1 items-center justify-end gap-1 lg:gap-2">
-          <CountryCurrencyPicker />
+          <div className="hidden lg:block">
+            <CountryCurrencyPicker />
+          </div>
           <button
             type="button"
             aria-label="Search"

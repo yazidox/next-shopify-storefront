@@ -23,25 +23,28 @@ export function ProductProof({ eyebrow = "In the wild" }: { eyebrow?: string }) 
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
           <Tile
             kind="video"
             src="/video1.MP4"
             aspect="aspect-[4/5]"
-            className="sm:col-span-1"
           />
           <Tile
             kind="image"
             src="/lambo-product.jpg"
             alt="ChronoStrap watch lifestyle shot"
             aspect="aspect-[4/5]"
-            className="sm:col-span-1 sm:row-span-1"
           />
           <Tile
             kind="video"
             src="/video2.MP4"
             aspect="aspect-[4/5]"
-            className="sm:col-span-1"
+          />
+          <Tile
+            kind="image"
+            src="/proof2.webp"
+            alt="ChronoStrap lifestyle proof"
+            aspect="aspect-[4/5]"
           />
         </div>
       </div>
