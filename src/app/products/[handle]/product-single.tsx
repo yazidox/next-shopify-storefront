@@ -29,6 +29,8 @@ interface Props {
   siblings: Awaited<ReturnType<typeof getSiblingProducts>>;
 }
 
+type ProductMoney = Props["data"]["priceRange"]["minVariantPrice"];
+
 // ╔═══════════════════════════════════════════════════════════════════╗
 // ║ Swatch-style PDP — FULL WIDTH                                       ║
 // ║ - Gallery: edge-to-edge left ~65%                                   ║
@@ -294,7 +296,7 @@ export function ProductSingle({ data, siblings }: Props) {
         title={data.title}
         price={price}
         available={availableForSale}
-        variantId={variantId}
+        variantId={variantId ?? undefined}
         qty={qty}
         onAdd={() => {
           analytics.addToCart({
@@ -649,7 +651,7 @@ function MobileStickyCTA({
   onAdd,
 }: {
   title: string;
-  price: { amount: string | number; currencyCode: string };
+  price: ProductMoney;
   available: boolean;
   variantId?: string;
   qty: number;
