@@ -12,8 +12,8 @@ const models: WatchModelItem[] = [
   { src: "/huit-blanc.opt.glb", color: "#f4efe6", bg: "#E5E2E5", name: "Huit Blanc" },
   { src: "/orenji-hachi.opt.glb", color: "#ff7a1a", bg: "#CD3C30", name: "Orenji Hachi" },
   { src: "/black.opt.glb", color: "#0a0a0a", bg: "#ffffff", name: "Noir" },
-  { src: "/green.opt.glb", color: "#10b981", bg: "#ECF0C2", name: "Vert" },
-  { src: "/yellow-sky.opt.glb", color: "#fde047", bg: "#DAE8EA", name: "Yellow Sky" },
+  { src: "/green.opt.glb", color: "#10b981", bg: "#ECF0C2", name: "Vert", targetOffsetY: 0.5 },
+  { src: "/yellow-sky.opt.glb", color: "#fde047", bg: "#DAE8EA", name: "Yellow Sky", targetOffsetY: 0.5 },
 ];
 
 // Relative luminance — returns a light or dark text color that contrasts the bg.

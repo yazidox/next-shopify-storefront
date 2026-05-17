@@ -10,6 +10,10 @@ export interface WatchModelItem {
   bg?: string; // hero background colour while this model is active
   name?: string;
   durationMs?: number; // override how long this model stays visible
+  // Y-shift applied to the shared cameraTarget (in meters). Positive moves the
+  // model DOWN in the viewport. Use to align models whose source mesh has a
+  // different vertical origin than the rest of the lineup.
+  targetOffsetY?: number;
 }
 
 interface Props {
@@ -47,6 +51,12 @@ export function WatchModel({
   const cachedRef = useRef<Set<string>>(new Set());
   const activeViewerRef = useRef<ModelViewerLike | null>(null);
   const firstReadyFiredRef = useRef(false);
+  // Mirrors `active` so the continuous animation closure can read the latest
+  // index without restarting on every model switch.
+  const activeRef = useRef(0);
+  useEffect(() => {
+    activeRef.current = active;
+  }, [active]);
 
   function notifyHeroReady() {
     if (firstReadyFiredRef.current) return;
@@ -99,7 +109,8 @@ export function WatchModel({
         if (a.target && b.target) {
           const tA = parseTriple(a.target);
           const tB = parseTriple(b.target);
-          el.cameraTarget = `${lerp(tA[0], tB[0], k).toFixed(4)}m ${lerp(tA[1], tB[1], k).toFixed(4)}m ${lerp(tA[2], tB[2], k).toFixed(4)}m`;
+          const offsetY = models[activeRef.current]?.targetOffsetY ?? 0;
+          el.cameraTarget = `${lerp(tA[0], tB[0], k).toFixed(4)}m ${(lerp(tA[1], tB[1], k) + offsetY).toFixed(4)}m ${lerp(tA[2], tB[2], k).toFixed(4)}m`;
         }
       }
 

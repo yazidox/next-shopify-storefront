@@ -207,10 +207,10 @@ function HowItWorks() {
       srcs: ["/black.opt.glb"],
       lineup: [
         {
-          src: "/yellow-sky.opt.glb",
+          src: "/huit-blanc.opt.glb",
           cameraOrbit: "129.5deg 85.3deg 2.042m",
           cameraTarget: "0m 0m 0m",
-          scale: 1.18,
+          scale: 1.45,
           breathe: { amplitudeDeg: 4, periodMs: 6500, phaseDeg: 0 },
         },
         {
