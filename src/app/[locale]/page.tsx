@@ -1,10 +1,12 @@
 import Image from "next/image";
-import Link from "next/link";
 import { ReactNode } from "react";
+import { getTranslations } from "next-intl/server";
+import { useTranslations } from "next-intl";
 import { ArrowRight } from "@esmate/shadcn/pkgs/lucide-react";
 import { HeroSplit } from "./hero-split";
 import { StepModel } from "./step-model";
 import { TrackedLink } from "./tracked-link";
+import { Link } from "@/i18n/navigation";
 
 // Returns true when the hex color is dark enough that we should use light text on top.
 function isDarkHex(hex: string): boolean {
@@ -24,14 +26,12 @@ function hexToRgba(hex: string, a: number): string {
   return `rgba(${r}, ${g}, ${b}, ${a})`;
 }
 
-export default function Page() {
+export default async function Page() {
+  const t = await getTranslations("Seo");
   return (
     <>
       {/* Hidden H1 for SEO — visual h1 lives inside the hero */}
-      <h1 className="sr-only">
-        ChronoStrap — The first customizable bioceramic watch. One Swiss-made case, eight interchangeable straps,
-        infinite combinations.
-      </h1>
+      <h1 className="sr-only">{t("homeH1")}</h1>
       <HeroSplit />
       <Marquee />
       <HowItWorks />
@@ -73,14 +73,14 @@ function SectionHeader({
 }
 
 function Marquee() {
-  // Pairs of [bold headline, italic whisper] for rhythm
-  const items: { headline: string; whisper: string }[] = [
-    { headline: "Build Your Own Strap", whisper: "your watch, your rules" },
-    { headline: "Eight Straps · One Watch", whisper: "infinite combinations" },
-    { headline: "Snap · Swap · Style", whisper: "in three seconds flat" },
-    { headline: "Color is a Choice", whisper: "make it yours" },
-    { headline: "Wear Your Mood", whisper: "change it by lunch" },
-    { headline: "Designed by You", whisper: "made in switzerland" },
+  const t = useTranslations("Marquee");
+  const items = [
+    { headline: t("item1Headline"), whisper: t("item1Whisper") },
+    { headline: t("item2Headline"), whisper: t("item2Whisper") },
+    { headline: t("item3Headline"), whisper: t("item3Whisper") },
+    { headline: t("item4Headline"), whisper: t("item4Whisper") },
+    { headline: t("item5Headline"), whisper: t("item5Whisper") },
+    { headline: t("item6Headline"), whisper: t("item6Whisper") },
   ];
   const repeated = [...items, ...items, ...items];
   return (
@@ -104,6 +104,7 @@ function Marquee() {
 }
 
 function CollectionGrid() {
+  const t = useTranslations("Collection");
   const pieces = [
     { name: "OTTO ROSSO", img: "/collection/otto-rosso.png" },
     { name: "HUIT BLANC", img: "/collection/huit-blanc.png" },
@@ -119,13 +120,13 @@ function CollectionGrid() {
       <div className="mx-auto max-w-[1800px]">
         <div className="mb-12 flex flex-col items-baseline justify-between gap-6 lg:mb-20 lg:flex-row">
           <SectionHeader
-            number="02"
-            eyebrow="The Collection"
+            number={t("number")}
+            eyebrow={t("eyebrow")}
             title={
               <>
-                Eight references.
+                {t("titleLine1")}
                 <br />
-                One <span className="text-pop">obsession.</span>
+                {t("titleLine2").split(" ")[0]} <span className="text-pop">{t("obsession")}</span>
               </>
             }
           />
@@ -134,7 +135,7 @@ function CollectionGrid() {
             className="group inline-flex items-center gap-3 text-[10px] font-medium tracking-[0.3em] text-muted uppercase transition-colors hover:text-ink"
           >
             <span className="h-px w-10 bg-line transition-all group-hover:w-16 group-hover:bg-ink" />
-            View all references
+            {t("viewAll")}
           </Link>
         </div>
 
@@ -152,7 +153,7 @@ function CollectionGrid() {
               </div>
               <div className="absolute inset-x-0 top-0 flex items-center justify-between px-6 pt-6 lg:px-10 lg:pt-10">
                 <span className="text-[10px] font-medium tracking-[0.3em] text-muted uppercase">
-                  Ref. {String(i + 1).padStart(2, "0")}
+                  {t("refLabel")} {String(i + 1).padStart(2, "0")}
                 </span>
               </div>
               <div className="absolute inset-x-0 bottom-0 flex items-end justify-between p-6 lg:p-10">
@@ -180,6 +181,7 @@ type Pose = {
 };
 
 function HowItWorks() {
+  const t = useTranslations("HowItWorks");
   const steps: {
     n: string;
     tag: string;
@@ -194,14 +196,13 @@ function HowItWorks() {
     autoRotate?: boolean;
     intervalMs?: number;
     breathe?: BreatheCfg;
-    // optional multi-watch presentation (used in step 01)
     lineup?: Pose[];
   }[] = [
     {
       n: "01",
-      tag: "The Case",
-      title: "Choose your case",
-      copy: "Swiss bioceramic, 42mm. Sistem51 movement, hand-finished. The canvas for every look you'll ever own.",
+      tag: t("step1Tag"),
+      title: t("step1Title"),
+      copy: t("step1Copy"),
       bg: "#0a0a0a",
       accent: "#ffffff",
       srcs: ["/black.opt.glb"],
@@ -231,18 +232,18 @@ function HowItWorks() {
     },
     {
       n: "02",
-      tag: "The Strap",
-      title: "Customize your strap",
-      copy: "Eight colourways. Hand-finished bioceramic. Mix, match, change your mind — and build a wardrobe that lives on your wrist.",
+      tag: t("step2Tag"),
+      title: t("step2Title"),
+      copy: t("step2Copy"),
       bg: "#941843",
       accent: "#f15bb5",
       srcs: ["/wristwatch.opt.glb"],
     },
     {
       n: "03",
-      tag: "Wear it",
-      title: "Wear what you made",
-      copy: "Snap in. Snap out. A whole new watch in three seconds — no tools, no appointment, no permission needed.",
+      tag: t("step3Tag"),
+      title: t("step3Title"),
+      copy: t("step3Copy"),
       bg: "#ECF0C2",
       accent: "#10b981",
       srcs: ["/ap-watch.opt.glb", "/yellow-ap.opt.glb", "/white-ap.opt.glb", "/blue-ap.opt.glb"],
@@ -259,20 +260,17 @@ function HowItWorks() {
       <div className="mx-auto max-w-[1800px]">
         <div className="mb-12 flex flex-col gap-6 sm:mb-16 lg:mb-20 lg:flex-row lg:items-end lg:justify-between">
           <SectionHeader
-            number="01"
-            eyebrow="How it works"
+            number={t("number")}
+            eyebrow={t("eyebrow")}
             title={
               <>
-                Three steps.
+                {t("titleLine1")}
                 <br />
-                <span className="text-pop">Infinitely</span> yours.
+                <span className="text-pop">{t("titleLine2Highlight")}</span> {t("titleLine2Rest")}
               </>
             }
           />
-          <p className="max-w-md text-[15px] leading-relaxed text-muted lg:text-base">
-            The first watch designed to be made yours. One Swiss case, eight straps, endless ways to wear it — change
-            your watch as often as you change your mind.
-          </p>
+          <p className="max-w-md text-[15px] leading-relaxed text-muted lg:text-base">{t("subtitle")}</p>
         </div>
 
         <ol className="grid grid-cols-1 gap-6 md:grid-cols-3 lg:gap-8">
@@ -320,7 +318,6 @@ function HowItWorks() {
                             : i < lineup.length / 2
                               ? "translateX(40%)"
                               : "translateX(-40%)";
-                        // On mobile show only the centre watch — the full lineup won't fit.
                           const mobileHidden = !isCenter;
                           return (
                             <div
@@ -424,15 +421,13 @@ function HowItWorks() {
             params={{ source: "how-it-works" }}
             className="group inline-flex w-full max-w-sm items-center justify-center gap-3 rounded-md bg-ink px-8 py-4 text-[11px] font-bold tracking-[0.28em] text-cream uppercase transition-colors hover:bg-pop sm:w-auto"
           >
-            Start Customizing
+            {t("startCustomizing")}
             <ArrowRight
               className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1"
               strokeWidth={2.5}
             />
           </TrackedLink>
-          <p className="text-center text-[10px] font-medium tracking-[0.3em] text-muted uppercase">
-            Free shipping · 30-day returns · 2-year warranty
-          </p>
+          <p className="text-center text-[10px] font-medium tracking-[0.3em] text-muted uppercase">{t("footnote")}</p>
         </div>
       </div>
     </section>

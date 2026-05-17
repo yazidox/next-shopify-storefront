@@ -1,11 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { ReactNode, useState } from "react";
+import { useTranslations } from "next-intl";
 import { ArrowRight } from "@esmate/shadcn/pkgs/lucide-react";
 import { WatchModel, type WatchModelItem } from "./watch-model";
 import { pinkPopAnimation } from "./animations";
 import { analytics } from "@/lib/analytics";
+import { Link } from "@/i18n/navigation";
 
 const models: WatchModelItem[] = [
   { src: "/wristwatch.opt.glb", color: "#f15bb5", bg: "#941843", name: "Pink Pop" },
@@ -32,6 +33,7 @@ function pickTextColor(hex?: string): { primary: string; muted: string; isLight:
 }
 
 export function HeroSplit() {
+  const t = useTranslations("Hero");
   const [activeBg, setActiveBg] = useState<string | undefined>(models[0]?.bg);
   const { primary, muted, isLight } = pickTextColor(activeBg);
 
@@ -55,13 +57,13 @@ export function HeroSplit() {
               className="tracking-luxury text-[10px] font-bold uppercase transition-colors duration-700"
               style={{ color: muted }}
             >
-              01 / Bundle
+              {t("eyebrowLeft")}
             </span>
             <h2
               className="mt-3 max-w-[11ch] font-display text-3xl leading-[0.95] uppercase transition-colors duration-700 sm:max-w-none sm:text-4xl sm:whitespace-nowrap md:text-5xl"
               style={{ color: primary }}
             >
-              Watch <span style={{ color: "#c2185b" }}>+</span> Strap
+              {t("titleLeft")}
             </h2>
           </div>
           <GlassButton
@@ -69,7 +71,7 @@ export function HeroSplit() {
             tone={isLight ? "dark" : "light"}
             onClick={() => analytics.custom("InitiateBuild", { source: "hero-left" })}
           >
-            Build Yours
+            {t("buildYours")}
           </GlassButton>
         </div>
       </div>
@@ -91,9 +93,9 @@ export function HeroSplit() {
 
         <div className="anim-fade-up anim-delay-2 relative z-10 flex w-full min-w-0 flex-col items-start gap-4 px-5 pt-10 pb-10 sm:flex-row sm:items-end sm:justify-between sm:gap-6 sm:px-8 sm:pb-14 lg:px-14 lg:pt-14 lg:pb-19">
           <div className="min-w-0">
-            <span className="tracking-luxury text-[10px] font-bold text-cream/60 uppercase">02 / Watch only</span>
+            <span className="tracking-luxury text-[10px] font-bold text-cream/60 uppercase">{t("eyebrowRight")}</span>
             <h2 className="mt-3 max-w-[11ch] font-display text-3xl leading-[0.95] uppercase sm:max-w-none sm:text-4xl sm:whitespace-nowrap md:text-5xl">
-              Just the <span className="text-pop">Watch</span>
+              {t("titleRight")} <span className="text-pop">{t("watch")}</span>
             </h2>
           </div>
           <GlassButton
@@ -101,7 +103,7 @@ export function HeroSplit() {
             tone="light"
             onClick={() => analytics.custom("ShopWatchClick", { source: "hero-right" })}
           >
-            Shop Watch
+            {t("shopWatch")}
           </GlassButton>
         </div>
       </div>

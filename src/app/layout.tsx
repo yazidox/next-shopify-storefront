@@ -1,16 +1,7 @@
 import type { Metadata } from "next";
 import { ReactNode } from "react";
 import Script from "next/script";
-import { cookies } from "next/headers";
 import { Analytics } from "@vercel/analytics/next";
-import { Header } from "./header";
-import { ConditionalFooter } from "./conditional-footer";
-import { LoadingScreen } from "./loading-screen";
-import { VercelInteractionTracker } from "./vercel-interaction-tracker";
-import TopLoader from "nextjs-toploader";
-import Providers from "./providers";
-import { COUNTRY_COOKIE, resolveCountryCode } from "@/lib/localization";
-import { getShopifyLocalization } from "@/lib/shopify-localization";
 import "./globals.css";
 
 const FB_PIXEL_ID = "2435361760266906";
@@ -124,11 +115,12 @@ interface Props {
   children: ReactNode;
 }
 
-export default async function Layout(props: Props) {
-  const localization = await getShopifyLocalization();
-  const cookieStore = await cookies();
-  const countryCode = resolveCountryCode(cookieStore.get(COUNTRY_COOKIE)?.value, localization.options);
-
+/**
+ * Root layout — owns <html>, <head>, <body> + global scripts. Per-locale
+ * providers (NextIntlClientProvider, Shopify provider, Header, Footer) live
+ * in `src/app/[locale]/layout.tsx`.
+ */
+export default function Layout(props: Props) {
   return (
     <html lang="en" className="light">
       <head>
@@ -187,14 +179,7 @@ export default async function Layout(props: Props) {
           />
         </noscript>
 
-        <LoadingScreen />
-        <TopLoader color="#c2185b" showSpinner={false} />
-        <Providers countryCode={countryCode} localizationOptions={localization.options}>
-          <VercelInteractionTracker />
-          <Header />
-          <main>{props.children}</main>
-          <ConditionalFooter />
-        </Providers>
+        {props.children}
         <Analytics />
       </body>
     </html>

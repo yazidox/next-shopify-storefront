@@ -27,6 +27,31 @@ interface Props {
 }
 
 const TRANSITION_MS = 700;
+const MOBILE_HERO_QUERY = "(max-width: 1023px)";
+
+function isMobileHeroViewport() {
+  return typeof window !== "undefined" && window.matchMedia(MOBILE_HERO_QUERY).matches;
+}
+
+function useMobileHeroViewport() {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const query = window.matchMedia(MOBILE_HERO_QUERY);
+    const update = () => setIsMobile(query.matches);
+
+    update();
+    if (typeof query.addEventListener === "function") {
+      query.addEventListener("change", update);
+      return () => query.removeEventListener("change", update);
+    }
+
+    query.addListener(update);
+    return () => query.removeListener(update);
+  }, []);
+
+  return isMobile;
+}
 
 type ModelViewerLike = HTMLElement & {
   getCameraOrbit?: () => { theta: number; phi: number; radius: number };
@@ -52,6 +77,7 @@ export function WatchModel({
   const cachedRef = useRef<Set<string>>(new Set());
   const activeViewerRef = useRef<ModelViewerLike | null>(null);
   const firstReadyFiredRef = useRef(false);
+  const mobileAutoMotionPaused = useMobileHeroViewport();
   // Mirrors `active` so the continuous animation closure can read the latest
   // index without restarting on every model switch.
   const activeRef = useRef(0);
@@ -64,9 +90,11 @@ export function WatchModel({
     firstReadyFiredRef.current = true;
     if (typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent("chronostrap:hero-ready"));
-      // Warm every other GLB into HTTP cache so /buy-strap, HowItWorks cards,
-      // and /custom-strap never show their loaders for first-time visitors.
-      prefetchAllModels();
+      if (!isMobileHeroViewport()) {
+        // Warm every other GLB into HTTP cache on desktop. Mobile Safari is more
+        // stable when extra GLBs load only after the user taps a swatch.
+        prefetchAllModels();
+      }
     }
   }
 
@@ -85,7 +113,8 @@ export function WatchModel({
   // Continuous global camera animation — plays across ALL models, never restarts.
   // The active model picks up wherever the timeline currently is when it swaps in.
   useEffect(() => {
-    if (debug || !animation || animation.keyframes.length < 2) return;
+    if (debug || mobileAutoMotionPaused || isMobileHeroViewport() || !animation || animation.keyframes.length < 2)
+      return;
     const frames = animation.keyframes;
     const total = animation.durationMs || frames[frames.length - 1].t || 1;
     const startedAt = performance.now();
@@ -122,7 +151,7 @@ export function WatchModel({
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [animation, debug]);
+  }, [animation, debug, mobileAutoMotionPaused]);
 
   const currentSrc = models[active]?.src;
   const currentColor = models[active]?.color;
@@ -130,14 +159,14 @@ export function WatchModel({
 
   // Auto cycle — paused while in debug mode
   useEffect(() => {
-    if (!isLoaded || models.length < 2 || debug) return;
+    if (!isLoaded || models.length < 2 || debug || mobileAutoMotionPaused || isMobileHeroViewport()) return;
     const perModel = models[active]?.durationMs ?? intervalMs;
     const id = window.setTimeout(() => {
       goTo((active + 1) % models.length);
     }, perModel);
     return () => window.clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoaded, active, models.length, intervalMs, debug]);
+  }, [isLoaded, active, models.length, intervalMs, debug, mobileAutoMotionPaused]);
 
   // Drop outgoing after the crossfade completes
   useEffect(() => {
@@ -204,7 +233,7 @@ export function WatchModel({
         src={currentSrc}
         alt={alt}
         state={isLoaded ? "in" : "entering"}
-        autoRotate={!debug && !animation}
+        autoRotate={!debug && !animation && !mobileAutoMotionPaused}
         onRef={(el) => (activeViewerRef.current = el)}
         onProgress={(p) => {
           setProgress(p);

@@ -1,28 +1,30 @@
 "use client";
 
 import { useCart } from "@shopify/hydrogen-react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Menu, Search, ShoppingBag } from "@esmate/shadcn/pkgs/lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@esmate/shadcn/components/ui/sheet";
 import { CountryCurrencyPicker } from "./country-currency-picker";
 import { SearchOverlay } from "./search-overlay";
+import { LanguageSwitcher } from "./language-switcher";
+import { Link, usePathname } from "@/i18n/navigation";
 import { prefetchAllModels } from "@/lib/model-prefetch";
 
-const mainMenuItems: { text: string; href: string }[] = [
-  { text: "Home", href: "/" },
-  { text: "Buy Watch", href: "/products" },
-  { text: "Buy Strap", href: "/buy-strap" },
-  { text: "Custom Strap", href: "/custom-strap" },
-];
-
 export function Header() {
+  const t = useTranslations("Nav");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
   const { totalQuantity } = useCart();
+
+  const mainMenuItems: { text: string; href: string }[] = [
+    { text: t("home"), href: "/" },
+    { text: t("buyWatch"), href: "/products" },
+    { text: t("buyStrap"), href: "/buy-strap" },
+    { text: t("customStrap"), href: "/custom-strap" },
+  ];
 
   // Cmd/Ctrl+K to open search
   useEffect(() => {
@@ -58,8 +60,7 @@ export function Header() {
   }, []);
 
   function isMenuItemActive(href: string) {
-    const url = new URL(`https://x${href}`);
-    return pathname === url.pathname;
+    return pathname === href;
   }
 
   return (
@@ -90,7 +91,7 @@ export function Header() {
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger
               className="-ml-1 flex h-11 w-11 items-center justify-center rounded-full text-ink transition-colors hover:bg-ink/5 lg:hidden"
-              aria-label="Open menu"
+              aria-label={t("openMenu")}
             >
               <Menu className="h-6 w-6" strokeWidth={2} />
             </SheetTrigger>
@@ -100,7 +101,7 @@ export function Header() {
             <SheetContent side="left" className="w-full border-r border-black/10 bg-cream sm:max-w-md">
               <div className="flex h-full flex-col justify-between p-8 pt-16">
                 <div className="flex flex-col">
-                  <span className="tracking-luxury mb-6 text-[10px] font-bold text-ink/40 uppercase">Maison</span>
+                  <span className="tracking-luxury mb-6 text-[10px] font-bold text-ink/40 uppercase">{t("maison")}</span>
                   {mainMenuItems.map(({ text, href }, i) => (
                     <Link
                       key={href}
@@ -116,10 +117,16 @@ export function Header() {
                       <span>{text}</span>
                     </Link>
                   ))}
+                  <div className="mt-8 flex flex-col gap-3">
+                    <span className="tracking-luxury text-[10px] font-bold text-ink/40 uppercase">
+                      {t("language")}
+                    </span>
+                    <LanguageSwitcher />
+                  </div>
                 </div>
                 <div className="tracking-luxury flex flex-col gap-1 text-xs text-ink/40 uppercase">
-                  <span>ChronoStrap · Geneva 2026</span>
-                  <span>Manufacture & Atelier</span>
+                  <span>{t("geneva")}</span>
+                  <span>{t("atelier")}</span>
                 </div>
               </div>
             </SheetContent>
@@ -160,11 +167,14 @@ export function Header() {
         {/* RIGHT — utility */}
         <div className="flex flex-1 items-center justify-end gap-1 lg:gap-2">
           <div className="hidden lg:block">
+            <LanguageSwitcher />
+          </div>
+          <div className="hidden lg:block">
             <CountryCurrencyPicker />
           </div>
           <button
             type="button"
-            aria-label="Search"
+            aria-label={t("search")}
             onClick={() => setSearchOpen(true)}
             className="flex h-11 w-11 items-center justify-center rounded-full text-ink/80 transition-colors hover:bg-ink/5 hover:text-ink"
           >
@@ -174,7 +184,7 @@ export function Header() {
           <Link
             href="/cart"
             className="group relative -mr-1 flex h-11 items-center gap-2 rounded-full px-3 text-ink transition-colors hover:bg-ink/5 lg:mr-0"
-            aria-label={totalQuantity ? `Cart, ${totalQuantity} items` : "Cart"}
+            aria-label={totalQuantity ? `${t("cart")}, ${totalQuantity}` : t("cart")}
           >
             <span className="relative">
               <ShoppingBag className="h-5 w-5 lg:h-4 lg:w-4" strokeWidth={2} />
@@ -184,7 +194,7 @@ export function Header() {
                 </span>
               )}
             </span>
-            <span className="hidden text-[11px] font-medium tracking-[0.2em] uppercase lg:inline">Bag</span>
+            <span className="hidden text-[11px] font-medium tracking-[0.2em] uppercase lg:inline">{t("bag")}</span>
           </Link>
         </div>
       </nav>
