@@ -242,6 +242,17 @@
     "descriptionTemplate": "Le bracelet {name} — un bracelet bioceramic à clip {tone}, fini à la main en Suisse. Compatible avec toutes les ChronoStrap et se change en trois secondes.",
     "strapAriaLabel": "Ajouter le bracelet {name} au panier"
   },
+  "Fomo": {
+    "topEyebrow": "Offre flash",
+    "topEyebrowShort": "Flash",
+    "topMessage": "Aujourd'hui seulement — plus aucune remise après le compte à rebours",
+    "dismiss": "Fermer",
+    "inlineLabel": "L'offre se termine dans",
+    "inlineNote": "plus aucune remise après",
+    "cardEyebrow": "Offre limitée de 2 heures",
+    "cardHeadline": "Ce prix disparaît dans 2 heures — plus aucune remise après.",
+    "cardSubline": "Profitez-en avant la fin du compte à rebours."
+  },
   "Common": {
     "addToBag": "Ajouter au panier",
     "adding": "Ajout…",

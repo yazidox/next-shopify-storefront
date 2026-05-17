@@ -31,6 +31,7 @@ import {
 import { titleize } from "@esmate/utils/string";
 import { Link } from "@/i18n/navigation";
 import { analytics } from "@/lib/analytics";
+import { FomoOfferBlock } from "../fomo-offer";
 
 const STRAP_HANDLE = "chronostrap-custom-strap";
 const CART_ID_STORAGE_KEY = "shopifyCartId";
@@ -256,6 +257,8 @@ export function Cart() {
             </div>
 
             <DiscountCodeForm />
+
+            <FomoOfferBlock />
 
             <CartCheckoutButton
               disabled={isCartEmpty}

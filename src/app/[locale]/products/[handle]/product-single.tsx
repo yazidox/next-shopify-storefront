@@ -24,6 +24,7 @@ import { getProductSingle, getSiblingProducts } from "./service";
 import { analytics } from "@/lib/analytics";
 import { titleize } from "@esmate/utils/string";
 import { ProductProof } from "../../product-proof";
+import { FomoOfferBlock } from "../../fomo-offer";
 import { Link } from "@/i18n/navigation";
 
 interface Props {
@@ -124,6 +125,9 @@ export function ProductSingle({ data, siblings }: Props) {
 
             {/* Same-day dispatch urgency */}
             <DispatchCountdown />
+
+            {/* 2-hour flash offer — site-wide FOMO */}
+            <FomoOfferBlock />
 
             <div className="h-px w-full bg-line" />
 

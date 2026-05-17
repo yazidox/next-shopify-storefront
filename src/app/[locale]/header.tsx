@@ -65,7 +65,7 @@ export function Header() {
 
   return (
     <header
-      className={`fixed top-3 right-3 left-3 z-50 rounded-full border backdrop-blur-2xl backdrop-saturate-150 transition-all duration-300 lg:top-4 lg:right-4 lg:left-4 ${
+      className={`fixed top-[44px] right-3 left-3 z-50 rounded-full border backdrop-blur-2xl backdrop-saturate-150 transition-all duration-300 lg:top-[50px] lg:right-4 lg:left-4 ${
         scrolled ? "border-black/10 bg-cream/60" : "border-white/25 bg-cream/25"
       }`}
       style={{

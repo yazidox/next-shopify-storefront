@@ -242,6 +242,17 @@
     "descriptionTemplate": "Das Armband {name} — ein {tone} Bioceramic-Snap-Armband, von Hand in der Schweiz gefertigt. Passt auf jede ChronoStrap und ist in drei Sekunden gewechselt.",
     "strapAriaLabel": "Armband {name} in den Warenkorb"
   },
+  "Fomo": {
+    "topEyebrow": "Blitzangebot",
+    "topEyebrowShort": "Blitz",
+    "topMessage": "Nur heute — danach keine Rabatte mehr",
+    "dismiss": "Schließen",
+    "inlineLabel": "Angebot endet in",
+    "inlineNote": "danach keine Rabatte mehr",
+    "cardEyebrow": "Limitiertes 2-Stunden-Angebot",
+    "cardHeadline": "Dieser Preis verschwindet in 2 Stunden — danach keine Rabatte mehr.",
+    "cardSubline": "Sicher dir den Preis, bevor der Timer abläuft."
+  },
   "Common": {
     "addToBag": "In den Warenkorb",
     "adding": "Wird hinzugefügt…",

@@ -6,6 +6,7 @@ import { ArrowRight } from "@esmate/shadcn/pkgs/lucide-react";
 import { HeroSplit } from "./hero-split";
 import { StepModel } from "./step-model";
 import { TrackedLink } from "./tracked-link";
+import { FomoOfferBlock } from "./fomo-offer";
 import { Link } from "@/i18n/navigation";
 
 // Returns true when the hex color is dark enough that we should use light text on top.
@@ -33,6 +34,9 @@ export default async function Page() {
       {/* Hidden H1 for SEO — visual h1 lives inside the hero */}
       <h1 className="sr-only">{t("homeH1")}</h1>
       <HeroSplit />
+      <div className="flex justify-center bg-cream px-6 pt-8 pb-2 lg:pt-10">
+        <FomoOfferBlock variant="compact" />
+      </div>
       <Marquee />
       <HowItWorks />
       <CollectionGrid />

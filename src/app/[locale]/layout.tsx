@@ -6,6 +6,7 @@ import { setRequestLocale } from "next-intl/server";
 import { Header } from "./header";
 import { ConditionalFooter } from "./conditional-footer";
 import { LoadingScreen } from "./loading-screen";
+import { FomoTopBar } from "./fomo-offer";
 import { VercelInteractionTracker } from "./vercel-interaction-tracker";
 import TopLoader from "nextjs-toploader";
 import Providers from "./providers";
@@ -37,6 +38,7 @@ export default async function LocaleLayout({ children, params }: Props) {
       <TopLoader color="#c2185b" showSpinner={false} />
       <Providers countryCode={countryCode} localizationOptions={localization.options}>
         <VercelInteractionTracker />
+        <FomoTopBar />
         <Header />
         <main>{children}</main>
         <ConditionalFooter />

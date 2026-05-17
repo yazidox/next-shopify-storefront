@@ -242,6 +242,17 @@
     "descriptionTemplate": "The {name} strap — a {tone} bioceramic snap-fit strap, hand-finished in Switzerland. Fits every ChronoStrap watch and swaps in three seconds.",
     "strapAriaLabel": "Add {name} strap to bag"
   },
+  "Fomo": {
+    "topEyebrow": "Flash offer",
+    "topEyebrowShort": "Flash",
+    "topMessage": "Today only — no more sales after the timer hits zero",
+    "dismiss": "Dismiss",
+    "inlineLabel": "Offer ends in",
+    "inlineNote": "no more discounts after",
+    "cardEyebrow": "Limited 2-hour offer",
+    "cardHeadline": "This price disappears in 2 hours — no more sales after.",
+    "cardSubline": "Lock it in before the timer hits zero."
+  },
   "Common": {
     "addToBag": "Add to Bag",
     "adding": "Adding…",
