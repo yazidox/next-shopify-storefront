@@ -36,7 +36,6 @@ export function prefetchAllModels(): void {
     for (const url of MODEL_URLS) {
       fetch(url, {
         cache: "force-cache",
-        // @ts-expect-error - `priority` is a valid fetch option but not in the lib typings yet
         priority: "low",
       }).catch(() => {
         /* swallow — best-effort prefetch */
