@@ -10,6 +10,7 @@ import { CountryCurrencyPicker } from "./country-currency-picker";
 import { SearchOverlay } from "./search-overlay";
 
 const mainMenuItems: { text: string; href: string }[] = [
+  { text: "Home", href: "/" },
   { text: "Buy Watch", href: "/products" },
   { text: "Buy Strap", href: "/buy-strap" },
   { text: "Custom Strap", href: "/custom-strap" },
