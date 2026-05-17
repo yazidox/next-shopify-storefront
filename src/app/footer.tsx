@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Instagram, Youtube } from "@esmate/shadcn/pkgs/lucide-react";
+import { Instagram } from "@esmate/shadcn/pkgs/lucide-react";
 import { FooterPaymentStrip } from "./footer-payment-strip";
 
 const columns: { title: string; links: { text: string; href: string }[] }[] = [
@@ -99,22 +99,13 @@ export function Footer() {
             </p>
             <div className="flex items-center gap-0.5">
               <a
-                href="https://instagram.com"
+                href="https://www.instagram.com/strap.chrono?igsh=MWQyNDU1eWN4bWFhZg=="
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 aria-label="Instagram"
                 className="rounded-full p-2.5 text-ink/55 transition-colors hover:bg-ink/6 hover:text-pop"
               >
                 <Instagram className="h-4 w-4" strokeWidth={1.75} />
-              </a>
-              <a
-                href="https://youtube.com"
-                target="_blank"
-                rel="noreferrer"
-                aria-label="YouTube"
-                className="rounded-full p-2.5 text-ink/55 transition-colors hover:bg-ink/6 hover:text-pop"
-              >
-                <Youtube className="h-4 w-4" strokeWidth={1.75} />
               </a>
             </div>
             <p className="text-center text-[10px] font-medium tracking-[0.3em] text-ink/50 uppercase sm:text-right">

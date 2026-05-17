@@ -4,6 +4,7 @@ import Script from "next/script";
 import { cookies } from "next/headers";
 import { Header } from "./header";
 import { ConditionalFooter } from "./conditional-footer";
+import { LoadingScreen } from "./loading-screen";
 import TopLoader from "nextjs-toploader";
 import Providers from "./providers";
 import { COUNTRY_COOKIE, resolveCountryCode } from "@/lib/localization";
@@ -131,9 +132,12 @@ export default async function Layout(props: Props) {
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link rel="preconnect" href="https://ajax.googleapis.com" crossOrigin="" />
+        <link rel="dns-prefetch" href="https://connect.facebook.net" />
+        <link rel="dns-prefetch" href="https://www.facebook.com" />
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700;800;900&display=swap"
         />
         {/* Preload only the FIRST 3D model — the rest load on-demand as we cycle. */}
         <link
@@ -147,7 +151,7 @@ export default async function Layout(props: Props) {
         />
         {/* Module preload for model-viewer itself */}
         <link rel="modulepreload" href="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js" />
-        <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js" />
+        <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js" async />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
       </head>
       <body className="min-h-screen bg-cream text-ink">
@@ -177,6 +181,7 @@ export default async function Layout(props: Props) {
           />
         </noscript>
 
+        <LoadingScreen />
         <TopLoader color="#c2185b" showSpinner={false} />
         <Providers countryCode={countryCode} localizationOptions={localization.options}>
           <Header />

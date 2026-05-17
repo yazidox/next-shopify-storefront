@@ -53,7 +53,7 @@ export const STRAP_COLOURWAYS: Colourway[] = [
     bg: "#ECF0C2",
     src: "/green.opt.glb",
     cameraOrbit: "61.9deg 72.9deg 2.027m",
-    cameraTarget: "0m 0m 0m",
+    cameraTarget: "0m 0.5m 0m",
   },
   {
     id: "lan-ba",
@@ -63,7 +63,7 @@ export const STRAP_COLOURWAYS: Colourway[] = [
     bg: "#DAE8EA",
     src: "/yellow-sky.opt.glb",
     cameraOrbit: DEFAULT_ORBIT,
-    cameraTarget: DEFAULT_TARGET,
+    cameraTarget: "0m 0.5m 0m",
   },
   {
     id: "otg-roz",

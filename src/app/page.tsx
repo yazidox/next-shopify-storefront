@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { ReactNode } from "react";
 import { ArrowRight } from "@esmate/shadcn/pkgs/lucide-react";
@@ -92,7 +93,7 @@ function Marquee() {
                 {it.headline}
               </span>
               <span className="font-display text-pop">→</span>
-              <span className="text-sm italic text-ink/50 sm:text-base lg:text-xl">— {it.whisper}</span>
+              <span className="text-sm text-ink/50 italic sm:text-base lg:text-xl">— {it.whisper}</span>
             </span>
             <span className="text-2xl text-pop/80 sm:text-3xl lg:text-5xl">✦</span>
           </span>
@@ -104,14 +105,14 @@ function Marquee() {
 
 function CollectionGrid() {
   const pieces = [
-    { name: "OTTO ROSSO", img: "/collection/otto-rosso.png" },
-    { name: "HUIT BLANC", img: "/collection/huit-blanc.png" },
-    { name: "GREEN EIGHT", img: "/collection/green-eight.png" },
-    { name: "BLAUE ACHT", img: "/collection/blaue-acht.png" },
-    { name: "LAN BA", img: "/collection/lan-ba.png" },
-    { name: "OTG ROZ", img: "/collection/otg-roz.png" },
-    { name: "OCHO NEGRO", img: "/collection/ocho-negro.png" },
-    { name: "ORENJI HACHI", img: "/collection/orenji-hachi.png" },
+    { name: "OTTO ROSSO", img: "/collection/otto-rosso.webp" },
+    { name: "HUIT BLANC", img: "/collection/huit-blanc.webp" },
+    { name: "GREEN EIGHT", img: "/collection/green-eight.webp" },
+    { name: "BLAUE ACHT", img: "/collection/blaue-acht.webp" },
+    { name: "LAN BA", img: "/collection/lan-ba.webp" },
+    { name: "OTG ROZ", img: "/collection/otg-roz.webp" },
+    { name: "OCHO NEGRO", img: "/collection/ocho-negro.webp" },
+    { name: "ORENJI HACHI", img: "/collection/orenji-hachi.webp" },
   ];
   return (
     <section className="bg-white px-6 py-24 lg:px-12 lg:py-32">
@@ -141,11 +142,12 @@ function CollectionGrid() {
           {pieces.map((p, i) => (
             <Link key={i} href="/products" className="group relative block overflow-hidden rounded-3xl bg-ink/5">
               <div className="relative aspect-4/5 w-full overflow-hidden">
-                <img
+                <Image
                   src={p.img}
                   alt={p.name}
-                  loading="lazy"
-                  className="h-full w-full object-cover transition-transform duration-1000 ease-out group-hover:scale-[1.03]"
+                  fill
+                  sizes="(min-width: 1024px) 900px, (min-width: 768px) 50vw, 100vw"
+                  className="object-cover transition-transform duration-1000 ease-out group-hover:scale-[1.03]"
                 />
               </div>
               <div className="absolute inset-x-0 top-0 flex items-center justify-between px-6 pt-6 lg:px-10 lg:pt-10">
@@ -208,7 +210,7 @@ function HowItWorks() {
           src: "/yellow-sky.opt.glb",
           cameraOrbit: "129.5deg 85.3deg 2.042m",
           cameraTarget: "0m 0m 0m",
-          scale: 1.45,
+          scale: 1.18,
           breathe: { amplitudeDeg: 4, periodMs: 6500, phaseDeg: 0 },
         },
         {
@@ -274,134 +276,145 @@ function HowItWorks() {
         </div>
 
         <ol className="grid grid-cols-1 gap-6 md:grid-cols-3 lg:gap-8">
-          {steps.map(({ n, tag, title, copy, bg, accent, srcs, cameraOrbit, cameraTarget, lineup, scale, autoRotate, intervalMs, breathe }) => {
-            const isDark = isDarkHex(bg);
-            const fg = isDark ? "#f4efe6" : "#0a0a0a";
-            const fgMuted = isDark ? "rgba(244,239,230,0.7)" : "rgba(10,10,10,0.65)";
-            return (
-              <li
-                key={n}
-                className="group relative flex aspect-3/4 flex-col overflow-hidden rounded-3xl transition-transform duration-500 hover:-translate-y-1"
-                style={{ backgroundColor: bg, color: fg }}
-              >
-                {/* MODEL — fills the whole card */}
-                <div className="absolute inset-0">
-                  <div
-                    aria-hidden
-                    className="pointer-events-none absolute inset-0 opacity-40"
-                    style={{
-                      background: `radial-gradient(60% 60% at 50% 45%, ${accent}55 0%, transparent 70%)`,
-                    }}
-                  />
-                  {lineup ? (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      {lineup.map((pose, i) => {
-                        const isCenter = i === Math.floor(lineup.length / 2);
-                        const shift = isCenter
-                          ? "translateX(0)"
-                          : i < lineup.length / 2
-                            ? "translateX(40%)"
-                            : "translateX(-40%)";
-                        // On mobile show only the centre watch — three at 1.45× won't fit.
-                        const mobileHidden = !isCenter;
-                        return (
-                          <div
-                            key={i}
-                            className={`relative h-full w-1/3 transition-transform duration-700 ${
-                              mobileHidden ? "hidden sm:block" : ""
-                            }`}
-                            style={{
-                              transform: `${shift} scale(${pose.scale ?? 1})`,
-                              zIndex: isCenter ? 20 : 10,
-                            }}
-                          >
-                            <StepModel
-                              srcs={[pose.src]}
-                              alt={`${title} — variant ${i + 1}`}
-                              autoRotate={false}
-                              cameraOrbit={pose.cameraOrbit}
-                              cameraTarget={pose.cameraTarget}
-                              breathe={pose.breathe}
-                            />
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
+          {steps.map(
+            ({
+              n,
+              tag,
+              title,
+              copy,
+              bg,
+              accent,
+              srcs,
+              cameraOrbit,
+              cameraTarget,
+              lineup,
+              scale,
+              autoRotate,
+              intervalMs,
+              breathe,
+            }) => {
+              const isDark = isDarkHex(bg);
+              const fg = isDark ? "#f4efe6" : "#0a0a0a";
+              const fgMuted = isDark ? "rgba(244,239,230,0.7)" : "rgba(10,10,10,0.65)";
+              return (
+                <li
+                  key={n}
+                  className="group relative flex aspect-3/4 flex-col overflow-hidden rounded-3xl transition-transform duration-500 hover:-translate-y-1"
+                  style={{ backgroundColor: bg, color: fg }}
+                >
+                  {/* MODEL — fills the whole card */}
+                  <div className="absolute inset-0">
                     <div
-                      className="absolute inset-0"
-                      style={scale ? { transform: `scale(${scale})` } : undefined}
-                    >
-                      <StepModel
-                        srcs={srcs}
-                        alt={title}
-                        rotationPerSecond="18deg"
-                        autoRotate={autoRotate ?? true}
-                        cameraOrbit={cameraOrbit}
-                        cameraTarget={cameraTarget}
-                        intervalMs={intervalMs}
-                        breathe={breathe}
-                      />
-                    </div>
-                  )}
-                </div>
-
-                {/* TOP corner badges — float on top of model */}
-                <div className="relative z-30 flex items-start justify-between p-7 lg:p-9">
-                  <span
-                    className="font-display text-[11px] tracking-[0.32em] uppercase"
-                    style={{ color: fgMuted }}
-                  >
-                    {n}
-                  </span>
-                  <span
-                    className="rounded-full border px-3 py-1 text-[9px] font-medium tracking-[0.3em] uppercase backdrop-blur-md"
-                    style={{
-                      borderColor: isDark ? "rgba(244,239,230,0.25)" : "rgba(10,10,10,0.15)",
-                      backgroundColor: isDark ? "rgba(0,0,0,0.25)" : "rgba(255,255,255,0.35)",
-                      color: fg,
-                    }}
-                  >
-                    {tag}
-                  </span>
-                </div>
-
-                {/* spacer so the text sits at the bottom */}
-                <div className="flex-1" />
-
-                {/* BOTTOM gradient + text overlay — floats over the model */}
-                <div className="relative z-30">
-                  <div
-                    aria-hidden
-                    className="pointer-events-none absolute inset-x-0 bottom-0 h-[140%]"
-                    style={{
-                      background: `linear-gradient(to bottom, ${hexToRgba(bg, 0)} 0%, ${hexToRgba(
-                        bg,
-                        0.6,
-                      )} 35%, ${hexToRgba(bg, 0.95)} 100%)`,
-                    }}
-                  />
-                  <div className="relative flex flex-col gap-3 p-7 lg:p-9">
-                    <h3
-                      className="font-display text-2xl leading-tight uppercase md:text-3xl lg:text-[2rem]"
-                      style={{ color: fg }}
-                    >
-                      {title}
-                    </h3>
-                    <p className="text-sm leading-relaxed lg:text-base" style={{ color: fgMuted }}>
-                      {copy}
-                    </p>
+                      aria-hidden
+                      className="pointer-events-none absolute inset-0 opacity-40"
+                      style={{
+                        background: `radial-gradient(60% 60% at 50% 45%, ${accent}55 0%, transparent 70%)`,
+                      }}
+                    />
+                    {lineup ? (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        {lineup.map((pose, i) => {
+                          const isCenter = i === Math.floor(lineup.length / 2);
+                          const shift = isCenter
+                            ? "translateX(0)"
+                            : i < lineup.length / 2
+                              ? "translateX(40%)"
+                              : "translateX(-40%)";
+                        // On mobile show only the centre watch — the full lineup won't fit.
+                          const mobileHidden = !isCenter;
+                          return (
+                            <div
+                              key={i}
+                              className={`relative h-full w-1/3 transition-transform duration-700 ${
+                                mobileHidden ? "hidden sm:block" : ""
+                              }`}
+                              style={{
+                                transform: `${shift} scale(${pose.scale ?? 1})`,
+                                zIndex: isCenter ? 20 : 10,
+                              }}
+                            >
+                              <StepModel
+                                srcs={[pose.src]}
+                                alt={`${title} — variant ${i + 1}`}
+                                autoRotate={false}
+                                cameraOrbit={pose.cameraOrbit}
+                                cameraTarget={pose.cameraTarget}
+                                breathe={pose.breathe}
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="absolute inset-0" style={scale ? { transform: `scale(${scale})` } : undefined}>
+                        <StepModel
+                          srcs={srcs}
+                          alt={title}
+                          rotationPerSecond="18deg"
+                          autoRotate={autoRotate ?? true}
+                          cameraOrbit={cameraOrbit}
+                          cameraTarget={cameraTarget}
+                          intervalMs={intervalMs}
+                          breathe={breathe}
+                        />
+                      </div>
+                    )}
                   </div>
-                </div>
 
-                {/* fine accent line at the bottom */}
-                <span
-                  className="relative z-30 block h-px w-full transition-all duration-500 group-hover:h-0.5"
-                  style={{ backgroundColor: accent, opacity: 0.6 }}
-                />
-              </li>
-            );
-          })}
+                  {/* TOP corner badges — float on top of model */}
+                  <div className="relative z-30 flex items-start justify-between p-7 lg:p-9">
+                    <span className="font-display text-[11px] tracking-[0.32em] uppercase" style={{ color: fgMuted }}>
+                      {n}
+                    </span>
+                    <span
+                      className="rounded-full border px-3 py-1 text-[9px] font-medium tracking-[0.3em] uppercase backdrop-blur-md"
+                      style={{
+                        borderColor: isDark ? "rgba(244,239,230,0.25)" : "rgba(10,10,10,0.15)",
+                        backgroundColor: isDark ? "rgba(0,0,0,0.25)" : "rgba(255,255,255,0.35)",
+                        color: fg,
+                      }}
+                    >
+                      {tag}
+                    </span>
+                  </div>
+
+                  {/* spacer so the text sits at the bottom */}
+                  <div className="flex-1" />
+
+                  {/* BOTTOM gradient + text overlay — floats over the model */}
+                  <div className="relative z-30">
+                    <div
+                      aria-hidden
+                      className="pointer-events-none absolute inset-x-0 bottom-0 h-[140%]"
+                      style={{
+                        background: `linear-gradient(to bottom, ${hexToRgba(bg, 0)} 0%, ${hexToRgba(
+                          bg,
+                          0.6,
+                        )} 35%, ${hexToRgba(bg, 0.95)} 100%)`,
+                      }}
+                    />
+                    <div className="relative flex flex-col gap-3 p-7 lg:p-9">
+                      <h3
+                        className="font-display text-2xl leading-tight uppercase md:text-3xl lg:text-[2rem]"
+                        style={{ color: fg }}
+                      >
+                        {title}
+                      </h3>
+                      <p className="text-sm leading-relaxed lg:text-base" style={{ color: fgMuted }}>
+                        {copy}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* fine accent line at the bottom */}
+                  <span
+                    className="relative z-30 block h-px w-full transition-all duration-500 group-hover:h-0.5"
+                    style={{ backgroundColor: accent, opacity: 0.6 }}
+                  />
+                </li>
+              );
+            },
+          )}
         </ol>
 
         <div className="mt-12 flex flex-col items-center gap-4 lg:mt-16">
@@ -425,4 +438,3 @@ function HowItWorks() {
     </section>
   );
 }
-

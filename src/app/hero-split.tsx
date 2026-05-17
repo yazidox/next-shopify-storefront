@@ -36,7 +36,7 @@ export function HeroSplit() {
   const { primary, muted, isLight } = pickTextColor(activeBg);
 
   return (
-    <section className="relative grid min-h-screen w-full grid-cols-1 lg:grid-cols-2">
+    <section className="relative grid min-h-screen w-full grid-cols-1 overflow-x-hidden lg:grid-cols-2">
       {/* LEFT — watch + strap (3D model) */}
       <div className="relative flex min-h-[70vh] items-end overflow-hidden bg-[#e9d5ff] lg:min-h-screen">
         <div className="absolute inset-0">
@@ -49,8 +49,8 @@ export function HeroSplit() {
           />
         </div>
 
-        <div className="anim-fade-up relative z-10 flex w-full items-end justify-between gap-8 px-10 pt-10 pb-15 lg:px-14 lg:pt-14 lg:pb-19">
-          <div>
+        <div className="anim-fade-up relative z-10 flex w-full min-w-0 flex-col items-start gap-4 px-5 pt-10 pb-10 sm:flex-row sm:items-end sm:justify-between sm:gap-6 sm:px-8 sm:pb-14 lg:px-14 lg:pt-14 lg:pb-19">
+          <div className="min-w-0">
             <span
               className="tracking-luxury text-[10px] font-bold uppercase transition-colors duration-700"
               style={{ color: muted }}
@@ -58,7 +58,7 @@ export function HeroSplit() {
               01 / Bundle
             </span>
             <h2
-              className="mt-3 font-display text-3xl leading-[0.95] whitespace-nowrap uppercase transition-colors duration-700 sm:text-4xl md:text-5xl"
+              className="mt-3 max-w-[11ch] font-display text-3xl leading-[0.95] uppercase transition-colors duration-700 sm:max-w-none sm:text-4xl sm:whitespace-nowrap md:text-5xl"
               style={{ color: primary }}
             >
               Watch <span style={{ color: "#c2185b" }}>+</span> Strap
@@ -89,10 +89,10 @@ export function HeroSplit() {
         </video>
         <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/70 via-black/10 to-black/30" />
 
-        <div className="anim-fade-up anim-delay-2 relative z-10 flex w-full items-end justify-between gap-8 px-10 pt-10 pb-15 lg:px-14 lg:pt-14 lg:pb-19">
-          <div>
+        <div className="anim-fade-up anim-delay-2 relative z-10 flex w-full min-w-0 flex-col items-start gap-4 px-5 pt-10 pb-10 sm:flex-row sm:items-end sm:justify-between sm:gap-6 sm:px-8 sm:pb-14 lg:px-14 lg:pt-14 lg:pb-19">
+          <div className="min-w-0">
             <span className="tracking-luxury text-[10px] font-bold text-cream/60 uppercase">02 / Watch only</span>
-            <h2 className="mt-3 font-display text-3xl leading-[0.95] whitespace-nowrap uppercase sm:text-4xl md:text-5xl">
+            <h2 className="mt-3 max-w-[11ch] font-display text-3xl leading-[0.95] uppercase sm:max-w-none sm:text-4xl sm:whitespace-nowrap md:text-5xl">
               Just the <span className="text-pop">Watch</span>
             </h2>
           </div>
@@ -125,7 +125,7 @@ export function GlassButton({
     <Link
       href={href}
       onClick={onClick}
-      className={`group tracking-luxury relative inline-flex shrink-0 items-center gap-2 overflow-hidden rounded-full border px-5 py-3 text-[11px] font-bold uppercase backdrop-blur-2xl transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] ${
+      className={`group tracking-luxury relative inline-flex max-w-full items-center justify-center gap-2 overflow-hidden rounded-full border px-4 py-3 text-[10px] font-bold uppercase backdrop-blur-2xl transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] sm:shrink-0 sm:px-5 sm:text-[11px] ${
         isDark
           ? "border-ink/15 bg-ink/10 text-ink hover:bg-ink/20"
           : "border-white/25 bg-white/15 text-cream hover:bg-white/25"

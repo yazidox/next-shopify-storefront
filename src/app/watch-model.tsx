@@ -46,6 +46,15 @@ export function WatchModel({
   const [isLoaded, setIsLoaded] = useState(false);
   const cachedRef = useRef<Set<string>>(new Set());
   const activeViewerRef = useRef<ModelViewerLike | null>(null);
+  const firstReadyFiredRef = useRef(false);
+
+  function notifyHeroReady() {
+    if (firstReadyFiredRef.current) return;
+    firstReadyFiredRef.current = true;
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("chronostrap:hero-ready"));
+    }
+  }
 
   // Debug mode
   const [debug, setDebug] = useState(false);
@@ -176,12 +185,14 @@ export function WatchModel({
           if (p >= 1) {
             cachedRef.current.add(currentSrc);
             setTimeout(() => setIsLoaded(true), 80);
+            notifyHeroReady();
           }
         }}
         onLoad={() => {
           setProgress(1);
           cachedRef.current.add(currentSrc);
           setTimeout(() => setIsLoaded(true), 80);
+          notifyHeroReady();
         }}
       />
 
