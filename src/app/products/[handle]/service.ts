@@ -35,6 +35,7 @@ export async function getProductSingle(handle: string) {
     query ProductSingle($handle: String!) {
       product(handle: $handle) {
         id
+        handle
         title
         description(truncateAt: 600)
         productType

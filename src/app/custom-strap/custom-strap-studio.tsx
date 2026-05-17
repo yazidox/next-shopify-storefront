@@ -89,6 +89,15 @@ const INITIAL_CONFIG: StrapConfig = {
   emboss: "CS",
 };
 
+// ─── SHOPIFY LINK ─────────────────────────────────────────────────────
+// The Custom Strap is a SINGLE Shopify product (handle: chronostrap-custom-strap, €90).
+// Every configuration in the studio adds THIS variant to the cart and ships the
+// actual customisation (colour, texture, initials, reference) as cart line attributes.
+// Replace the variant ID below with your real one after importing the CSV:
+//   Shopify admin → Products → Custom Strap → click the variant → grab the ID from the URL
+const CUSTOM_STRAP_HANDLE = "chronostrap-custom-strap";
+const CUSTOM_STRAP_VARIANT_ID = "gid://shopify/ProductVariant/REPLACE_ME_AFTER_IMPORT";
+
 const HERO_TEXTURE_OPTIONS: {
   id: HeroTextureStyle;
   name: string;
@@ -105,66 +114,48 @@ const HERO_TEXTURE_OPTIONS: {
     name: "Royal Purple",
     src: "/wristwatch.opt.glb",
     colors: ["#f15bb5", "#941843"],
-    detail: "Official case color",
-    shopify: {
-      handle: "chronostrap-case-royal-purple",
-      variantId: "gid://shopify/ProductVariant/52654604943584",
-    },
+    detail: "Official preset · Pink Pop",
+    shopify: { handle: CUSTOM_STRAP_HANDLE, variantId: CUSTOM_STRAP_VARIANT_ID },
   },
   {
     id: "hero-white",
     name: "Arctic White",
     src: "/huit-blanc.opt.glb",
     colors: ["#f4efe6", "#e5e2e5"],
-    detail: "Official case color",
-    shopify: {
-      handle: "chronostrap-case-arctic-white",
-      variantId: "gid://shopify/ProductVariant/52654605009120",
-    },
+    detail: "Official preset · Huit Blanc",
+    shopify: { handle: CUSTOM_STRAP_HANDLE, variantId: CUSTOM_STRAP_VARIANT_ID },
   },
   {
     id: "hero-orange",
     name: "Hyper Yellow",
     src: "/orenji-hachi.opt.glb",
     colors: ["#ff7a1a", "#cd3c30"],
-    detail: "Official strap color",
-    shopify: {
-      handle: "chronostrap-strap-hyper-yellow",
-      variantId: "gid://shopify/ProductVariant/52654605107424",
-    },
+    detail: "Official preset · Orenji Hachi",
+    shopify: { handle: CUSTOM_STRAP_HANDLE, variantId: CUSTOM_STRAP_VARIANT_ID },
   },
   {
     id: "hero-black",
     name: "Stealth Black",
     src: "/black.opt.glb",
     colors: ["#0a0a0a", "#ffffff"],
-    detail: "Official case color",
-    shopify: {
-      handle: "chronostrap-case-stealth-black",
-      variantId: "gid://shopify/ProductVariant/52654604976352",
-    },
+    detail: "Official preset · Ocho Negro",
+    shopify: { handle: CUSTOM_STRAP_HANDLE, variantId: CUSTOM_STRAP_VARIANT_ID },
   },
   {
     id: "hero-green",
     name: "Teal",
     src: "/green.opt.glb",
     colors: ["#10b981", "#ecf0c2"],
-    detail: "Official strap color",
-    shopify: {
-      handle: "chronostrap-strap-teal",
-      variantId: "gid://shopify/ProductVariant/52654605074656",
-    },
+    detail: "Official preset · Green Eight",
+    shopify: { handle: CUSTOM_STRAP_HANDLE, variantId: CUSTOM_STRAP_VARIANT_ID },
   },
   {
     id: "hero-yellow",
     name: "Sky Blue",
     src: "/yellow-sky.opt.glb",
     colors: ["#fde047", "#dae8ea"],
-    detail: "Official case color",
-    shopify: {
-      handle: "chronostrap-case-sky-blue",
-      variantId: "gid://shopify/ProductVariant/52654605041888",
-    },
+    detail: "Official preset · Yellow Sky",
+    shopify: { handle: CUSTOM_STRAP_HANDLE, variantId: CUSTOM_STRAP_VARIANT_ID },
   },
 ];
 
