@@ -821,7 +821,10 @@ export function CustomStrapStudio() {
                 "radial-gradient(70% 55% at 45% 42%, rgba(255,255,255,0.78), rgba(255,255,255,0) 62%), linear-gradient(135deg, #f4efe6 0%, #d8edf1 45%, #f7dd80 100%)",
             }}
           />
-          <div ref={mountRef} className="absolute inset-y-10 left-0 w-full sm:inset-y-6 lg:inset-y-0 lg:w-[62%]" />
+          <div
+            ref={mountRef}
+            className="absolute inset-y-10 -left-[60%] w-[160%] sm:inset-y-6 sm:-left-[38%] sm:w-[138%] lg:inset-y-0 lg:left-0 lg:w-[62%]"
+          />
 
           <div className="pointer-events-none absolute top-20 left-4 max-w-[320px] sm:top-24 sm:left-8 sm:max-w-[420px] lg:top-28 lg:left-12">
             <p className="tracking-luxury text-[10px] font-bold text-ink/55 uppercase">Live customizer</p>
@@ -848,7 +851,7 @@ export function CustomStrapStudio() {
           {debug && <CameraDebugPanel snapshot={debugSnapshot} copied={copiedDebug} onCopy={copyDebugView} />}
         </div>
 
-        <aside className="border-t border-ink/10 bg-cream px-4 pt-5 pb-0 lg:max-h-screen lg:overflow-y-auto lg:border-t-0 lg:border-l lg:px-8 lg:pt-28 2xl:px-10">
+        <aside className="border-t border-ink/10 bg-cream px-4 pt-5 pb-28 lg:max-h-screen lg:overflow-y-auto lg:border-t-0 lg:border-l lg:px-8 lg:pt-28 lg:pb-0 2xl:px-10">
           <div className="mx-auto flex min-h-full w-full max-w-[680px] flex-col">
             <div className="mb-5 flex items-start justify-between gap-6 sm:mb-7">
               <div>
@@ -1018,7 +1021,7 @@ export function CustomStrapStudio() {
               </div>
             </ConfigSection>
 
-            <div className="sticky bottom-0 z-40 -mx-4 mt-auto border-t border-ink/10 bg-cream/95 px-4 pt-4 pb-[calc(0.5rem+env(safe-area-inset-bottom))] shadow-[0_-16px_38px_rgba(10,10,10,0.08)] backdrop-blur-xl lg:-mx-8 lg:px-8">
+            <div className="fixed right-3 bottom-3 left-3 z-[80] rounded-[12px] border border-ink/10 bg-cream/95 p-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] shadow-[0_18px_48px_rgba(10,10,10,0.2)] backdrop-blur-xl lg:sticky lg:right-auto lg:bottom-0 lg:left-auto lg:z-40 lg:-mx-8 lg:mt-auto lg:rounded-none lg:border-x-0 lg:border-b-0 lg:px-8 lg:pt-4 lg:shadow-[0_-16px_38px_rgba(10,10,10,0.08)]">
               <button
                 type="button"
                 onClick={reviewCustomBuild}

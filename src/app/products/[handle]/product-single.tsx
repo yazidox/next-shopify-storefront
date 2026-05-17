@@ -96,22 +96,19 @@ export function ProductSingle({ data, siblings }: Props) {
               {titleize(data.title)}
             </h1>
 
-            {/* Highlight pills */}
-            {specs.length > 0 && (
-              <ul className="flex flex-wrap gap-1.5">
-                {specs.slice(0, 4).map((h, i) => (
-                  <li key={i} className="rounded-sm bg-line/40 px-2.5 py-1.5 text-[13px] leading-[14px] text-ink">
-                    <span className="text-muted">{h.label}</span>
-                    <span className="ml-1.5 font-medium">{h.value}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
+            {/* Reviews — placeholder until a review app is connected */}
+            <Reviews rating={4.9} count={127} />
 
-            {/* Price */}
-            <p className="font-display text-3xl leading-none text-ink lg:text-4xl">
-              <Money data={price} />
-            </p>
+            {/* Price + payment plan */}
+            <div className="flex flex-col gap-2">
+              <p className="font-display text-3xl leading-none text-ink lg:text-4xl">
+                <Money data={price} />
+              </p>
+              <PaymentPlan amount={parseFloat(String(price.amount))} currency={price.currencyCode} />
+            </div>
+
+            {/* Same-day dispatch urgency */}
+            <DispatchCountdown />
 
             <div className="h-px w-full bg-line" />
 
@@ -214,14 +211,14 @@ export function ProductSingle({ data, siblings }: Props) {
               {availableForSale && <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} />}
             </AddToCartButton>
 
-            {/* Secondary — full-width outlined */}
-            <button
-              type="button"
-              className="inline-flex h-12 w-full items-center justify-between gap-2 rounded-md border border-line bg-surface px-4 text-[11px] font-extrabold tracking-[0.18em] text-ink uppercase transition-colors hover:border-ink"
-            >
-              <span>Find it in store</span>
-              <Store className="h-4 w-4" strokeWidth={1.5} />
-            </button>
+            {/* Secondary actions — Wishlist + Share */}
+            <SecondaryActions title={data.title} />
+
+            {/* Quick value chips — gift box, dispatch */}
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <ValueChip Icon={Gift} label="Free gift box" />
+              <ValueChip Icon={Package} label="Ships in 24h" />
+            </div>
 
             {/* Sibling carousel */}
             {siblings.length > 0 && (
@@ -475,6 +472,161 @@ function SiblingCarousel({
 }
 
 // ────────────────────────────────────────────────────────────────────
+
+// ────────────────────────────────────────────────────────────────────
+// CONVERSION HELPERS
+// ────────────────────────────────────────────────────────────────────
+
+function Reviews({ rating }: { rating: number; count?: number }) {
+  const full = Math.floor(rating);
+  return (
+    <div className="flex items-center gap-2 text-[13px]">
+      <div className="flex items-center gap-0.5">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Star
+            key={i}
+            className={`h-4 w-4 fill-current ${i < full ? "text-pop" : "text-ink/15"}`}
+            strokeWidth={0}
+          />
+        ))}
+      </div>
+      <span className="font-medium text-ink">{rating.toFixed(1)}</span>
+    </div>
+  );
+}
+
+function PaymentPlan({ amount, currency }: { amount: number; currency: string }) {
+  if (!amount) return null;
+  const each = (amount / 4).toFixed(2);
+  const sym = currency === "EUR" ? "€" : currency === "USD" ? "$" : currency === "GBP" ? "£" : `${currency} `;
+  return (
+    <p className="text-[12px] text-muted">
+      or <span className="font-semibold text-ink">4 interest-free payments</span> of {sym}
+      {each} with <span className="font-bold text-ink">Klarna</span>
+    </p>
+  );
+}
+
+function DispatchCountdown() {
+  const [text, setText] = useState<string | null>(null);
+  useEffect(() => {
+    function compute() {
+      const now = new Date();
+      // Cut-off: 16:00 local for same-day dispatch
+      const cutoff = new Date(now);
+      cutoff.setHours(16, 0, 0, 0);
+      if (now > cutoff) {
+        setText("Order today — dispatched tomorrow");
+        return;
+      }
+      const ms = cutoff.getTime() - now.getTime();
+      const h = Math.floor(ms / 3_600_000);
+      const m = Math.floor((ms % 3_600_000) / 60_000);
+      const s = Math.floor((ms % 60_000) / 1000);
+      const hh = h.toString().padStart(2, "0");
+      const mm = m.toString().padStart(2, "0");
+      const ss = s.toString().padStart(2, "0");
+      setText(`Order in the next ${hh}:${mm}:${ss} for same-day dispatch`);
+    }
+    compute();
+    // Tick every second for a true live countdown
+    const id = window.setInterval(compute, 1000);
+    return () => window.clearInterval(id);
+  }, []);
+  if (!text) return null;
+  return (
+    <div className="dispatch-pulse inline-flex items-center gap-2.5 self-start rounded-md border border-emerald-600/30 bg-emerald-50/60 px-3 py-2 text-[12px] font-semibold text-emerald-900 tabular-nums">
+      <span className="relative flex h-2.5 w-2.5">
+        <span className="absolute inset-0 rounded-full bg-emerald-500 opacity-75 animate-[ping_1.4s_cubic-bezier(0,0,0.2,1)_infinite]" />
+        <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-600" />
+      </span>
+      <span>{text}</span>
+      <style>{`
+        @keyframes dispatchGlow {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+          50%      { box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15); }
+        }
+        .dispatch-pulse { animation: dispatchGlow 2s ease-in-out infinite; }
+      `}</style>
+    </div>
+  );
+}
+
+function SecondaryActions({ title }: { title: string }) {
+  const [saved, setSaved] = useState(false);
+  useEffect(() => {
+    try {
+      const list = JSON.parse(localStorage.getItem("cs_wishlist") || "[]") as string[];
+      setSaved(list.includes(title));
+    } catch {
+      /* noop */
+    }
+  }, [title]);
+
+  function toggleSave() {
+    try {
+      const list = new Set<string>(JSON.parse(localStorage.getItem("cs_wishlist") || "[]"));
+      if (list.has(title)) list.delete(title);
+      else list.add(title);
+      localStorage.setItem("cs_wishlist", JSON.stringify([...list]));
+      setSaved(list.has(title));
+    } catch {
+      /* noop */
+    }
+  }
+
+  async function share() {
+    const url = typeof window !== "undefined" ? window.location.href : "";
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({ title, url });
+      } catch {
+        /* user cancelled */
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(url);
+      } catch {
+        /* noop */
+      }
+    }
+  }
+
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      <button
+        type="button"
+        onClick={toggleSave}
+        aria-pressed={saved}
+        className={`inline-flex h-11 items-center justify-center gap-2 rounded-md border text-[11px] font-extrabold tracking-[0.18em] uppercase transition-colors ${
+          saved
+            ? "border-pop bg-pop/5 text-pop"
+            : "border-line bg-surface text-ink hover:border-ink"
+        }`}
+      >
+        <Heart className={`h-4 w-4 ${saved ? "fill-pop" : ""}`} strokeWidth={1.75} />
+        {saved ? "Saved" : "Wishlist"}
+      </button>
+      <button
+        type="button"
+        onClick={share}
+        className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-line bg-surface text-[11px] font-extrabold tracking-[0.18em] text-ink uppercase transition-colors hover:border-ink"
+      >
+        <Share2 className="h-4 w-4" strokeWidth={1.75} />
+        Share
+      </button>
+    </div>
+  );
+}
+
+function ValueChip({ Icon, label }: { Icon: typeof Truck; label: string }) {
+  return (
+    <div className="inline-flex items-center gap-2 rounded-md border border-line bg-surface px-3 py-2 text-[12px] text-ink">
+      <Icon className="h-3.5 w-3.5 text-pop" strokeWidth={1.75} />
+      <span className="font-medium">{label}</span>
+    </div>
+  );
+}
 
 function Trust({ Icon, label, sub }: { Icon: typeof Truck; label: string; sub: string }) {
   return (
