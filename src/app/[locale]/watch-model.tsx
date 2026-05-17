@@ -29,6 +29,10 @@ interface Props {
 
 const TRANSITION_MS = 700;
 const MOBILE_HERO_QUERY = "(max-width: 1023px)";
+const DESKTOP_CAMERA_ORBIT = "0deg 80deg 110%";
+const MOBILE_CAMERA_ORBIT = "71.7deg 90.0deg 2.027m";
+const MOBILE_CAMERA_TARGET = "0.000m 0.000m -0.000m";
+const MOBILE_FIELD_OF_VIEW = "38.7deg";
 
 function isMobileHeroViewport() {
   return typeof window !== "undefined" && window.matchMedia(MOBILE_HERO_QUERY).matches;
@@ -256,6 +260,9 @@ export function WatchModel({
   const currentBg = models[active]?.bg;
   const modelVisible = isLoaded;
   const loaderHidden = useLightweightFallback || (modelRuntimeReady && isLoaded) || !loaderShown;
+  const cameraOrbit = mobileAutoMotionPaused ? MOBILE_CAMERA_ORBIT : DESKTOP_CAMERA_ORBIT;
+  const cameraTarget = mobileAutoMotionPaused ? MOBILE_CAMERA_TARGET : undefined;
+  const fieldOfView = mobileAutoMotionPaused ? MOBILE_FIELD_OF_VIEW : undefined;
 
   return (
     <div className={`relative h-full w-full overflow-hidden ${className ?? ""}`}>
@@ -279,7 +286,16 @@ export function WatchModel({
       {!useLightweightFallback && modelRuntimeReady && (
         <>
           {outgoing && (
-            <ModelSlot key={`out-${outgoing.src}`} src={outgoing.src} alt={alt} state="exiting" autoRotate={false} />
+            <ModelSlot
+              key={`out-${outgoing.src}`}
+              src={outgoing.src}
+              alt={alt}
+              state="exiting"
+              autoRotate={false}
+              cameraOrbit={cameraOrbit}
+              cameraTarget={cameraTarget}
+              fieldOfView={fieldOfView}
+            />
           )}
 
           <ModelSlot
@@ -288,6 +304,9 @@ export function WatchModel({
             alt={alt}
             state={modelVisible ? "in" : "entering"}
             autoRotate={!debug && !animation && !mobileAutoMotionPaused}
+            cameraOrbit={cameraOrbit}
+            cameraTarget={cameraTarget}
+            fieldOfView={fieldOfView}
             onRef={(el) => (activeViewerRef.current = el)}
             onProgress={(p) => {
               setProgress(p);
@@ -363,6 +382,9 @@ function ModelSlot({
   alt,
   state,
   autoRotate,
+  cameraOrbit,
+  cameraTarget,
+  fieldOfView,
   onProgress,
   onLoad,
   onRef,
@@ -371,6 +393,9 @@ function ModelSlot({
   alt: string;
   state: SlotState;
   autoRotate: boolean;
+  cameraOrbit: string;
+  cameraTarget?: string;
+  fieldOfView?: string;
   onProgress?: (p: number) => void;
   onLoad?: () => void;
   onRef?: (el: ModelViewerLike | null) => void;
@@ -425,7 +450,9 @@ function ModelSlot({
         "auto-rotate-delay": "0",
         loading: "eager",
         reveal: "auto",
-        "camera-orbit": "0deg 80deg 110%",
+        "camera-orbit": cameraOrbit,
+        ...(cameraTarget ? { "camera-target": cameraTarget } : {}),
+        ...(fieldOfView ? { "field-of-view": fieldOfView } : {}),
         style: {
           width: "100%",
           height: "100%",
