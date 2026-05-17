@@ -10329,6 +10329,13 @@ export enum WeightUnit {
   Pounds = 'POUNDS'
 }
 
+export type CustomStrapVariantQueryVariables = Exact<{
+  handle: Scalars['String']['input'];
+}>;
+
+
+export type CustomStrapVariantQuery = { __typename?: 'QueryRoot', product?: { __typename?: 'Product', id: string, variants: { __typename?: 'ProductVariantConnection', nodes: Array<{ __typename?: 'ProductVariant', id: string }> } } | null };
+
 export type SiblingProductsQueryVariables = Exact<{
   first: Scalars['Int']['input'];
   query?: InputMaybe<Scalars['String']['input']>;
@@ -10371,6 +10378,18 @@ export class TypedDocumentString<TResult, TVariables>
   }
 }
 
+export const CustomStrapVariantDocument = new TypedDocumentString(`
+    query CustomStrapVariant($handle: String!) {
+  product(handle: $handle) {
+    id
+    variants(first: 1) {
+      nodes {
+        id
+      }
+    }
+  }
+}
+    `) as unknown as TypedDocumentString<CustomStrapVariantQuery, CustomStrapVariantQueryVariables>;
 export const SiblingProductsDocument = new TypedDocumentString(`
     query SiblingProducts($first: Int!, $query: String) {
   products(first: $first, query: $query) {

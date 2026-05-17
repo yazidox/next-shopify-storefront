@@ -90,13 +90,10 @@ const INITIAL_CONFIG: StrapConfig = {
 };
 
 // ─── SHOPIFY LINK ─────────────────────────────────────────────────────
-// The Custom Strap is a SINGLE Shopify product (handle: chronostrap-custom-strap, €90).
-// Every configuration in the studio adds THIS variant to the cart and ships the
-// actual customisation (colour, texture, initials, reference) as cart line attributes.
-// Replace the variant ID below with your real one after importing the CSV:
-//   Shopify admin → Products → Custom Strap → click the variant → grab the ID from the URL
+// Custom Strap is a SINGLE Shopify product (handle: chronostrap-custom-strap, €90).
+// The variant ID is fetched at runtime in page.tsx and passed in via props — no
+// hardcoded ID to keep in sync if you ever re-import the product.
 const CUSTOM_STRAP_HANDLE = "chronostrap-custom-strap";
-const CUSTOM_STRAP_VARIANT_ID = "gid://shopify/ProductVariant/REPLACE_ME_AFTER_IMPORT";
 
 const HERO_TEXTURE_OPTIONS: {
   id: HeroTextureStyle;
@@ -104,10 +101,6 @@ const HERO_TEXTURE_OPTIONS: {
   src: string;
   colors: string[];
   detail: string;
-  shopify: {
-    handle: string;
-    variantId: string;
-  };
 }[] = [
   {
     id: "hero-pink",
@@ -115,7 +108,6 @@ const HERO_TEXTURE_OPTIONS: {
     src: "/wristwatch.opt.glb",
     colors: ["#f15bb5", "#941843"],
     detail: "Official preset · Pink Pop",
-    shopify: { handle: CUSTOM_STRAP_HANDLE, variantId: CUSTOM_STRAP_VARIANT_ID },
   },
   {
     id: "hero-white",
@@ -123,7 +115,6 @@ const HERO_TEXTURE_OPTIONS: {
     src: "/huit-blanc.opt.glb",
     colors: ["#f4efe6", "#e5e2e5"],
     detail: "Official preset · Huit Blanc",
-    shopify: { handle: CUSTOM_STRAP_HANDLE, variantId: CUSTOM_STRAP_VARIANT_ID },
   },
   {
     id: "hero-orange",
@@ -131,7 +122,6 @@ const HERO_TEXTURE_OPTIONS: {
     src: "/orenji-hachi.opt.glb",
     colors: ["#ff7a1a", "#cd3c30"],
     detail: "Official preset · Orenji Hachi",
-    shopify: { handle: CUSTOM_STRAP_HANDLE, variantId: CUSTOM_STRAP_VARIANT_ID },
   },
   {
     id: "hero-black",
@@ -139,7 +129,6 @@ const HERO_TEXTURE_OPTIONS: {
     src: "/black.opt.glb",
     colors: ["#0a0a0a", "#ffffff"],
     detail: "Official preset · Ocho Negro",
-    shopify: { handle: CUSTOM_STRAP_HANDLE, variantId: CUSTOM_STRAP_VARIANT_ID },
   },
   {
     id: "hero-green",
@@ -147,7 +136,6 @@ const HERO_TEXTURE_OPTIONS: {
     src: "/green.opt.glb",
     colors: ["#10b981", "#ecf0c2"],
     detail: "Official preset · Green Eight",
-    shopify: { handle: CUSTOM_STRAP_HANDLE, variantId: CUSTOM_STRAP_VARIANT_ID },
   },
   {
     id: "hero-yellow",
@@ -155,7 +143,6 @@ const HERO_TEXTURE_OPTIONS: {
     src: "/yellow-sky.opt.glb",
     colors: ["#fde047", "#dae8ea"],
     detail: "Official preset · Yellow Sky",
-    shopify: { handle: CUSTOM_STRAP_HANDLE, variantId: CUSTOM_STRAP_VARIANT_ID },
   },
 ];
 
@@ -385,7 +372,11 @@ const INITIALS_PLACEMENTS: Record<HeroTextureStyle, InitialsPlacementSnapshot> =
   },
 };
 
-export function CustomStrapStudio() {
+export function CustomStrapStudio({
+  customStrapVariantId,
+}: {
+  customStrapVariantId: string | null;
+}) {
   const cart = useCart();
   const router = useRouter();
   const [config, setConfig] = useState<StrapConfig>(INITIAL_CONFIG);
@@ -756,7 +747,7 @@ export function CustomStrapStudio() {
   }
 
   function reviewCustomBuild() {
-    if (addingBuild || !selectedModel.shopify.variantId) return;
+    if (addingBuild || !customStrapVariantId) return;
 
     const activeMaterial =
       HERO_TEXTURE_OPTIONS.find((item) => item.id === config.textureStyle) ??
@@ -780,7 +771,7 @@ export function CustomStrapStudio() {
     setAddingBuild(true);
     cart.linesAdd([
       {
-        merchandiseId: selectedModel.shopify.variantId,
+        merchandiseId: customStrapVariantId,
         quantity: 1,
         attributes,
       },
