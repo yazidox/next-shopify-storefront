@@ -5,6 +5,7 @@ import { ReactNode, useState } from "react";
 import { ArrowRight } from "@esmate/shadcn/pkgs/lucide-react";
 import { WatchModel, type WatchModelItem } from "./watch-model";
 import { pinkPopAnimation } from "./animations";
+import { analytics } from "@/lib/analytics";
 
 const models: WatchModelItem[] = [
   { src: "/wristwatch.opt.glb", color: "#f15bb5", bg: "#941843", name: "Pink Pop" },
@@ -63,7 +64,11 @@ export function HeroSplit() {
               Watch <span style={{ color: "#c2185b" }}>+</span> Strap
             </h2>
           </div>
-          <GlassButton href="/custom-strap" tone={isLight ? "dark" : "light"}>
+          <GlassButton
+            href="/custom-strap"
+            tone={isLight ? "dark" : "light"}
+            onClick={() => analytics.custom("InitiateBuild", { source: "hero-left" })}
+          >
             Build Yours
           </GlassButton>
         </div>
@@ -91,7 +96,11 @@ export function HeroSplit() {
               Just the <span className="text-pop">Watch</span>
             </h2>
           </div>
-          <GlassButton href="/products" tone="light">
+          <GlassButton
+            href="/products"
+            tone="light"
+            onClick={() => analytics.custom("ShopWatchClick", { source: "hero-right" })}
+          >
             Shop Watch
           </GlassButton>
         </div>
@@ -104,15 +113,18 @@ export function GlassButton({
   href,
   children,
   tone = "light",
+  onClick,
 }: {
   href: string;
   children: ReactNode;
   tone?: "light" | "dark";
+  onClick?: () => void;
 }) {
   const isDark = tone === "dark";
   return (
     <Link
       href={href}
+      onClick={onClick}
       className={`group tracking-luxury relative inline-flex shrink-0 items-center gap-2 overflow-hidden rounded-full border px-5 py-3 text-[11px] font-bold uppercase backdrop-blur-2xl transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] ${
         isDark
           ? "border-ink/15 bg-ink/10 text-ink hover:bg-ink/20"

@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Instagram, Youtube, ArrowRight } from "@esmate/shadcn/pkgs/lucide-react";
+import { Instagram, Youtube } from "@esmate/shadcn/pkgs/lucide-react";
+import { NewsletterForm } from "./newsletter-form";
 
 const columns: { title: string; links: { text: string; href: string }[] }[] = [
   {
@@ -50,21 +51,7 @@ export function Footer() {
             <p className="mt-6 max-w-md text-base leading-relaxed text-ink/60">
               Drops, launches, and the occasional manifesto. No spam, ever.
             </p>
-            <form className="mt-10 flex max-w-md items-center border-b border-ink/25 pb-3 transition-colors focus-within:border-pop">
-              <input
-                type="email"
-                required
-                placeholder="your@email.com"
-                className="flex-1 bg-transparent text-base tracking-wide text-ink placeholder:text-ink/30 focus:outline-none"
-              />
-              <button
-                type="submit"
-                className="group inline-flex items-center gap-2 text-[10px] font-medium tracking-[0.3em] text-pop uppercase transition-opacity hover:opacity-70"
-              >
-                Subscribe
-                <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" strokeWidth={2} />
-              </button>
-            </form>
+            <NewsletterForm source="footer" />
           </div>
 
           <div className="grid grid-cols-2 gap-10 sm:grid-cols-3 lg:col-span-6">

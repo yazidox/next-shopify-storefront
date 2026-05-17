@@ -6,7 +6,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { DecalGeometry } from "three/examples/jsm/geometries/DecalGeometry.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { Check, Palette, RotateCcw, ShoppingBag, Sparkles, Type, Upload } from "@esmate/shadcn/pkgs/lucide-react";
+import { Check, RotateCcw, ShoppingBag, Upload } from "@esmate/shadcn/pkgs/lucide-react";
 
 type HeroTextureStyle = "hero-pink" | "hero-white" | "hero-orange" | "hero-black" | "hero-green" | "hero-yellow";
 type TextureStyle = HeroTextureStyle | "smooth" | "saffiano" | "rally" | "checker" | "wave" | "uploaded";
@@ -17,6 +17,7 @@ type StrapConfig = {
   textureStyle: TextureStyle;
   baseColor: string;
   accentColor: string;
+  initialsColor: string;
   finish: Finish;
   textureScale: number;
   emboss: string;
@@ -80,27 +81,58 @@ const INITIAL_CONFIG: StrapConfig = {
   textureStyle: "hero-green",
   baseColor: "#10b981",
   accentColor: "#ecf0c2",
+  initialsColor: "#ecf0c2",
   finish: "matte",
   textureScale: 1,
   emboss: "CS",
 };
 
-const HERO_TEXTURE_OPTIONS: { id: HeroTextureStyle; name: string; src: string; colors: string[] }[] = [
-  { id: "hero-pink", name: "Pink Pop", src: "/wristwatch.opt.glb", colors: ["#f15bb5", "#941843"] },
-  { id: "hero-white", name: "Huit Blanc", src: "/huit-blanc.opt.glb", colors: ["#f4efe6", "#e5e2e5"] },
-  { id: "hero-orange", name: "Orenji Hachi", src: "/orenji-hachi.opt.glb", colors: ["#ff7a1a", "#cd3c30"] },
-  { id: "hero-black", name: "Noir", src: "/black.opt.glb", colors: ["#0a0a0a", "#ffffff"] },
-  { id: "hero-green", name: "Vert", src: "/green.opt.glb", colors: ["#10b981", "#ecf0c2"] },
-  { id: "hero-yellow", name: "Yellow Sky", src: "/yellow-sky.opt.glb", colors: ["#fde047", "#dae8ea"] },
+const HERO_TEXTURE_OPTIONS: {
+  id: HeroTextureStyle;
+  name: string;
+  src: string;
+  colors: string[];
+  detail: string;
+}[] = [
+  {
+    id: "hero-pink",
+    name: "Pink Pop",
+    src: "/wristwatch.opt.glb",
+    colors: ["#f15bb5", "#941843"],
+    detail: "Full GLB finish",
+  },
+  {
+    id: "hero-white",
+    name: "Huit Blanc",
+    src: "/huit-blanc.opt.glb",
+    colors: ["#f4efe6", "#e5e2e5"],
+    detail: "Full GLB finish",
+  },
+  {
+    id: "hero-orange",
+    name: "Orenji Hachi",
+    src: "/orenji-hachi.opt.glb",
+    colors: ["#ff7a1a", "#cd3c30"],
+    detail: "Full GLB finish",
+  },
+  { id: "hero-black", name: "Noir", src: "/black.opt.glb", colors: ["#0a0a0a", "#ffffff"], detail: "Full GLB finish" },
+  { id: "hero-green", name: "Vert", src: "/green.opt.glb", colors: ["#10b981", "#ecf0c2"], detail: "Full GLB finish" },
+  {
+    id: "hero-yellow",
+    name: "Yellow Sky",
+    src: "/yellow-sky.opt.glb",
+    colors: ["#fde047", "#dae8ea"],
+    detail: "Full GLB finish",
+  },
 ];
 
-const CUSTOM_TEXTURE_OPTIONS: { id: TextureStyle; name: string; colors: string[] }[] = [
-  { id: "smooth", name: "Smooth", colors: ["#f04f42", "#f6d7cf"] },
-  { id: "saffiano", name: "Saffiano", colors: ["#101820", "#d8dee5"] },
-  { id: "rally", name: "Rally", colors: ["#0a0a0a", "#ff3b30"] },
-  { id: "checker", name: "Checker", colors: ["#f4efe6", "#1f6f8b"] },
-  { id: "wave", name: "Wave", colors: ["#3349ff", "#fbdb52"] },
-  { id: "uploaded", name: "Upload", colors: ["#c8f7dc", "#7c3aed"] },
+const CUSTOM_TEXTURE_OPTIONS: { id: TextureStyle; name: string; colors: string[]; detail: string }[] = [
+  { id: "smooth", name: "Fine Smooth", colors: ["#f04f42", "#f6d7cf"], detail: "Single-tone matte surface" },
+  { id: "saffiano", name: "Saffiano Grain", colors: ["#101820", "#d8dee5"], detail: "Crosshatch leather texture" },
+  { id: "rally", name: "Racing Stripe", colors: ["#0a0a0a", "#ff3b30"], detail: "Twin stripe performance line" },
+  { id: "checker", name: "Grand Check", colors: ["#f4efe6", "#1f6f8b"], detail: "Graphic repeat pattern" },
+  { id: "wave", name: "Guilloche Wave", colors: ["#3349ff", "#fbdb52"], detail: "Soft engraved linework" },
+  { id: "uploaded", name: "Bespoke Artwork", colors: ["#c8f7dc", "#7c3aed"], detail: "Upload a custom image" },
 ];
 
 const COLOR_PRESETS = ["#ff3b30", "#0a0a0a", "#f4efe6", "#1f6f8b", "#f7c948", "#5a3bff", "#0fa36b", "#f15bb5"];
@@ -374,9 +406,9 @@ export function CustomStrapStudio() {
       return;
     }
 
-    applyInitialsDecal(parts, placement, config.emboss, config.accentColor);
+    applyInitialsDecal(parts, placement, config.emboss, config.initialsColor);
     setInitialsPlaced(true);
-  }, [config.accentColor, config.emboss]);
+  }, [config.emboss, config.initialsColor]);
 
   useEffect(() => {
     if (!debug) return;
@@ -609,10 +641,19 @@ export function CustomStrapStudio() {
       HERO_TEXTURE_OPTIONS.find((item) => item.id === config.textureStyle)?.name ??
       CUSTOM_TEXTURE_OPTIONS.find((item) => item.id === config.textureStyle)?.name ??
       "Custom";
-    const source = isHeroTextureStyle(config.textureStyle) ? "Official" : "Custom";
+    const source = isHeroTextureStyle(config.textureStyle) ? "Official GLB" : "Atelier";
 
     return `${textureName} / ${source} / ${config.finish}`;
   }, [config.finish, config.textureStyle]);
+
+  const activeTexture =
+    HERO_TEXTURE_OPTIONS.find((item) => item.id === config.textureStyle) ??
+    CUSTOM_TEXTURE_OPTIONS.find((item) => item.id === config.textureStyle);
+  const activeTextureName = activeTexture?.name ?? "Custom";
+  const activeSource = isHeroTextureStyle(config.textureStyle) ? "Official reference" : "Atelier material";
+  const activeColors = isHeroTextureStyle(config.textureStyle)
+    ? (activeTexture?.colors ?? [config.baseColor, config.accentColor])
+    : [config.baseColor, config.accentColor];
 
   function updateConfig(next: Partial<StrapConfig>) {
     setConfig((current) => ({ ...current, ...next }));
@@ -654,7 +695,7 @@ export function CustomStrapStudio() {
 
     const placement = placementFromSnapshot(placementSnapshot, targetMesh);
     initialsPlacementRef.current = placement;
-    applyInitialsDecal(activeParts, placement, text, activeConfig.accentColor || placementSnapshot.mark.color);
+    applyInitialsDecal(activeParts, placement, text, activeConfig.initialsColor || placementSnapshot.mark.color);
     initialsPlacedRef.current = true;
     setInitialsPlaced(true);
   }
@@ -671,6 +712,7 @@ export function CustomStrapStudio() {
         baseHeroStyle: CUSTOM_TEXTURE_MODEL_ID,
         uploadedTexture: reader.result,
         textureStyle: "uploaded",
+        initialsColor: configRef.current.initialsColor,
       });
     };
     reader.readAsDataURL(file);
@@ -686,7 +728,7 @@ export function CustomStrapStudio() {
 
   return (
     <div className="min-h-screen bg-cream text-ink">
-      <section className="grid min-h-screen grid-cols-1 lg:grid-cols-[minmax(0,1fr)_500px] xl:grid-cols-[minmax(0,1fr)_560px] 2xl:grid-cols-[minmax(0,1fr)_600px]">
+      <section className="grid min-h-screen grid-cols-1 lg:grid-cols-[minmax(0,1fr)_560px] xl:grid-cols-[minmax(0,1fr)_620px] 2xl:grid-cols-[minmax(0,1fr)_660px]">
         <div className="relative min-h-[620px] overflow-hidden bg-[#e9edf0] sm:min-h-[680px] lg:min-h-screen">
           <div
             aria-hidden
@@ -724,154 +766,180 @@ export function CustomStrapStudio() {
         </div>
 
         <aside className="border-t border-ink/10 bg-cream px-5 py-7 lg:max-h-screen lg:overflow-y-auto lg:border-t-0 lg:border-l lg:px-8 lg:pt-28 2xl:px-10">
-          <div className="mb-8 flex items-start justify-between gap-6">
-            <div>
-              <p className="tracking-luxury text-[10px] font-bold text-ink/45 uppercase">ChronoStrap</p>
-              <h2 className="mt-2 text-3xl leading-none font-black tracking-normal uppercase">Customize</h2>
-              <p className="mt-3 text-sm leading-relaxed font-medium text-ink/55">{summary}</p>
-            </div>
-            <button
-              type="button"
-              onClick={resetStudio}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-ink/15 text-ink transition-colors hover:bg-white"
-              aria-label="Reset design"
-              title="Reset"
-            >
-              <RotateCcw className="h-4 w-4" strokeWidth={2} />
-            </button>
-          </div>
-
-          <ControlGroup icon={<Sparkles className="h-4 w-4" />} title="Texture">
-            <OptionSetLabel label="Official models" count={HERO_TEXTURE_OPTIONS.length} />
-            <div className="grid grid-cols-2 gap-3">
-              {HERO_TEXTURE_OPTIONS.map((look) => {
-                const active = config.baseHeroStyle === look.id && config.textureStyle === look.id;
-                return (
-                  <TextureChoiceButton
-                    key={look.id}
-                    option={look}
-                    active={active}
-                    badge="OFFICIAL"
-                    compact
-                    onClick={() =>
-                      updateConfig({
-                        baseHeroStyle: look.id,
-                        textureStyle: look.id,
-                        baseColor: look.colors[0],
-                        accentColor: look.colors[1] ?? config.accentColor,
-                      })
-                    }
-                  />
-                );
-              })}
+          <div className="mx-auto flex min-h-full w-full max-w-[680px] flex-col">
+            <div className="mb-7 flex items-start justify-between gap-6">
+              <div>
+                <p className="tracking-luxury text-[10px] font-bold text-ink/45 uppercase">ChronoStrap Studio</p>
+                <h2 className="mt-2 text-3xl leading-none font-black tracking-normal uppercase">Configure</h2>
+              </div>
+              <button
+                type="button"
+                onClick={resetStudio}
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-ink/15 text-ink transition-colors hover:bg-white"
+                aria-label="Reset design"
+                title="Reset"
+              >
+                <RotateCcw className="h-4 w-4" strokeWidth={2} />
+              </button>
             </div>
 
-            <OptionSetLabel label="Custom textures" count={CUSTOM_TEXTURE_OPTIONS.length} className="mt-5" />
-            <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-2 2xl:grid-cols-3">
-              {CUSTOM_TEXTURE_OPTIONS.map((texture) => {
-                const active = config.textureStyle === texture.id;
-                return (
-                  <TextureChoiceButton
-                    key={texture.id}
-                    option={texture}
-                    active={active}
-                    badge="CUSTOM"
-                    compact
-                    onClick={() =>
-                      texture.id === "uploaded"
-                        ? fileInputRef.current?.click()
-                        : updateConfig({
-                            baseHeroStyle: CUSTOM_TEXTURE_MODEL_ID,
-                            textureStyle: texture.id,
-                            baseColor: texture.colors[0],
-                            accentColor: texture.colors[1] ?? config.accentColor,
-                          })
-                    }
-                  />
-                );
-              })}
+            <div className="mb-7 rounded-[8px] border border-ink/10 bg-white/55 p-4 shadow-[0_18px_45px_rgba(10,10,10,0.04)]">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="tracking-luxury text-[10px] font-bold text-ink/42 uppercase">Current build</p>
+                  <h3 className="mt-2 text-xl leading-none font-black tracking-normal text-ink uppercase">
+                    {activeTextureName}
+                  </h3>
+                  <p className="mt-2 text-sm font-medium text-ink/55">{activeSource} / Matte finish</p>
+                </div>
+                <SwatchStack colors={activeColors} />
+              </div>
             </div>
 
-            <input ref={fileInputRef} type="file" accept="image/*" className="sr-only" onChange={handleUpload} />
-          </ControlGroup>
+            <ConfigSection step="01" title="Reference" meta="Official GLB models">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {HERO_TEXTURE_OPTIONS.map((look) => {
+                  const active = config.baseHeroStyle === look.id && config.textureStyle === look.id;
+                  return (
+                    <TextureChoiceButton
+                      key={look.id}
+                      option={look}
+                      active={active}
+                      source="Official reference"
+                      onClick={() =>
+                        updateConfig({
+                          baseHeroStyle: look.id,
+                          textureStyle: look.id,
+                          baseColor: look.colors[0],
+                          accentColor: look.colors[1] ?? config.accentColor,
+                          initialsColor: look.colors[1] ?? config.initialsColor,
+                        })
+                      }
+                    />
+                  );
+                })}
+              </div>
+            </ConfigSection>
 
-          <ControlGroup icon={<Palette className="h-4 w-4" />} title="Color">
-            <div className="grid grid-cols-4 gap-2 sm:grid-cols-8">
-              {COLOR_PRESETS.map((color) => (
-                <button
-                  key={color}
-                  type="button"
-                  onClick={() =>
-                    updateConfig({ baseHeroStyle: CUSTOM_TEXTURE_MODEL_ID, baseColor: color, textureStyle: "smooth" })
-                  }
-                  className={`h-10 rounded-full border transition-transform hover:scale-105 ${
-                    config.baseColor === color ? "border-ink ring-2 ring-ink/20" : "border-ink/15"
-                  }`}
-                  style={{ backgroundColor: color }}
-                  aria-label={`Use ${color} base colour`}
-                  title={color}
-                />
-              ))}
-            </div>
+            <ConfigSection step="02" title="Material" meta="Atelier textures">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {CUSTOM_TEXTURE_OPTIONS.map((texture) => {
+                  const active = config.textureStyle === texture.id;
+                  return (
+                    <TextureChoiceButton
+                      key={texture.id}
+                      option={texture}
+                      active={active}
+                      source={texture.id === "uploaded" ? "Bespoke artwork" : "Atelier surface"}
+                      onClick={() =>
+                        texture.id === "uploaded"
+                          ? fileInputRef.current?.click()
+                          : updateConfig({
+                              baseHeroStyle: CUSTOM_TEXTURE_MODEL_ID,
+                              textureStyle: texture.id,
+                              baseColor: texture.colors[0],
+                              accentColor: texture.colors[1] ?? config.accentColor,
+                              initialsColor: texture.colors[1] ?? config.initialsColor,
+                            })
+                      }
+                    />
+                  );
+                })}
+              </div>
 
-            <div className="mt-4 grid gap-2">
-              <ColorInput
-                label="Custom color"
-                value={config.baseColor}
-                onChange={(baseColor) =>
-                  updateConfig({ baseHeroStyle: CUSTOM_TEXTURE_MODEL_ID, baseColor, textureStyle: "smooth" })
-                }
-              />
+              <input ref={fileInputRef} type="file" accept="image/*" className="sr-only" onChange={handleUpload} />
               {uploadName && (
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="flex h-12 w-full items-center justify-between rounded-[8px] border border-ink/10 bg-white px-4 text-left transition-colors hover:border-ink/25"
+                  className="mt-3 flex h-12 w-full items-center justify-between rounded-[8px] border border-ink/10 bg-white px-4 text-left transition-colors hover:border-ink/25"
                 >
-                  <span className="truncate text-sm font-semibold">{uploadName}</span>
+                  <span className="truncate text-sm font-semibold text-ink">{uploadName}</span>
                   <Upload className="h-4 w-4 shrink-0 text-ink/55" strokeWidth={2.2} />
                 </button>
               )}
-            </div>
-          </ControlGroup>
+            </ConfigSection>
 
-          <ControlGroup icon={<Type className="h-4 w-4" />} title="Initials">
-            <input
-              value={config.emboss}
-              onChange={(event) => updateConfig({ emboss: event.target.value.slice(0, 4).toUpperCase() })}
-              className="h-12 w-full rounded-[8px] border border-ink/15 bg-white px-4 text-sm font-bold tracking-[0.22em] text-ink uppercase transition-colors outline-none focus:border-ink"
-              placeholder="CS"
-              maxLength={4}
-              aria-label="Texture mark"
-            />
-            <div className="mt-3 grid grid-cols-[1fr_auto] gap-2">
-              <button
-                type="button"
-                onClick={addInitialsMark}
-                disabled={!config.emboss.trim() || modelStatus !== "ready"}
-                className="tracking-luxury inline-flex h-12 items-center justify-center rounded-[8px] border border-ink/10 bg-white px-4 text-[10px] font-bold text-ink uppercase transition-colors hover:border-ink/25 disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                {initialsPlaced ? "Refresh Initial" : "Add Initial"}
-              </button>
-              <button
-                type="button"
-                onClick={clearInitialsMark}
-                disabled={!initialsPlaced}
-                className="tracking-luxury inline-flex h-12 items-center justify-center rounded-[8px] border border-ink/10 bg-white px-4 text-[10px] font-bold text-ink/60 uppercase transition-colors hover:border-ink/25 disabled:cursor-not-allowed disabled:opacity-35"
-              >
-                Clear
-              </button>
-            </div>
-          </ControlGroup>
+            <ConfigSection step="03" title="Tone" meta="For atelier materials">
+              <div className="grid grid-cols-8 gap-2">
+                {COLOR_PRESETS.map((color) => (
+                  <button
+                    key={color}
+                    type="button"
+                    onClick={() =>
+                      updateConfig({ baseHeroStyle: CUSTOM_TEXTURE_MODEL_ID, baseColor: color, textureStyle: "smooth" })
+                    }
+                    className={`aspect-square rounded-full border transition-transform hover:scale-105 ${
+                      config.baseColor === color ? "border-ink ring-2 ring-ink/20" : "border-ink/15"
+                    }`}
+                    style={{ backgroundColor: color }}
+                    aria-label={`Use ${color} base colour`}
+                    title={color}
+                  />
+                ))}
+              </div>
 
-          <div className="sticky bottom-0 mt-8 border-t border-ink/10 bg-cream pt-5 pb-2">
-            <a
-              href="/products?tag=strap"
-              className="tracking-luxury inline-flex w-full items-center justify-center gap-2 rounded-[8px] bg-ink px-5 py-4 text-[10px] font-bold text-cream uppercase transition-colors hover:bg-pop active:bg-pop"
-            >
-              <ShoppingBag className="h-4 w-4" strokeWidth={2.2} />
-              Review Custom Build
-            </a>
+              <div className="mt-4">
+                <ColorInput
+                  label="Exact color"
+                  value={config.baseColor}
+                  onChange={(baseColor) =>
+                    updateConfig({ baseHeroStyle: CUSTOM_TEXTURE_MODEL_ID, baseColor, textureStyle: "smooth" })
+                  }
+                />
+              </div>
+            </ConfigSection>
+
+            <ConfigSection step="04" title="Monogram" meta="Optional initials">
+              <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_180px]">
+                <label>
+                  <span className="tracking-luxury mb-2 block text-[10px] font-bold text-ink/45 uppercase">
+                    Initials
+                  </span>
+                  <input
+                    value={config.emboss}
+                    onChange={(event) => updateConfig({ emboss: event.target.value.slice(0, 4).toUpperCase() })}
+                    className="h-12 w-full rounded-[8px] border border-ink/15 bg-white px-4 text-sm font-bold tracking-[0.22em] text-ink uppercase transition-colors outline-none focus:border-ink"
+                    placeholder="CS"
+                    maxLength={4}
+                    aria-label="Texture mark"
+                  />
+                </label>
+                <ColorInput
+                  label="Initials color"
+                  value={config.initialsColor}
+                  onChange={(initialsColor) => updateConfig({ initialsColor })}
+                />
+              </div>
+              <div className="mt-3 grid grid-cols-[1fr_auto] gap-2">
+                <button
+                  type="button"
+                  onClick={addInitialsMark}
+                  disabled={!config.emboss.trim() || modelStatus !== "ready"}
+                  className="tracking-luxury inline-flex h-12 items-center justify-center rounded-[8px] bg-ink px-4 text-[10px] font-bold text-cream uppercase transition-colors hover:bg-pop disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {initialsPlaced ? "Update Monogram" : "Apply Monogram"}
+                </button>
+                <button
+                  type="button"
+                  onClick={clearInitialsMark}
+                  disabled={!initialsPlaced}
+                  className="tracking-luxury inline-flex h-12 items-center justify-center rounded-[8px] border border-ink/10 bg-white px-4 text-[10px] font-bold text-ink/60 uppercase transition-colors hover:border-ink/25 disabled:cursor-not-allowed disabled:opacity-35"
+                >
+                  Clear
+                </button>
+              </div>
+            </ConfigSection>
+
+            <div className="sticky bottom-0 mt-auto border-t border-ink/10 bg-cream pt-5 pb-2">
+              <a
+                href="/products?tag=strap"
+                className="tracking-luxury inline-flex w-full items-center justify-center gap-2 rounded-[8px] bg-ink px-5 py-4 text-[10px] font-bold text-cream uppercase transition-colors hover:bg-pop active:bg-pop"
+              >
+                <ShoppingBag className="h-4 w-4" strokeWidth={2.2} />
+                Review Custom Build
+              </a>
+            </div>
           </div>
         </aside>
       </section>
@@ -890,50 +958,38 @@ function BuildChip({ label }: { label: string }) {
 function TextureChoiceButton({
   option,
   active,
-  badge,
-  compact,
+  source,
   onClick,
 }: {
-  option: { id: TextureStyle; name: string; colors: string[] };
+  option: { id: TextureStyle; name: string; colors: string[]; detail: string };
   active: boolean;
-  badge: "OFFICIAL" | "CUSTOM";
-  compact?: boolean;
+  source: string;
   onClick: () => void;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`group relative flex items-center gap-3 rounded-[8px] border px-3 py-2 pr-10 text-left transition-all ${
-        compact ? "min-h-[106px] flex-col items-start gap-3" : "min-h-14"
-      } ${
+      className={`group relative grid min-h-[92px] grid-cols-[10px_minmax(0,1fr)] overflow-hidden rounded-[8px] border text-left transition-all ${
         active
           ? "border-ink bg-white shadow-[0_10px_26px_rgba(10,10,10,0.08)]"
-          : "border-ink/10 bg-white/45 hover:bg-white"
+          : "border-ink/10 bg-white/45 hover:border-ink/25 hover:bg-white"
       }`}
       aria-pressed={active}
     >
-      <span
-        aria-hidden
-        className={`${compact ? "h-10 w-full rounded-[6px]" : "h-9 w-9 rounded-full"} block shrink-0 border border-ink/10`}
-        style={getTexturePreviewStyle(option)}
-      />
-      <span className="flex min-w-0 flex-1 items-center gap-2">
-        <span className="min-w-0 truncate text-xs font-bold tracking-[0.14em] uppercase">{option.name}</span>
-        <span
-          className={`rounded-full px-2 py-1 text-[8px] font-black tracking-[0.14em] uppercase ${
-            badge === "OFFICIAL" ? "bg-ink text-cream" : "bg-pop/10 text-pop"
-          }`}
-        >
-          {badge}
+      <span aria-hidden className="block h-full w-full border-r border-ink/10" style={getTexturePreviewStyle(option)} />
+      <span className="flex min-w-0 flex-col justify-between gap-3 p-3 pr-10">
+        <span className="min-w-0">
+          <span className="block truncate text-sm font-black tracking-normal text-ink uppercase">{option.name}</span>
+          <span className="mt-1 block truncate text-xs font-medium text-ink/52">{option.detail}</span>
+        </span>
+        <span className="flex items-center justify-between gap-3">
+          <SwatchLine colors={option.colors} />
+          <span className="truncate text-[10px] font-bold text-ink/38">{source}</span>
         </span>
       </span>
       {active && (
-        <span
-          className={`absolute right-3 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-ink text-cream ${
-            compact ? "top-3" : "top-1/2 -translate-y-1/2"
-          }`}
-        >
+        <span className="absolute top-3 right-3 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-ink text-cream">
           <Check className="h-3 w-3" strokeWidth={2.4} />
         </span>
       )}
@@ -941,11 +997,30 @@ function TextureChoiceButton({
   );
 }
 
-function OptionSetLabel({ label, count, className = "" }: { label: string; count: number; className?: string }) {
+function SwatchLine({ colors }: { colors: string[] }) {
   return (
-    <div className={`mb-3 flex items-center justify-between gap-4 ${className}`}>
-      <span className="tracking-luxury text-[10px] font-bold text-ink/45 uppercase">{label}</span>
-      <span className="text-[10px] font-bold text-ink/35">{count}</span>
+    <span className="flex items-center">
+      {colors.slice(0, 3).map((color) => (
+        <span
+          key={color}
+          className="-ml-1 block h-4 w-4 rounded-full border border-white shadow-[0_0_0_1px_rgba(10,10,10,0.12)] first:ml-0"
+          style={{ backgroundColor: color }}
+        />
+      ))}
+    </span>
+  );
+}
+
+function SwatchStack({ colors }: { colors: string[] }) {
+  return (
+    <div className="flex shrink-0 items-center">
+      {colors.slice(0, 3).map((color) => (
+        <span
+          key={color}
+          className="-ml-2 block h-10 w-10 rounded-full border-2 border-white shadow-[0_8px_18px_rgba(10,10,10,0.12)] first:ml-0"
+          style={{ backgroundColor: color }}
+        />
+      ))}
     </div>
   );
 }
@@ -1004,12 +1079,25 @@ function CameraDebugPanel({
   );
 }
 
-function ControlGroup({ icon, title, children }: { icon: ReactNode; title: string; children: ReactNode }) {
+function ConfigSection({
+  step,
+  title,
+  meta,
+  children,
+}: {
+  step: string;
+  title: string;
+  meta: string;
+  children: ReactNode;
+}) {
   return (
     <section className="border-t border-ink/10 py-6">
-      <div className="mb-4 flex items-center gap-2 text-ink">
-        <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white text-pop">{icon}</span>
-        <h3 className="tracking-luxury text-[11px] font-bold uppercase">{title}</h3>
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span className="font-display text-[11px] text-ink/32">{step}</span>
+          <h3 className="text-sm font-black tracking-normal text-ink uppercase">{title}</h3>
+        </div>
+        <span className="text-xs font-semibold text-ink/42">{meta}</span>
       </div>
       {children}
     </section>
@@ -1018,15 +1106,18 @@ function ControlGroup({ icon, title, children }: { icon: ReactNode; title: strin
 
 function ColorInput({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
   return (
-    <label className="flex h-12 items-center justify-between rounded-[8px] border border-ink/10 bg-white px-4">
-      <span className="text-sm font-semibold">{label}</span>
-      <input
-        type="color"
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className="h-8 w-10 cursor-pointer rounded-[8px] border border-ink/15 bg-transparent p-1"
-        aria-label={`${label} picker`}
-      />
+    <label className="block">
+      <span className="tracking-luxury mb-2 block text-[10px] font-bold text-ink/45 uppercase">{label}</span>
+      <span className="flex h-12 items-center justify-between rounded-[8px] border border-ink/10 bg-white px-3">
+        <span className="text-sm font-semibold text-ink/70">{value.toUpperCase()}</span>
+        <input
+          type="color"
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          className="h-8 w-10 cursor-pointer rounded-[8px] border border-ink/15 bg-transparent p-1"
+          aria-label={`${label} picker`}
+        />
+      </span>
     </label>
   );
 }
@@ -1193,20 +1284,30 @@ function createInitialsDecalTexture(text: string, accentColor: string) {
   if (!context) return new THREE.CanvasTexture(canvas);
 
   const fillColor = getReadableInitialsColor(accentColor);
-  const strokeColor = fillColor === "#0a0a0a" ? "rgba(244, 239, 230, 0.95)" : "rgba(10, 10, 10, 0.8)";
+  const strokeColor = fillColor === "#0a0a0a" ? "rgba(244, 239, 230, 0.84)" : "rgba(10, 10, 10, 0.74)";
 
   context.clearRect(0, 0, canvas.width, canvas.height);
   context.save();
   context.translate(canvas.width / 2, canvas.height / 2);
-  context.font = "900 136px Inter, Arial, sans-serif";
+  context.font = '700 142px "Bodoni 72 Smallcaps", "Bodoni 72", "Didot", "Libre Bodoni", "Times New Roman", serif';
   context.textAlign = "center";
   context.textBaseline = "middle";
-  context.letterSpacing = text.length <= 2 ? "22px" : "12px";
-  context.lineWidth = 12;
+  context.letterSpacing = text.length <= 2 ? "16px" : "8px";
+  context.lineWidth = 8;
   context.strokeStyle = strokeColor;
   context.fillStyle = fillColor;
-  context.strokeText(text, 0, 8);
-  context.fillText(text, 0, 8);
+  context.strokeText(text, 0, 6);
+  context.fillText(text, 0, 6);
+
+  const underlineWidth = Math.min(180, Math.max(88, text.length * 52));
+  context.globalAlpha = 0.82;
+  context.lineWidth = 5;
+  context.lineCap = "round";
+  context.strokeStyle = fillColor;
+  context.beginPath();
+  context.moveTo(-underlineWidth / 2, 84);
+  context.lineTo(underlineWidth / 2, 84);
+  context.stroke();
   context.restore();
 
   const texture = new THREE.CanvasTexture(canvas);

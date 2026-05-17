@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { AddToCartButton, ProductPrice, ProductProvider } from "@shopify/hydrogen-react";
 import { useVariantSelector } from "@/hooks/use-variant-selector";
 import { getProductSingle } from "./service";
@@ -7,6 +8,7 @@ import Image from "next/image";
 import { Button } from "@esmate/shadcn/components/ui/button";
 import { Card, CardContent } from "@esmate/shadcn/components/ui/card";
 import { Separator } from "@esmate/shadcn/components/ui/separator";
+import { analytics } from "@/lib/analytics";
 
 interface Props {
   data: Awaited<ReturnType<typeof getProductSingle>>;
@@ -14,6 +16,17 @@ interface Props {
 
 export function ProductSingle(props: Props) {
   const { variantId, options, selectOption } = useVariantSelector(props.data);
+
+  // Fire Meta Pixel ViewContent once per product page view.
+  useEffect(() => {
+    const variant = props.data.variants?.nodes?.[0];
+    analytics.viewContent({
+      id: props.data.id,
+      name: props.data.title,
+      category: props.data.productType ?? undefined,
+      price: variant?.price ? { amount: variant.price.amount, currencyCode: variant.price.currencyCode } : undefined,
+    });
+  }, [props.data]);
 
   return (
     <ProductProvider data={props.data}>
@@ -78,6 +91,15 @@ export function ProductSingle(props: Props) {
               <AddToCartButton
                 variantId={variantId}
                 disabled={!variantId}
+                onClick={() => {
+                  const variant = props.data.variants?.nodes?.find((v) => v?.id === variantId) ?? props.data.variants?.nodes?.[0];
+                  analytics.addToCart({
+                    id: props.data.id,
+                    name: props.data.title,
+                    quantity: 1,
+                    price: variant?.price ? { amount: variant.price.amount, currencyCode: variant.price.currencyCode } : undefined,
+                  });
+                }}
                 className="inline-flex h-11 w-full items-center justify-center rounded-md bg-primary px-8 text-base font-semibold text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
               >
                 Add to Cart

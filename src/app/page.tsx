@@ -3,6 +3,7 @@ import { ReactNode } from "react";
 import { ArrowRight } from "@esmate/shadcn/pkgs/lucide-react";
 import { HeroSplit } from "./hero-split";
 import { StepModel } from "./step-model";
+import { TrackedLink } from "./tracked-link";
 
 // Returns true when the hex color is dark enough that we should use light text on top.
 function isDarkHex(hex: string): boolean {
@@ -404,8 +405,10 @@ function HowItWorks() {
         </ol>
 
         <div className="mt-12 flex flex-col items-center gap-4 lg:mt-16">
-          <Link
+          <TrackedLink
             href="/custom-strap"
+            event="InitiateBuild"
+            params={{ source: "how-it-works" }}
             className="group inline-flex w-full max-w-sm items-center justify-center gap-3 rounded-md bg-ink px-8 py-4 text-[11px] font-bold tracking-[0.28em] text-cream uppercase transition-colors hover:bg-pop sm:w-auto"
           >
             Start Customizing
@@ -413,7 +416,7 @@ function HowItWorks() {
               className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1"
               strokeWidth={2.5}
             />
-          </Link>
+          </TrackedLink>
           <p className="text-center text-[10px] font-medium tracking-[0.3em] text-muted uppercase">
             Free shipping · 30-day returns · 2-year warranty
           </p>
