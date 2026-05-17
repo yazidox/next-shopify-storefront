@@ -133,23 +133,6 @@ export default function Layout(props: Props) {
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700;800;900&display=swap"
         />
-        {/* Preload only the FIRST 3D model — the rest load on-demand as we cycle. */}
-        <link
-          rel="preload"
-          href="/wristwatch.opt.glb"
-          as="fetch"
-          type="model/gltf-binary"
-          crossOrigin="anonymous"
-          // @ts-expect-error -- fetchpriority is valid HTML but not yet in React types
-          fetchpriority="high"
-        />
-        {/* Module preload for model-viewer itself */}
-        <link rel="modulepreload" href="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js" />
-        <script
-          type="module"
-          src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"
-          async
-        />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
       </head>
       <body className="min-h-screen bg-cream text-ink">

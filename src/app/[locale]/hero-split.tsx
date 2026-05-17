@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { ArrowRight } from "@esmate/shadcn/pkgs/lucide-react";
 import { WatchModel, type WatchModelItem } from "./watch-model";
@@ -43,6 +43,26 @@ const models: WatchModelItem[] = [
   },
 ];
 
+function useDesktopHeroMedia() {
+  const [desktop, setDesktop] = useState(false);
+
+  useEffect(() => {
+    const query = window.matchMedia("(min-width: 1024px)");
+    const update = () => setDesktop(query.matches);
+
+    update();
+    if (typeof query.addEventListener === "function") {
+      query.addEventListener("change", update);
+      return () => query.removeEventListener("change", update);
+    }
+
+    query.addListener(update);
+    return () => query.removeListener(update);
+  }, []);
+
+  return desktop;
+}
+
 // Relative luminance — returns a light or dark text color that contrasts the bg.
 function pickTextColor(hex?: string): { primary: string; muted: string; isLight: boolean } {
   if (!hex) return { primary: "#0a0a0a", muted: "rgba(10,10,10,0.5)", isLight: false };
@@ -61,6 +81,7 @@ function pickTextColor(hex?: string): { primary: string; muted: string; isLight:
 export function HeroSplit() {
   const t = useTranslations("Hero");
   const [activeBg, setActiveBg] = useState<string | undefined>(models[0]?.bg);
+  const renderDesktopVideo = useDesktopHeroMedia();
   const { primary, muted, isLight } = pickTextColor(activeBg);
 
   return (
@@ -104,17 +125,27 @@ export function HeroSplit() {
 
       {/* RIGHT — just the watch (video) */}
       <div className="relative flex min-h-[70vh] items-end justify-center overflow-hidden bg-ink text-cream lg:min-h-screen">
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="absolute inset-0 h-full w-full object-cover"
-          aria-label="Royal Pop"
-        >
-          <source media="(max-width: 768px)" src="/videos/hero-mobile.mp4" type="video/mp4" />
-          <source src="/videos/hero-desktop.mp4" type="video/mp4" />
-        </video>
+        {renderDesktopVideo ? (
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="absolute inset-0 h-full w-full object-cover"
+            aria-label="Royal Pop"
+          >
+            <source src="/videos/hero-desktop.mp4" type="video/mp4" />
+          </video>
+        ) : (
+          <img
+            src="/products/chronostrap-case-royal-purple.png"
+            alt=""
+            aria-hidden
+            loading="lazy"
+            decoding="async"
+            className="absolute inset-0 h-full w-full object-cover opacity-95"
+          />
+        )}
         <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/70 via-black/10 to-black/30" />
 
         <div className="anim-fade-up anim-delay-2 relative z-10 flex w-full min-w-0 flex-col items-start gap-4 px-5 pt-10 pb-10 sm:flex-row sm:items-end sm:justify-between sm:gap-6 sm:px-8 sm:pb-14 lg:px-14 lg:pt-14 lg:pb-19">

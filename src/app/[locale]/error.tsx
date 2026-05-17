@@ -1,8 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { AlertTriangle, ArrowRight, RotateCw } from "@esmate/shadcn/pkgs/lucide-react";
+import { Link } from "@/i18n/navigation";
 
 export default function RouteError({
   error,
@@ -11,6 +12,7 @@ export default function RouteError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const t = useTranslations("Error");
   useEffect(() => {
     if (typeof console !== "undefined") {
       console.error("[ChronoStrap route error]", error);
@@ -24,15 +26,11 @@ export default function RouteError({
       </div>
 
       <div className="flex flex-col gap-3">
-        <h1 className="font-display text-3xl leading-[0.95] uppercase md:text-4xl">
-          Something glitched
-        </h1>
-        <p className="text-[15px] leading-relaxed text-muted">
-          We hit a snag loading this page. Most of the time a quick retry sorts it. If it keeps happening, head home and we&apos;ll get you sorted.
-        </p>
+        <h1 className="font-display text-3xl leading-[0.95] uppercase md:text-4xl">{t("title")}</h1>
+        <p className="text-[15px] leading-relaxed text-muted">{t("subtitle")}</p>
         {error.digest && (
           <p className="text-[10px] tracking-[0.18em] text-muted/70 uppercase">
-            Reference: {error.digest}
+            {t("reference")}: {error.digest}
           </p>
         )}
       </div>
@@ -44,13 +42,13 @@ export default function RouteError({
           className="group inline-flex h-12 items-center justify-center gap-2 rounded-md bg-ink px-8 text-[11px] font-extrabold tracking-[0.18em] text-cream uppercase transition-colors hover:bg-pop"
         >
           <RotateCw className="h-3.5 w-3.5 transition-transform group-hover:rotate-180" strokeWidth={2.5} />
-          Try again
+          {t("tryAgain")}
         </button>
         <Link
           href="/"
           className="inline-flex h-12 items-center justify-center gap-2 rounded-md border border-line bg-surface px-8 text-[11px] font-extrabold tracking-[0.18em] text-ink uppercase transition-colors hover:border-ink"
         >
-          Go home
+          {t("goHome")}
           <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} />
         </Link>
       </div>

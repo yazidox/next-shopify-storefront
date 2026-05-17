@@ -67,6 +67,55 @@
   "Seo": {
     "homeH1": "ChronoStrap — The first customizable bioceramic watch. One Swiss-made case, eight interchangeable straps, infinite combinations."
   },
+  "Proof": {
+    "eyebrow": "In the wild",
+    "title": "On wrists. On the move.",
+    "imageAlt": "ChronoStrap lifestyle shot"
+  },
+  "Error": {
+    "title": "Something glitched",
+    "subtitle": "We hit a snag loading this page. Most of the time a quick retry sorts it. If it keeps happening, head home and we'll get you sorted.",
+    "reference": "Reference",
+    "tryAgain": "Try again",
+    "goHome": "Go home"
+  },
+  "NotFound": {
+    "code": "404",
+    "title": "Lost in transit",
+    "subtitle": "This page doesn't exist — or it slipped out of stock. Try the collection or head home.",
+    "shopCollection": "Shop the collection",
+    "goHome": "Go home"
+  },
+  "Search": {
+    "placeholder": "Search watches, straps, references…",
+    "trySearching": "Try searching",
+    "close": "Close",
+    "clearAria": "Clear search",
+    "closeAria": "Close search",
+    "searching": "Searching…",
+    "noResultsFor": "No results for",
+    "noResultsHint": "Try a colour, a reference name, or browse the collection.",
+    "viewAllProducts": "View all products",
+    "result": "result",
+    "results": "results",
+    "quickShopCollectionTitle": "Shop the collection",
+    "quickShopCollectionSub": "Eight references",
+    "quickDesignTitle": "Design your strap",
+    "quickDesignSub": "Configurator · €90",
+    "quickBagTitle": "Your bag",
+    "quickBagSub": "View what's saved"
+  },
+  "CustomStrap": {
+    "liveCustomizer": "Live customizer",
+    "title1": "Custom",
+    "title2": "Strap",
+    "configure": "Configure",
+    "reset": "Reset design",
+    "noMark": "No mark",
+    "addToBag": "Add to Bag",
+    "section01": "Reference",
+    "section01Meta": "Official GLB models"
+  },
   "Footer": {
     "newsletterTitle": "Join the inner circle",
     "newsletterSubtitle": "Early access to drops, restocks, and limited editions.",

@@ -1,6 +1,7 @@
 "use client";
 
 import { ChangeEvent, ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useCart } from "@shopify/hydrogen-react";
 import * as THREE from "three";
@@ -388,6 +389,7 @@ const INITIALS_PLACEMENTS: Record<HeroTextureStyle, InitialsPlacementSnapshot> =
 };
 
 export function CustomStrapStudio({ customStrapVariantId }: { customStrapVariantId: string | null }) {
+  const t = useTranslations("CustomStrap");
   const cart = useCart();
   const router = useRouter();
   const [config, setConfig] = useState<StrapConfig>(INITIAL_CONFIG);
@@ -815,15 +817,15 @@ export function CustomStrapStudio({ customStrapVariantId }: { customStrapVariant
 
           <div className="pointer-events-none absolute top-20 left-4 max-w-[320px] sm:top-24 sm:left-8 sm:max-w-[420px] lg:top-28 lg:left-12">
             <p className="tracking-luxury text-[10px] font-bold uppercase" style={{ color: previewText.muted }}>
-              Live customizer
+              {t("liveCustomizer")}
             </p>
             <h1
               className="mt-3 text-4xl leading-[0.95] font-black tracking-normal uppercase sm:mt-4 sm:text-6xl lg:text-7xl"
               style={{ color: previewText.primary }}
             >
-              Custom
+              {t("title1")}
               <br />
-              Strap
+              {t("title2")}
             </h1>
           </div>
 
@@ -834,7 +836,7 @@ export function CustomStrapStudio({ customStrapVariantId }: { customStrapVariant
               label={
                 config.emboss.trim()
                   ? `${initialsPlaced ? "Placed" : "Mark"} ${config.emboss.trim().slice(0, 10)}`
-                  : "No mark"
+                  : t("noMark")
               }
             />
             {debug && <BuildChip label="Debug Camera" />}
@@ -849,21 +851,21 @@ export function CustomStrapStudio({ customStrapVariantId }: { customStrapVariant
               <div>
                 <p className="tracking-luxury text-[10px] font-bold text-ink/45 uppercase">ChronoStrap Studio</p>
                 <h2 className="mt-2 text-2xl leading-none font-black tracking-normal uppercase sm:text-3xl">
-                  Configure
+                  {t("configure")}
                 </h2>
               </div>
               <button
                 type="button"
                 onClick={resetStudio}
                 className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-ink/15 text-ink transition-colors hover:bg-white"
-                aria-label="Reset design"
-                title="Reset"
+                aria-label={t("reset")}
+                title={t("reset")}
               >
                 <RotateCcw className="h-4 w-4" strokeWidth={2} />
               </button>
             </div>
 
-            <ConfigSection step="01" title="Reference" meta="Official GLB models">
+            <ConfigSection step="01" title={t("section01")} meta={t("section01Meta")}>
               <div className="grid grid-cols-2 gap-2">
                 {HERO_TEXTURE_OPTIONS.map((look) => {
                   const active = config.baseHeroStyle === look.id && config.textureStyle === look.id;

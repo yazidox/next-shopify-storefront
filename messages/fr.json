@@ -67,6 +67,55 @@
   "Seo": {
     "homeH1": "ChronoStrap — La première montre bioceramic personnalisable. Un boîtier suisse, huit bracelets interchangeables, combinaisons infinies."
   },
+  "Proof": {
+    "eyebrow": "En conditions réelles",
+    "title": "Au poignet. En mouvement.",
+    "imageAlt": "ChronoStrap en situation"
+  },
+  "Error": {
+    "title": "Un souci est survenu",
+    "subtitle": "Le chargement de cette page a échoué. Une nouvelle tentative suffit souvent. Sinon, retournez à l'accueil et nous nous en occupons.",
+    "reference": "Référence",
+    "tryAgain": "Réessayer",
+    "goHome": "Retour à l'accueil"
+  },
+  "NotFound": {
+    "code": "404",
+    "title": "Page introuvable",
+    "subtitle": "Cette page n'existe pas — ou n'est plus disponible. Découvrez la collection ou rentrez à l'accueil.",
+    "shopCollection": "Voir la collection",
+    "goHome": "Accueil"
+  },
+  "Search": {
+    "placeholder": "Rechercher montres, bracelets, références…",
+    "trySearching": "Essayez de chercher",
+    "close": "Fermer",
+    "clearAria": "Effacer la recherche",
+    "closeAria": "Fermer la recherche",
+    "searching": "Recherche…",
+    "noResultsFor": "Aucun résultat pour",
+    "noResultsHint": "Essayez une couleur, un nom de référence ou parcourez la collection.",
+    "viewAllProducts": "Voir tous les produits",
+    "result": "résultat",
+    "results": "résultats",
+    "quickShopCollectionTitle": "Voir la collection",
+    "quickShopCollectionSub": "Huit références",
+    "quickDesignTitle": "Composez votre bracelet",
+    "quickDesignSub": "Configurateur · 90 €",
+    "quickBagTitle": "Votre panier",
+    "quickBagSub": "Voir ce qui est sauvegardé"
+  },
+  "CustomStrap": {
+    "liveCustomizer": "Configurateur en direct",
+    "title1": "Bracelet",
+    "title2": "Personnalisé",
+    "configure": "Configurer",
+    "reset": "Réinitialiser",
+    "noMark": "Sans gravure",
+    "addToBag": "Ajouter au panier",
+    "section01": "Référence",
+    "section01Meta": "Modèles GLB officiels"
+  },
   "Footer": {
     "newsletterTitle": "Rejoignez le cercle privé",
     "newsletterSubtitle": "Accès anticipé aux sorties, réassorts et éditions limitées.",

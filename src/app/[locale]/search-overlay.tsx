@@ -2,13 +2,14 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { Search, X, ArrowRight } from "@esmate/shadcn/pkgs/lucide-react";
 import { graphql } from "@/lib/graphql";
 import { CountryCode } from "@/lib/graphql/graphql";
 import { storefront } from "@/lib/storefront";
 import { analytics } from "@/lib/analytics";
 import { useStoreLocalization } from "./store-localization";
+import { Link } from "@/i18n/navigation";
 
 interface Result {
   handle: string;
@@ -43,6 +44,7 @@ const SearchQuery = graphql(`
 `);
 
 export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const t = useTranslations("Search");
   const [q, setQ] = useState("");
   const [results, setResults] = useState<Result[]>([]);
   const [loading, setLoading] = useState(false);
@@ -144,7 +146,7 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
           ref={inputRef}
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search watches, straps, references…"
+          placeholder={t("placeholder")}
           className="flex-1 bg-transparent text-lg text-ink placeholder:text-muted focus:outline-none lg:text-2xl"
           autoComplete="off"
           spellCheck={false}
@@ -153,7 +155,7 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
           <button
             type="button"
             onClick={() => setQ("")}
-            aria-label="Clear search"
+            aria-label={t("clearAria")}
             className="rounded-full p-2 text-muted transition-colors hover:bg-ink/5 hover:text-ink"
           >
             <X className="h-4 w-4" strokeWidth={2} />
@@ -162,11 +164,11 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
         <button
           type="button"
           onClick={onClose}
-          aria-label="Close search"
+          aria-label={t("closeAria")}
           className="inline-flex items-center gap-2 rounded-md border border-line bg-surface px-3 py-2 text-[10px] font-extrabold tracking-[0.18em] text-muted uppercase transition-colors hover:border-ink hover:text-ink"
         >
           <X className="h-3.5 w-3.5" strokeWidth={2} />
-          Close
+          {t("close")}
         </button>
       </div>
 
@@ -175,7 +177,7 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
         <div className="mx-auto max-w-[1200px] px-6 py-10 lg:px-12 lg:py-14">
           {showHelp && (
             <div className="flex flex-col gap-6">
-              <p className="text-[11px] font-extrabold tracking-[0.18em] text-muted uppercase">Try searching</p>
+              <p className="text-[11px] font-extrabold tracking-[0.18em] text-muted uppercase">{t("trySearching")}</p>
               <ul className="flex flex-wrap gap-2">
                 {suggestions.map((s) => (
                   <li key={s}>
@@ -192,14 +194,24 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
 
               {/* Quick links to top destinations */}
               <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <QuickLink href="/products" title="Shop the collection" sub="Eight references" onNavigate={onClose} />
                 <QuickLink
-                  href="/custom-strap"
-                  title="Design your strap"
-                  sub="Configurator · €90"
+                  href="/products"
+                  title={t("quickShopCollectionTitle")}
+                  sub={t("quickShopCollectionSub")}
                   onNavigate={onClose}
                 />
-                <QuickLink href="/cart" title="Your bag" sub="View what's saved" onNavigate={onClose} />
+                <QuickLink
+                  href="/custom-strap"
+                  title={t("quickDesignTitle")}
+                  sub={t("quickDesignSub")}
+                  onNavigate={onClose}
+                />
+                <QuickLink
+                  href="/cart"
+                  title={t("quickBagTitle")}
+                  sub={t("quickBagSub")}
+                  onNavigate={onClose}
+                />
               </div>
             </div>
           )}
@@ -207,22 +219,22 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
           {loading && (
             <div className="flex items-center gap-3 text-sm text-muted">
               <span className="h-3 w-3 animate-pulse rounded-full bg-pop" />
-              Searching…
+              {t("searching")}
             </div>
           )}
 
           {showEmpty && (
             <div className="flex flex-col items-center gap-3 py-16 text-center">
               <p className="text-lg text-ink">
-                No results for <span className="font-semibold">&ldquo;{trimmed}&rdquo;</span>
+                {t("noResultsFor")} <span className="font-semibold">&ldquo;{trimmed}&rdquo;</span>
               </p>
-              <p className="text-sm text-muted">Try a colour, a reference name, or browse the collection.</p>
+              <p className="text-sm text-muted">{t("noResultsHint")}</p>
               <Link
                 href="/products"
                 onClick={onClose}
                 className="mt-4 inline-flex h-11 items-center justify-center gap-2 rounded-md bg-ink px-6 text-[11px] font-extrabold tracking-[0.18em] text-cream uppercase transition-colors hover:bg-pop"
               >
-                View all products
+                {t("viewAllProducts")}
                 <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} />
               </Link>
             </div>
@@ -231,7 +243,7 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
           {!loading && results.length > 0 && (
             <>
               <p className="mb-4 text-[11px] font-extrabold tracking-[0.18em] text-muted uppercase">
-                {results.length} result{results.length === 1 ? "" : "s"}
+                {results.length} {results.length === 1 ? t("result") : t("results")}
               </p>
               <ul className="flex flex-col">
                 {results.map((r) => (

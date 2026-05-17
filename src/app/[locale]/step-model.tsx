@@ -1,6 +1,7 @@
 "use client";
 
 import { createElement, useEffect, useRef, useState } from "react";
+import { ensureModelViewerScript } from "@/lib/model-viewer-loader";
 
 type BreatheConfig = boolean | { amplitudeDeg?: number; periodMs?: number; phaseDeg?: number };
 
@@ -26,6 +27,42 @@ type ModelViewerLike = HTMLElement & {
   cameraTarget?: string;
 };
 
+const MOBILE_MODEL_QUERY = "(max-width: 1023px)";
+
+const STATIC_MODEL_POSTERS: Record<string, string> = {
+  "/ap-watch.opt.glb": "/products/chronostrap-case-royal-purple.png",
+  "/black.opt.glb": "/collection/ocho-negro.png",
+  "/blue-ap.opt.glb": "/products/chronostrap-case-sky-blue.png",
+  "/custom-strap.glb": "/products/chronostrap-strap-teal.png",
+  "/green.opt.glb": "/collection/green-eight.png",
+  "/huit-blanc.opt.glb": "/collection/huit-blanc.png",
+  "/orenji-hachi.opt.glb": "/collection/orenji-hachi.png",
+  "/white-ap.opt.glb": "/products/chronostrap-case-arctic-white.png",
+  "/wristwatch.opt.glb": "/collection/otg-roz.png",
+  "/yellow-ap.opt.glb": "/products/chronostrap-strap-hyper-yellow.png",
+  "/yellow-sky.opt.glb": "/collection/lan-ba.png",
+};
+
+function useMobileModelFallback() {
+  const [fallback, setFallback] = useState(false);
+
+  useEffect(() => {
+    const query = window.matchMedia(MOBILE_MODEL_QUERY);
+    const update = () => setFallback(query.matches);
+
+    update();
+    if (typeof query.addEventListener === "function") {
+      query.addEventListener("change", update);
+      return () => query.removeEventListener("change", update);
+    }
+
+    query.addListener(update);
+    return () => query.removeListener(update);
+  }, []);
+
+  return fallback;
+}
+
 /**
  * Lightweight model-viewer wrapper for showcase cards.
  *
@@ -40,7 +77,17 @@ type ModelViewerLike = HTMLElement & {
  * - The browser HTTP cache (warmed via `prefetchAllModels`) keeps swap times
  *   under the 350ms loader-delay threshold, so no spinner ever flashes.
  */
-export function StepModel({
+export function StepModel({ srcs, alt = "Watch 3D", className, ...viewerProps }: Props) {
+  const useFallback = useMobileModelFallback();
+
+  if (useFallback) {
+    return <StaticModelFallback srcs={srcs} alt={alt} className={className} />;
+  }
+
+  return <StepModelViewer srcs={srcs} alt={alt} className={className} {...viewerProps} />;
+}
+
+function StepModelViewer({
   srcs,
   alt = "Watch 3D",
   intervalMs = 2500,
@@ -85,6 +132,7 @@ export function StepModel({
   // that haven't been rendered yet.
   useEffect(() => {
     if (!inView) return;
+    ensureModelViewerScript();
     srcs.forEach((src) => {
       fetch(src, { cache: "force-cache" }).catch(() => {});
     });
@@ -151,9 +199,7 @@ export function StepModel({
   }, [breathe, cameraOrbit, inView, srcs, debug]);
 
   const activeSrc = srcs[active];
-  const mounted = inView
-    ? Array.from(new Set([outgoing, activeSrc].filter((s): s is string => Boolean(s))))
-    : [];
+  const mounted = inView ? Array.from(new Set([outgoing, activeSrc].filter((s): s is string => Boolean(s)))) : [];
 
   return (
     <div ref={wrapRef} className={`relative h-full w-full ${className ?? ""}`}>
@@ -194,6 +240,45 @@ export function StepModel({
       {!anyLoaded && inView && <DelayedSpinner />}
 
       {debug && <DebugPosition viewerRef={activeViewerRef} />}
+    </div>
+  );
+}
+
+function StaticModelFallback({ srcs, alt, className }: { srcs: string[]; alt: string; className?: string }) {
+  const posters = srcs.map((src) => STATIC_MODEL_POSTERS[src]).filter((src): src is string => Boolean(src));
+  const display = posters.length ? posters.slice(0, 3) : [];
+
+  return (
+    <div
+      role="img"
+      aria-label={alt}
+      className={`relative flex h-full w-full items-center justify-center overflow-hidden ${className ?? ""}`}
+    >
+      {display.length ? (
+        display.map((src, index) => {
+          const center = index === Math.floor(display.length / 2);
+          const offset = display.length === 1 ? 0 : (index - Math.floor(display.length / 2)) * 22;
+
+          return (
+            <img
+              key={`${src}-${index}`}
+              src={src}
+              alt=""
+              aria-hidden
+              loading="lazy"
+              decoding="async"
+              className="absolute h-[82%] w-auto object-contain drop-shadow-[0_24px_44px_rgba(0,0,0,0.25)]"
+              style={{
+                transform: `translateX(${offset}%) scale(${center ? 1.04 : 0.84})`,
+                zIndex: center ? 20 : 10,
+                opacity: center ? 0.98 : 0.72,
+              }}
+            />
+          );
+        })
+      ) : (
+        <span aria-hidden className="h-[48%] w-[48%] rounded-full border-[16px] border-current opacity-50" />
+      )}
     </div>
   );
 }

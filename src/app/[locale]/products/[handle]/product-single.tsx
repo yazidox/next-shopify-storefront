@@ -43,6 +43,7 @@ type ProductMoney = Props["data"]["priceRange"]["minVariantPrice"];
 export function ProductSingle({ data, siblings }: Props) {
   const t = useTranslations("Product");
   const tc = useTranslations("Common");
+  const tcart = useTranslations("Cart");
   const { variantId, options, selectOption } = useVariantSelector(data);
   const [active, setActive] = useState(0);
   const [qty, setQty] = useState(1);
@@ -237,9 +238,9 @@ export function ProductSingle({ data, siblings }: Props) {
 
             {/* Trust strip */}
             <ul className="grid grid-cols-1 gap-3 border-t border-line pt-5 sm:grid-cols-3">
-              <Trust Icon={Truck} label={useTranslations("Cart")("freeShipping")} sub={useTranslations("Cart")("freeShippingSub")} />
-              <Trust Icon={RotateCcw} label={useTranslations("Cart")("returns")} sub={useTranslations("Cart")("returnsSub")} />
-              <Trust Icon={Shield} label={useTranslations("Cart")("warranty")} sub={useTranslations("Cart")("warrantySub")} />
+              <Trust Icon={Truck} label={tcart("freeShipping")} sub={tcart("freeShippingSub")} />
+              <Trust Icon={RotateCcw} label={tcart("returns")} sub={tcart("returnsSub")} />
+              <Trust Icon={Shield} label={tcart("warranty")} sub={tcart("warrantySub")} />
             </ul>
           </div>
         </aside>
@@ -253,13 +254,13 @@ export function ProductSingle({ data, siblings }: Props) {
         <div className="mx-auto max-w-[900px] px-6 py-12 lg:px-10 lg:py-16">
           <nav className="flex items-center justify-center gap-4 border-b border-line sm:gap-8 lg:gap-12">
             <TabButton active={tab === "description"} onClick={() => setTab("description")}>
-              Description
+              {t("tabDescription")}
             </TabButton>
             <TabButton active={tab === "features"} onClick={() => setTab("features")}>
-              Features
+              {t("tabFeatures")}
             </TabButton>
             <TabButton active={tab === "specifications"} onClick={() => setTab("specifications")}>
-              Specifications
+              {t("tabSpecifications")}
             </TabButton>
           </nav>
 
@@ -267,7 +268,7 @@ export function ProductSingle({ data, siblings }: Props) {
             {tab === "description" && (
               <div className="prose prose-sm max-w-none text-ink/85">
                 <p className="text-[15px] leading-[1.7] whitespace-pre-line text-ink/85">
-                  {data.description || "No description available."}
+                  {data.description || t("descriptionNone")}
                 </p>
               </div>
             )}
@@ -275,15 +276,15 @@ export function ProductSingle({ data, siblings }: Props) {
             {tab === "features" && (
               <ul className="grid grid-cols-1 gap-x-8 gap-y-3 sm:grid-cols-2">
                 {(data.tags ?? [])
-                  .filter((t) => !t.includes(":"))
-                  .map((t, i) => (
+                  .filter((tag) => !tag.includes(":"))
+                  .map((tag, i) => (
                     <li key={i} className="flex items-start gap-2 text-[14px] text-ink/85">
                       <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-pop" />
-                      {titleize(t.replace(/[-_]/g, " "))}
+                      {titleize(tag.replace(/[-_]/g, " "))}
                     </li>
                   ))}
-                {(data.tags ?? []).filter((t) => !t.includes(":")).length === 0 && (
-                  <li className="text-[14px] text-muted">No additional features listed.</li>
+                {(data.tags ?? []).filter((tag) => !tag.includes(":")).length === 0 && (
+                  <li className="text-[14px] text-muted">{t("featuresNone")}</li>
                 )}
               </ul>
             )}
@@ -443,18 +444,19 @@ function SiblingCarousel({
   siblings: Props["siblings"];
   currentHandle: string;
 }) {
+  const t = useTranslations("Product");
   if (!siblings.length) return null;
 
   return (
     <div className="flex flex-col gap-3 border-t border-line pt-5">
-      <p className="text-[13px] text-ink">Available in {siblings.length + 1} unique variations.</p>
+      <p className="text-[13px] text-ink">{t("variationsAvailable", { count: siblings.length + 1 })}</p>
       <div className="flex gap-2 overflow-x-auto pb-1">
         <span
           className="relative flex h-14 w-14 shrink-0 items-center justify-center border-2 border-ink bg-white"
           aria-current="true"
-          title="Current"
+          title={t("now")}
         >
-          <span className="text-[9px] font-extrabold tracking-[0.18em] text-ink uppercase">Now</span>
+          <span className="text-[9px] font-extrabold tracking-[0.18em] text-ink uppercase">{t("now")}</span>
         </span>
         {siblings
           .map((s) =>
@@ -509,18 +511,20 @@ function Reviews({ rating }: { rating: number; count?: number }) {
 }
 
 function PaymentPlan({ amount, currency }: { amount: number; currency: string }) {
+  const t = useTranslations("Product");
   if (!amount) return null;
   const each = (amount / 4).toFixed(2);
   const sym = currency === "EUR" ? "€" : currency === "USD" ? "$" : currency === "GBP" ? "£" : `${currency} `;
   return (
     <p className="text-[12px] text-muted">
-      or <span className="font-semibold text-ink">4 interest-free payments</span> of {sym}
-      {each} with <span className="font-bold text-ink">Klarna</span>
+      {t("klarnaPlan", { count: 4, amount: `${sym}${each}` })}{" "}
+      <span className="font-bold text-ink">{t("klarnaProvider")}</span>
     </p>
   );
 }
 
 function DispatchCountdown() {
+  const t = useTranslations("Product");
   const [text, setText] = useState<string | null>(null);
   useEffect(() => {
     function compute() {
@@ -529,7 +533,7 @@ function DispatchCountdown() {
       const cutoff = new Date(now);
       cutoff.setHours(16, 0, 0, 0);
       if (now > cutoff) {
-        setText("Order today — dispatched tomorrow");
+        setText(t("dispatchTomorrow"));
         return;
       }
       const ms = cutoff.getTime() - now.getTime();
@@ -539,13 +543,13 @@ function DispatchCountdown() {
       const hh = h.toString().padStart(2, "0");
       const mm = m.toString().padStart(2, "0");
       const ss = s.toString().padStart(2, "0");
-      setText(`Order in the next ${hh}:${mm}:${ss} for same-day dispatch`);
+      setText(t("dispatchSameDay", { time: `${hh}:${mm}:${ss}` }));
     }
     compute();
     // Tick every second for a true live countdown
     const id = window.setInterval(compute, 1000);
     return () => window.clearInterval(id);
-  }, []);
+  }, [t]);
   if (!text) return null;
   return (
     <div className="dispatch-pulse inline-flex items-center gap-2.5 self-start rounded-md border border-emerald-600/30 bg-emerald-50/60 px-3 py-2 text-[12px] font-semibold text-emerald-900 tabular-nums">
@@ -574,6 +578,7 @@ function SecondaryActions({
   title: string;
   price?: { amount: string | number; currencyCode?: string };
 }) {
+  const t = useTranslations("Product");
   const [saved, setSaved] = useState(false);
   useEffect(() => {
     try {
@@ -630,7 +635,7 @@ function SecondaryActions({
         }`}
       >
         <Heart className={`h-4 w-4 ${saved ? "fill-pop" : ""}`} strokeWidth={1.75} />
-        {saved ? "Saved" : "Wishlist"}
+        {saved ? t("saved") : t("wishlist")}
       </button>
       <button
         type="button"
@@ -638,7 +643,7 @@ function SecondaryActions({
         className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-line bg-surface text-[11px] font-extrabold tracking-[0.18em] text-ink uppercase transition-colors hover:border-ink"
       >
         <Share2 className="h-4 w-4" strokeWidth={1.75} />
-        Share
+        {t("share")}
       </button>
     </div>
   );
@@ -680,6 +685,7 @@ function MobileStickyCTA({
   qty: number;
   onAdd: () => void;
 }) {
+  const tc = useTranslations("Common");
   const [show, setShow] = useState(false);
   useEffect(() => {
     const onScroll = () => setShow(window.scrollY > 280);
@@ -711,7 +717,7 @@ function MobileStickyCTA({
           onClick={onAdd}
           className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-md bg-ink px-5 text-[11px] font-extrabold tracking-[0.18em] text-cream uppercase transition-colors hover:bg-pop disabled:opacity-50"
         >
-          {available ? "Add to Bag" : "Sold Out"}
+          {available ? tc("addToBag") : tc("soldOut")}
           {available && <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} />}
         </AddToCartButton>
       </div>

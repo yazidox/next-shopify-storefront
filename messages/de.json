@@ -67,6 +67,55 @@
   "Seo": {
     "homeH1": "ChronoStrap — Die erste personalisierbare Bioceramic-Uhr. Ein Schweizer Gehäuse, acht austauschbare Armbänder, unendliche Kombinationen."
   },
+  "Proof": {
+    "eyebrow": "In der Realität",
+    "title": "Am Handgelenk. Unterwegs.",
+    "imageAlt": "ChronoStrap im Einsatz"
+  },
+  "Error": {
+    "title": "Etwas ist schiefgelaufen",
+    "subtitle": "Beim Laden dieser Seite gab es ein Problem. Meist hilft ein erneuter Versuch. Andernfalls geht es zurück zur Startseite.",
+    "reference": "Referenz",
+    "tryAgain": "Erneut versuchen",
+    "goHome": "Zur Startseite"
+  },
+  "NotFound": {
+    "code": "404",
+    "title": "Seite nicht gefunden",
+    "subtitle": "Diese Seite existiert nicht — oder ist nicht mehr verfügbar. Entdecke die Kollektion oder geh zur Startseite.",
+    "shopCollection": "Kollektion ansehen",
+    "goHome": "Zur Startseite"
+  },
+  "Search": {
+    "placeholder": "Uhren, Armbänder, Referenzen suchen…",
+    "trySearching": "Suchvorschläge",
+    "close": "Schließen",
+    "clearAria": "Suche löschen",
+    "closeAria": "Suche schließen",
+    "searching": "Wird gesucht…",
+    "noResultsFor": "Keine Ergebnisse für",
+    "noResultsHint": "Versuche eine Farbe, einen Referenznamen oder stöbere in der Kollektion.",
+    "viewAllProducts": "Alle Produkte ansehen",
+    "result": "Ergebnis",
+    "results": "Ergebnisse",
+    "quickShopCollectionTitle": "Kollektion ansehen",
+    "quickShopCollectionSub": "Acht Referenzen",
+    "quickDesignTitle": "Armband gestalten",
+    "quickDesignSub": "Konfigurator · 90 €",
+    "quickBagTitle": "Dein Warenkorb",
+    "quickBagSub": "Gespeichertes ansehen"
+  },
+  "CustomStrap": {
+    "liveCustomizer": "Live-Konfigurator",
+    "title1": "Custom",
+    "title2": "Strap",
+    "configure": "Konfigurieren",
+    "reset": "Zurücksetzen",
+    "noMark": "Keine Gravur",
+    "addToBag": "In den Warenkorb",
+    "section01": "Referenz",
+    "section01Meta": "Offizielle GLB-Modelle"
+  },
   "Footer": {
     "newsletterTitle": "Werde Teil des inneren Kreises",
     "newsletterSubtitle": "Vorabzugang zu Drops, Neuauflagen und limitierten Editionen.",

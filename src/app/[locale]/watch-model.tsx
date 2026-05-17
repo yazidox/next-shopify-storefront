@@ -4,6 +4,7 @@ import { createElement, useEffect, useRef, useState } from "react";
 
 import type { ModelAnimation } from "./animations";
 import { prefetchAllModels } from "@/lib/model-prefetch";
+import { ensureModelViewerScript } from "@/lib/model-viewer-loader";
 
 export interface WatchModelItem {
   src: string;
@@ -130,6 +131,11 @@ export function WatchModel({
   useEffect(() => {
     setDebug(new URLSearchParams(window.location.search).get("debug") === "1");
   }, []);
+
+  useEffect(() => {
+    if (useLightweightFallback) return;
+    ensureModelViewerScript();
+  }, [useLightweightFallback]);
 
   useEffect(() => {
     if (!useLightweightFallback || heroRenderMode === "pending") return;
