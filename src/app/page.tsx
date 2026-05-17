@@ -105,14 +105,14 @@ function Marquee() {
 
 function CollectionGrid() {
   const pieces = [
-    { name: "OTTO ROSSO", img: "/collection/otto-rosso.webp" },
-    { name: "HUIT BLANC", img: "/collection/huit-blanc.webp" },
-    { name: "GREEN EIGHT", img: "/collection/green-eight.webp" },
-    { name: "BLAUE ACHT", img: "/collection/blaue-acht.webp" },
-    { name: "LAN BA", img: "/collection/lan-ba.webp" },
-    { name: "OTG ROZ", img: "/collection/otg-roz.webp" },
-    { name: "OCHO NEGRO", img: "/collection/ocho-negro.webp" },
-    { name: "ORENJI HACHI", img: "/collection/orenji-hachi.webp" },
+    { name: "OTTO ROSSO", img: "/collection/otto-rosso.png" },
+    { name: "HUIT BLANC", img: "/collection/huit-blanc.png" },
+    { name: "GREEN EIGHT", img: "/collection/green-eight.png" },
+    { name: "BLAUE ACHT", img: "/collection/blaue-acht.png" },
+    { name: "LAN BA", img: "/collection/lan-ba.png" },
+    { name: "OTG ROZ", img: "/collection/otg-roz.png" },
+    { name: "OCHO NEGRO", img: "/collection/ocho-negro.png" },
+    { name: "ORENJI HACHI", img: "/collection/orenji-hachi.png" },
   ];
   return (
     <section className="bg-white px-6 py-24 lg:px-12 lg:py-32">

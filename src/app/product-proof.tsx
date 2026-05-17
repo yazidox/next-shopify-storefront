@@ -42,7 +42,7 @@ export function ProductProof({ eyebrow = "In the wild" }: { eyebrow?: string }) 
           />
           <Tile
             kind="image"
-            src="/proof2.webp"
+            src="/proof2.png"
             alt="ChronoStrap lifestyle proof"
             aspect="aspect-[4/5]"
           />
