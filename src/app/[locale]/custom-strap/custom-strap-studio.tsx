@@ -179,6 +179,12 @@ const DEFAULT_MODEL_VIEW = {
   rotation: { x: 0, y: 0, z: 0 },
 };
 
+const MOBILE_MODEL_VIEW = {
+  maxAxis: 2.18,
+  offset: { x: -0.0001, y: 0.78, z: 0 },
+  rotation: { x: 0, y: 0, z: 0 },
+};
+
 const DEFAULT_CAMERA_VIEW = {
   position: { x: 5.6992, y: 0.8756, z: 3.7065 },
   target: { x: 0, y: 0.45, z: 0 },
@@ -186,6 +192,11 @@ const DEFAULT_CAMERA_VIEW = {
 
 const CUSTOM_TEXTURE_MODEL_ID: HeroTextureStyle = "hero-yellow";
 const MAX_INITIALS_LENGTH = 2;
+const MOBILE_STUDIO_QUERY = "(max-width: 1023px)";
+
+function isMobileStudioViewport() {
+  return typeof window !== "undefined" && window.matchMedia(MOBILE_STUDIO_QUERY).matches;
+}
 
 const INITIALS_PLACEMENTS: Record<HeroTextureStyle, InitialsPlacementSnapshot> = {
   "hero-pink": {
@@ -400,6 +411,7 @@ export function CustomStrapStudio({ customStrapVariantId }: { customStrapVariant
   const [debug, setDebug] = useState(false);
   const [debugSnapshot, setDebugSnapshot] = useState<StudioView | null>(null);
   const [copiedDebug, setCopiedDebug] = useState(false);
+  const [preview3DActive, setPreview3DActive] = useState(true);
   const mountRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const sceneRef = useRef<SceneParts | null>(null);
@@ -418,6 +430,54 @@ export function CustomStrapStudio({ customStrapVariantId }: { customStrapVariant
 
   useEffect(() => {
     setDebug(new URLSearchParams(window.location.search).get("debug") === "1");
+  }, []);
+
+  useEffect(() => {
+    const mount = mountRef.current;
+    if (!mount) return;
+
+    const query = window.matchMedia(MOBILE_STUDIO_QUERY);
+    let observer: IntersectionObserver | null = null;
+
+    const configurePreview = () => {
+      observer?.disconnect();
+      observer = null;
+
+      if (!query.matches) {
+        setPreview3DActive(true);
+        return;
+      }
+
+      const rect = mount.getBoundingClientRect();
+      setPreview3DActive(rect.bottom >= 0 && rect.top <= window.innerHeight);
+
+      if (typeof IntersectionObserver !== "function") return;
+
+      observer = new IntersectionObserver(
+        (entries) => {
+          const entry = entries[0];
+          setPreview3DActive(Boolean(entry?.isIntersecting || (entry?.intersectionRatio ?? 0) > 0.01));
+        },
+        { rootMargin: "240px 0px", threshold: [0, 0.01, 0.08] },
+      );
+      observer.observe(mount);
+    };
+
+    configurePreview();
+    if (typeof query.addEventListener === "function") {
+      query.addEventListener("change", configurePreview);
+    } else {
+      query.addListener(configurePreview);
+    }
+
+    return () => {
+      observer?.disconnect();
+      if (typeof query.removeEventListener === "function") {
+        query.removeEventListener("change", configurePreview);
+      } else {
+        query.removeListener(configurePreview);
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -469,27 +529,34 @@ export function CustomStrapStudio({ customStrapVariantId }: { customStrapVariant
   }, [debug, modelStatus]);
 
   useEffect(() => {
+    if (!preview3DActive) {
+      setModelStatus("loading");
+      return;
+    }
+
     const mount = mountRef.current;
     if (!mount) return;
 
+    const isMobile = isMobileStudioViewport();
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 100);
     camera.position.set(DEFAULT_CAMERA_VIEW.position.x, DEFAULT_CAMERA_VIEW.position.y, DEFAULT_CAMERA_VIEW.position.z);
 
     const renderer = new THREE.WebGLRenderer({
-      antialias: true,
+      antialias: !isMobile,
       alpha: true,
-      preserveDrawingBuffer: true,
+      powerPreference: isMobile ? "low-power" : "high-performance",
+      preserveDrawingBuffer: false,
     });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.15 : 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.enabled = !isMobile;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.domElement.setAttribute("data-custom-strap-canvas", "true");
     mount.appendChild(renderer.domElement);
 
     const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
+    controls.enableDamping = !isMobile;
     controls.enablePan = debugRef.current;
     controls.screenSpacePanning = debugRef.current;
     controls.minDistance = 3.7;
@@ -501,8 +568,8 @@ export function CustomStrapStudio({ customStrapVariantId }: { customStrapVariant
 
     const keyLight = new THREE.DirectionalLight("#fff2de", 3.4);
     keyLight.position.set(2.8, -3.4, 5.5);
-    keyLight.castShadow = true;
-    keyLight.shadow.mapSize.set(1024, 1024);
+    keyLight.castShadow = !isMobile;
+    keyLight.shadow.mapSize.set(isMobile ? 512 : 1024, isMobile ? 512 : 1024);
     scene.add(keyLight);
 
     const rimLight = new THREE.DirectionalLight("#d5f7ff", 1.8);
@@ -559,12 +626,15 @@ export function CustomStrapStudio({ customStrapVariantId }: { customStrapVariant
       sceneRef.current?.texture?.dispose();
       controls.dispose();
       renderer.dispose();
+      if (isMobile) renderer.forceContextLoss();
       renderer.domElement.remove();
       sceneRef.current = null;
     };
-  }, []);
+  }, [preview3DActive]);
 
   useEffect(() => {
+    if (!preview3DActive) return;
+
     const parts = sceneRef.current;
     if (!parts) return;
 
@@ -628,9 +698,11 @@ export function CustomStrapStudio({ customStrapVariantId }: { customStrapVariant
       cancelled = true;
       dracoLoader.dispose();
     };
-  }, [selectedModel.id, selectedModel.src]);
+  }, [preview3DActive, selectedModel.id, selectedModel.src]);
 
   useEffect(() => {
+    if (!preview3DActive) return;
+
     const parts = sceneRef.current;
     if (!parts || !parts.modelMaterials.length) return;
 
@@ -678,7 +750,7 @@ export function CustomStrapStudio({ customStrapVariantId }: { customStrapVariant
     return () => {
       cancelled = true;
     };
-  }, [config, modelStatus]);
+  }, [config, modelStatus, preview3DActive]);
 
   const summary = useMemo(() => {
     const textureName =
@@ -812,7 +884,7 @@ export function CustomStrapStudio({ customStrapVariantId }: { customStrapVariant
         >
           <div
             ref={mountRef}
-            className="absolute inset-y-10 left-[-150%] w-[200%] sm:inset-y-6 sm:left-[-90%] sm:w-[160%] lg:inset-y-0 lg:left-0 lg:w-[62%]"
+            className="absolute top-12 bottom-[-7rem] left-[-62%] w-[180%] sm:top-8 sm:bottom-[-5rem] sm:left-[-42%] sm:w-[150%] lg:inset-y-0 lg:left-0 lg:w-[62%]"
           />
 
           <div className="pointer-events-none absolute top-20 left-4 max-w-[320px] sm:top-24 sm:left-8 sm:max-w-[420px] lg:top-28 lg:left-12">
@@ -1283,6 +1355,7 @@ function round(value: number) {
 }
 
 function fitModelToStudio(model: any) {
+  const modelView = isMobileStudioViewport() ? MOBILE_MODEL_VIEW : DEFAULT_MODEL_VIEW;
   const box = new THREE.Box3().setFromObject(model);
   const size = new THREE.Vector3();
   const center = new THREE.Vector3();
@@ -1290,14 +1363,14 @@ function fitModelToStudio(model: any) {
   box.getCenter(center);
 
   const maxAxis = Math.max(size.x, size.y, size.z);
-  const scale = maxAxis > 0 ? DEFAULT_MODEL_VIEW.maxAxis / maxAxis : 1;
+  const scale = maxAxis > 0 ? modelView.maxAxis / maxAxis : 1;
   model.scale.setScalar(scale);
   model.position.set(
-    -center.x * scale + DEFAULT_MODEL_VIEW.offset.x,
-    -center.y * scale + DEFAULT_MODEL_VIEW.offset.y,
-    -center.z * scale + DEFAULT_MODEL_VIEW.offset.z,
+    -center.x * scale + modelView.offset.x,
+    -center.y * scale + modelView.offset.y,
+    -center.z * scale + modelView.offset.z,
   );
-  model.rotation.set(DEFAULT_MODEL_VIEW.rotation.x, DEFAULT_MODEL_VIEW.rotation.y, DEFAULT_MODEL_VIEW.rotation.z);
+  model.rotation.set(modelView.rotation.x, modelView.rotation.y, modelView.rotation.z);
 }
 
 function clearGroup(group: any) {

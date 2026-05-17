@@ -148,6 +148,7 @@ function CollectionGrid() {
                   alt={p.name}
                   fill
                   sizes="(min-width: 1024px) 900px, (min-width: 768px) 50vw, 100vw"
+                  quality={80}
                   className="object-cover transition-transform duration-1000 ease-out group-hover:scale-[1.03]"
                 />
               </div>

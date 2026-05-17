@@ -55,6 +55,9 @@ export function ProductSingle({ data, siblings }: Props) {
   const activeVariant = data.variants?.nodes?.find((v) => v?.id === variantId) ?? data.variants?.nodes?.[0];
   const price = activeVariant?.priceV2 ?? data.priceRange.minVariantPrice;
   const availableForSale = activeVariant?.availableForSale !== false;
+  const stockLeft =
+    typeof activeVariant?.quantityAvailable === "number" ? activeVariant.quantityAvailable : null;
+  const showLowStock = availableForSale && stockLeft !== null && stockLeft > 0 && stockLeft < 5;
 
   const colorOption = useMemo(() => options.find((o) => /col/i.test(o.name)), [options]);
   const otherOptions = useMemo(() => options.filter((o) => o !== colorOption), [options, colorOption]);
@@ -83,18 +86,23 @@ export function ProductSingle({ data, siblings }: Props) {
         <aside className="px-6 pt-10 pb-12 lg:px-10 lg:pt-12 lg:pb-16">
           <div className="flex flex-col gap-5 lg:sticky lg:top-28">
             {/* Brand badge + stock */}
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="rounded-md bg-ink px-3 py-1.5 text-[11px] font-extrabold tracking-[0.18em] text-cream uppercase">
                 {data.vendor || "ChronoStrap"}
               </span>
-              {availableForSale ? (
+              {!availableForSale ? (
+                <span className="rounded-sm bg-line/40 px-2.5 py-1.5 text-[10px] font-medium tracking-[0.18em] text-muted uppercase">
+                  {tc("soldOut")}
+                </span>
+              ) : showLowStock ? (
+                <span className="inline-flex items-center gap-1.5 rounded-sm bg-pop/10 px-2.5 py-1.5 text-[10px] font-extrabold tracking-[0.18em] text-pop uppercase">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-pop" />
+                  {tc("lowStock", { count: stockLeft! })}
+                </span>
+              ) : (
                 <span className="inline-flex items-center gap-1.5 rounded-sm bg-line/40 px-2.5 py-1.5 text-[10px] font-medium tracking-[0.18em] text-ink uppercase">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
                   {tc("inStock")}
-                </span>
-              ) : (
-                <span className="rounded-sm bg-line/40 px-2.5 py-1.5 text-[10px] font-medium tracking-[0.18em] text-muted uppercase">
-                  {tc("soldOut")}
                 </span>
               )}
             </div>
@@ -103,8 +111,8 @@ export function ProductSingle({ data, siblings }: Props) {
               {titleize(data.title)}
             </h1>
 
-            {/* Reviews — placeholder until a review app is connected */}
-            <Reviews rating={4.9} count={127} />
+            {/* Reviews — render only when real data is available (Yotpo / Stamped / metafield). */}
+            <Reviews rating={readReviewRating(data.tags)} count={readReviewCount(data.tags)} />
 
             {/* Price + payment plan */}
             <div className="flex flex-col gap-2">
@@ -386,6 +394,7 @@ function Gallery({
                 alt={img!.altText || `${title} thumbnail ${i + 1}`}
                 fill
                 sizes="64px"
+                quality={75}
                 className="object-contain p-1"
               />
             </button>
@@ -401,6 +410,7 @@ function Gallery({
             alt={main.altText || title}
             fill
             sizes="(min-width: 1024px) 1000px, 100vw"
+            quality={82}
             className="object-contain"
             priority
           />
@@ -473,6 +483,7 @@ function SiblingCarousel({
                     alt={s.featuredImage.altText || s.title}
                     fill
                     sizes="56px"
+                    quality={70}
                     className="object-contain p-0.5"
                   />
                 )}
@@ -492,7 +503,24 @@ function SiblingCarousel({
 // CONVERSION HELPERS
 // ────────────────────────────────────────────────────────────────────
 
-function Reviews({ rating }: { rating: number; count?: number }) {
+// Pulls reviews from product tags so merchants can ship without a reviews app.
+// Tag the product in Shopify with `reviews:4.8` and `review-count:42`. Once a real
+// reviews provider (Yotpo / Stamped / Judge.me) is wired in, swap the source here.
+function readReviewRating(tags: readonly string[] | null | undefined): number | undefined {
+  const match = tags?.find((t) => /^reviews?:/i.test(t));
+  if (!match) return undefined;
+  const value = parseFloat(match.split(":")[1] ?? "");
+  return Number.isFinite(value) && value > 0 && value <= 5 ? value : undefined;
+}
+function readReviewCount(tags: readonly string[] | null | undefined): number | undefined {
+  const match = tags?.find((t) => /^review-count:/i.test(t));
+  if (!match) return undefined;
+  const value = parseInt(match.split(":")[1] ?? "", 10);
+  return Number.isFinite(value) && value > 0 ? value : undefined;
+}
+
+function Reviews({ rating, count }: { rating?: number; count?: number }) {
+  if (rating === undefined) return null;
   const full = Math.floor(rating);
   return (
     <div className="flex items-center gap-2 text-[13px]">
@@ -506,6 +534,7 @@ function Reviews({ rating }: { rating: number; count?: number }) {
         ))}
       </div>
       <span className="font-medium text-ink">{rating.toFixed(1)}</span>
+      {count !== undefined && <span className="text-muted">({count})</span>}
     </div>
   );
 }
@@ -688,7 +717,7 @@ function MobileStickyCTA({
   const tc = useTranslations("Common");
   const [show, setShow] = useState(false);
   useEffect(() => {
-    const onScroll = () => setShow(window.scrollY > 280);
+    const onScroll = () => setShow(window.scrollY > 120);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -735,6 +764,7 @@ function buildSpecs(data: Props["data"]): { label: string; value: string }[] {
     if (idx <= 0) continue;
     const key = tag.slice(0, idx).trim();
     const value = tag.slice(idx + 1).trim();
+    if (/^reviews?$/i.test(key) || /^review-count$/i.test(key)) continue;
     const lookup: Record<string, string> = {
       material: "Material",
       "case-material": "Case Material",

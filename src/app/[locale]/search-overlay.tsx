@@ -260,6 +260,7 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
                             alt={r.image.altText || r.title}
                             fill
                             sizes="64px"
+                            quality={75}
                             className="object-contain p-1"
                           />
                         )}

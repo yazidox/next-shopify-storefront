@@ -4,7 +4,7 @@ import { ProductList } from "./product-list";
 import { getProductList } from "./service";
 import { COUNTRY_COOKIE, normalizeCountryCode } from "@/lib/localization";
 
-export const revalidate = 60;
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "Products",

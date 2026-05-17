@@ -71,6 +71,8 @@ export async function getProductSingle(handle: string, countryCode = DEFAULT_COU
           nodes {
             id
             availableForSale
+            quantityAvailable
+            currentlyNotInStock
             priceV2 {
               amount
               currencyCode
@@ -84,6 +86,7 @@ export async function getProductSingle(handle: string, countryCode = DEFAULT_COU
             }
           }
         }
+        totalInventory
       }
     }
   `);

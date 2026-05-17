@@ -86,6 +86,8 @@ function Tile({
           alt={alt ?? ""}
           fill
           sizes="(min-width: 640px) 33vw, 100vw"
+          quality={78}
+          loading="lazy"
           className="object-cover transition-transform duration-700 hover:scale-[1.03]"
         />
       ) : mounted ? (

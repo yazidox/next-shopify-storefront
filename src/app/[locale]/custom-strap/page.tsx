@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { CustomStrapStudio } from "./custom-strap-studio";
+import { CustomStrapLoader } from "./custom-strap-loader";
 import { graphql } from "@/lib/graphql";
 import { storefront } from "@/lib/storefront";
 
@@ -36,5 +36,5 @@ async function getCustomStrapVariantId(): Promise<string | null> {
 
 export default async function Page() {
   const customStrapVariantId = await getCustomStrapVariantId();
-  return <CustomStrapStudio customStrapVariantId={customStrapVariantId} />;
+  return <CustomStrapLoader customStrapVariantId={customStrapVariantId} />;
 }

@@ -4,7 +4,7 @@ import { ProductSingle } from "./product-single";
 import { getProductSingle, getSiblingProducts } from "./service";
 import { COUNTRY_COOKIE, normalizeCountryCode } from "@/lib/localization";
 
-export const revalidate = 60;
+export const revalidate = 300;
 
 interface Props {
   params: Promise<{ handle: string }>;

@@ -1,12 +1,20 @@
 "use client";
 
 import { ReactNode, useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { ArrowRight } from "@esmate/shadcn/pkgs/lucide-react";
-import { WatchModel, type WatchModelItem } from "./watch-model";
+import type { WatchModelItem } from "./watch-model";
 import { pinkPopAnimation } from "./animations";
 import { analytics } from "@/lib/analytics";
 import { Link } from "@/i18n/navigation";
+
+// Defer the model-viewer + GLB runtime to a separate chunk. Saves ~100kb on TTFB
+// and prevents the heavy 3D code from blocking interactive on the rest of the page.
+const WatchModel = dynamic(() => import("./watch-model").then((m) => m.WatchModel), {
+  ssr: false,
+  loading: () => <div aria-hidden className="absolute inset-0" />,
+});
 
 const models: WatchModelItem[] = [
   { src: "/wristwatch.opt.glb", color: "#f15bb5", bg: "#941843", name: "Pink Pop" },

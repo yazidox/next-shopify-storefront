@@ -17,17 +17,20 @@ import {
 
 import {
   ArrowRight,
+  Loader2,
   Minus,
   Plus,
   RotateCcw,
   Shield,
   ShoppingBag,
   Sparkles,
+  Tag,
   Truck,
   X,
 } from "@esmate/shadcn/pkgs/lucide-react";
 import { titleize } from "@esmate/utils/string";
 import { Link } from "@/i18n/navigation";
+import { analytics } from "@/lib/analytics";
 
 const STRAP_HANDLE = "chronostrap-custom-strap";
 const CART_ID_STORAGE_KEY = "shopifyCartId";
@@ -252,8 +255,11 @@ export function Cart() {
               </span>
             </div>
 
+            <DiscountCodeForm />
+
             <CartCheckoutButton
               disabled={isCartEmpty}
+              onPointerDown={() => trackInitiateCheckout(cart)}
               className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-md bg-ink p-4 text-[11px] font-extrabold tracking-[0.18em] text-cream uppercase transition-colors hover:bg-pop disabled:cursor-not-allowed disabled:opacity-50"
             >
               {t("checkout")}
@@ -308,6 +314,7 @@ function CartLineCard() {
             alt={img.altText || title}
             fill
             sizes="(min-width: 640px) 140px, 112px"
+            quality={75}
             className="object-contain p-2"
           />
         )}
@@ -396,6 +403,7 @@ function QtyControl() {
 
 function MobileStickyCheckout({ itemCount }: { itemCount: number }) {
   const t = useTranslations("Cart");
+  const cart = useCart();
   return (
     <div
       className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-cream/95 px-3 pt-3 backdrop-blur-xl lg:hidden"
@@ -409,12 +417,135 @@ function MobileStickyCheckout({ itemCount }: { itemCount: number }) {
           <span className="font-display text-lg text-ink">
             <CartCost amountType="subtotal" />
           </span>
+          <span className="text-[10px] text-muted">{t("taxesValue")}</span>
         </div>
-        <CartCheckoutButton className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-md bg-ink px-5 text-[11px] font-extrabold tracking-[0.18em] text-cream uppercase transition-colors hover:bg-pop disabled:opacity-50">
+        <CartCheckoutButton
+          onPointerDown={() => trackInitiateCheckout(cart)}
+          className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-md bg-ink px-5 text-[11px] font-extrabold tracking-[0.18em] text-cream uppercase transition-colors hover:bg-pop disabled:opacity-50"
+        >
           {t("checkoutShort")}
           <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} />
         </CartCheckoutButton>
       </div>
+    </div>
+  );
+}
+
+function trackInitiateCheckout(cart: CartLike) {
+  const lines = cart.lines ?? [];
+  const ids = lines.map((line) => line?.merchandise?.product?.id).filter((id): id is string => Boolean(id));
+  if (ids.length === 0) return;
+
+  const quantity = lines.reduce((sum, line) => sum + Number(line?.quantity ?? 0), 0);
+  const subtotal = cart.cost?.subtotalAmount;
+
+  analytics.initiateCheckout({
+    ids,
+    quantity,
+    subtotal:
+      subtotal && subtotal.amount !== undefined && subtotal.amount !== null
+        ? { amount: String(subtotal.amount), currencyCode: subtotal.currencyCode }
+        : undefined,
+  });
+}
+
+function DiscountCodeForm() {
+  const t = useTranslations("Cart");
+  const cart = useCart();
+  const applied = (cart.discountCodes ?? []).filter((d): d is { code: string; applicable: boolean } =>
+    Boolean(d?.code),
+  );
+  const hasApplied = applied.length > 0;
+  const hasInapplicable = applied.some((d) => !d.applicable);
+  const [open, setOpen] = useState(hasApplied);
+  const [code, setCode] = useState("");
+  const [dismissedError, setDismissedError] = useState(false);
+  const busy = cart.status === "creating" || cart.status === "updating";
+  const error = hasInapplicable && !dismissedError ? t("discountInvalid") : null;
+
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
+    const next = code.trim();
+    if (!next) return;
+    setDismissedError(false);
+    const merged = Array.from(new Set([...applied.map((d) => d.code), next]));
+    cart.discountCodesUpdate(merged);
+    setCode("");
+  }
+
+  function remove(target: string) {
+    setDismissedError(true);
+    cart.discountCodesUpdate(applied.map((d) => d.code).filter((c) => c !== target));
+  }
+
+  if (!open && !hasApplied) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="-mt-1 inline-flex items-center gap-2 self-start text-[11px] font-extrabold tracking-[0.18em] text-muted uppercase transition-colors hover:text-ink"
+      >
+        <Tag className="h-3.5 w-3.5" strokeWidth={2} />
+        {t("discountLabel")}
+      </button>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      <label
+        htmlFor="cart-discount-code"
+        className="text-[11px] font-extrabold tracking-[0.18em] text-muted uppercase"
+      >
+        {t("discountLabel")}
+      </label>
+      <form onSubmit={submit} className="flex items-stretch gap-2">
+        <input
+          id="cart-discount-code"
+          type="text"
+          autoComplete="off"
+          value={code}
+          onChange={(e) => {
+            setCode(e.target.value);
+            if (hasInapplicable) setDismissedError(true);
+          }}
+          placeholder={t("discountPlaceholder")}
+          className="flex-1 rounded-md border border-line bg-surface px-3 text-[13px] text-ink uppercase placeholder:text-muted/70 focus:border-ink focus:outline-none"
+        />
+        <button
+          type="submit"
+          disabled={!code.trim() || busy}
+          className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-ink px-4 text-[11px] font-extrabold tracking-[0.18em] text-cream uppercase transition-colors hover:bg-pop disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2.5} /> : t("discountApply")}
+        </button>
+      </form>
+      {error && <p className="text-[11px] text-pop">{error}</p>}
+      {applied.length > 0 && (
+        <ul className="flex flex-wrap gap-2">
+          {applied.map((d) => (
+            <li
+              key={d.code}
+              className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] font-semibold tracking-[0.18em] uppercase ${
+                d.applicable
+                  ? "border-emerald-600/40 bg-emerald-50/70 text-emerald-900"
+                  : "border-pop/40 bg-pop/10 text-pop"
+              }`}
+            >
+              <Tag className="h-3 w-3" strokeWidth={2.5} />
+              {d.code}
+              <button
+                type="button"
+                onClick={() => remove(d.code)}
+                aria-label={`${t("discountRemove")} ${d.code}`}
+                className="inline-flex h-4 w-4 items-center justify-center rounded-full transition-opacity hover:opacity-70"
+              >
+                <X className="h-3 w-3" strokeWidth={2.5} />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
@@ -462,6 +593,7 @@ function CrossSellCard({ missing }: { missing: "watch" | "strap" }) {
             alt={cfg.imageAlt}
             fill
             sizes="(min-width: 640px) 140px, 112px"
+            quality={75}
             className="object-cover"
           />
         </div>

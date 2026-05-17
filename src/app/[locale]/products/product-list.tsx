@@ -107,8 +107,13 @@ function ProductCard({ node, index }: { node: Props["data"]["edges"][number]["no
     const after = totalQuantity ?? 0;
     if (after <= before) return;
 
+    analytics.initiateCheckout({
+      ids: [node.id],
+      quantity: 1,
+      subtotal: price ? { amount: price.amount, currencyCode: price.currencyCode } : undefined,
+    });
     window.location.href = checkoutUrl;
-  }, [checkoutStartQuantity, checkoutUrl, payingNow, status, totalQuantity]);
+  }, [checkoutStartQuantity, checkoutUrl, payingNow, status, totalQuantity, node.id, price]);
 
   async function add(e: React.MouseEvent) {
     e.preventDefault();
@@ -156,6 +161,7 @@ function ProductCard({ node, index }: { node: Props["data"]["edges"][number]["no
             alt={node.featuredImage.altText || node.title}
             fill
             sizes="(min-width: 1024px) 800px, (min-width: 768px) 50vw, 100vw"
+            quality={80}
             className="object-cover transition-transform duration-1000 ease-out group-hover:scale-[1.04]"
             priority={index < 4}
           />
