@@ -29,11 +29,16 @@ type ModelViewerLike = HTMLElement & {
 /**
  * Lightweight model-viewer wrapper for showcase cards.
  *
- * Performance strategy when cycling between multiple srcs:
- * - When the card scrolls into view, ALL srcs are mounted in parallel as stacked viewers.
- * - Only the active one is visible (opacity 1) — the others are hidden but already loaded.
- * - This eliminates the loader appearing on every cycle: once loaded, swaps are instant.
- * - For single-src usage, only one viewer is ever mounted.
+ * Mobile Safari caps live WebGL contexts at ~8. With 3D models in the hero
+ * AND multiple HowItWorks cards visible, stacking every src as its own viewer
+ * blew past that cap and crashed the page ("a problem repeatedly occurred").
+ *
+ * Strategy:
+ * - Mount at most TWO model-viewer instances per card: the active one + the
+ *   incoming one during a crossfade. After the crossfade, the old viewer is
+ *   unmounted so its WebGL context is released.
+ * - The browser HTTP cache (warmed via `prefetchAllModels`) keeps swap times
+ *   under the 350ms loader-delay threshold, so no spinner ever flashes.
  */
 export function StepModel({
   srcs,
@@ -50,6 +55,7 @@ export function StepModel({
   const wrapRef = useRef<HTMLDivElement>(null);
   const [inView, setInView] = useState(false);
   const [active, setActive] = useState(0);
+  const [outgoing, setOutgoing] = useState<string | null>(null);
   const [loaded, setLoaded] = useState<Set<string>>(new Set());
   const [debug, setDebug] = useState(false);
 
@@ -57,7 +63,8 @@ export function StepModel({
     setDebug(new URLSearchParams(window.location.search).get("debug") === "1");
   }, []);
 
-  // Mount only when scrolled into view
+  // Mount only when scrolled into view (with generous margin so models begin
+  // loading well before they're visible).
   useEffect(() => {
     if (!wrapRef.current) return;
     const obs = new IntersectionObserver(
@@ -67,7 +74,7 @@ export function StepModel({
           obs.disconnect();
         }
       },
-      { rootMargin: "300px" },
+      { rootMargin: "800px" },
     );
     obs.observe(wrapRef.current);
     return () => obs.disconnect();
@@ -83,14 +90,26 @@ export function StepModel({
     });
   }, [inView, srcs]);
 
-  // Cycle (paused in debug)
+  // Cycle (paused in debug). Captures the previous src as "outgoing" so the
+  // crossfade has something to fade FROM while the new src loads.
   useEffect(() => {
     if (!inView || srcs.length < 2 || debug) return;
     const id = window.setInterval(() => {
-      setActive((i) => (i + 1) % srcs.length);
+      setActive((i) => {
+        const next = (i + 1) % srcs.length;
+        setOutgoing(srcs[i]);
+        return next;
+      });
     }, intervalMs);
     return () => window.clearInterval(id);
-  }, [inView, srcs.length, intervalMs, debug]);
+  }, [inView, srcs, debug, intervalMs]);
+
+  // Drop the outgoing viewer after the crossfade so its WebGL context is freed.
+  useEffect(() => {
+    if (!outgoing) return;
+    const id = window.setTimeout(() => setOutgoing(null), 600);
+    return () => window.clearTimeout(id);
+  }, [outgoing]);
 
   const activeViewerRef = useRef<ModelViewerLike | null>(null);
   const viewerRefs = useRef<Map<string, ModelViewerLike>>(new Map());
@@ -131,55 +150,70 @@ export function StepModel({
     return () => cancelAnimationFrame(raf);
   }, [breathe, cameraOrbit, inView, srcs, debug]);
 
+  const activeSrc = srcs[active];
+  const mounted = inView
+    ? Array.from(new Set([outgoing, activeSrc].filter((s): s is string => Boolean(s))))
+    : [];
+
   return (
     <div ref={wrapRef} className={`relative h-full w-full ${className ?? ""}`}>
-      {/* Mount ALL srcs at once so swaps are instant after their first load */}
-      {inView &&
-        srcs.map((src, i) => (
-          <ModelMount
-            key={src}
-            src={src}
-            alt={alt}
-            cameraOrbit={cameraOrbit}
-            cameraTarget={cameraTarget}
-            rotationPerSecond={rotationPerSecond}
-            visible={i === active && loaded.has(src)}
-            autoRotate={!debug && autoRotate && !breathe}
-            cameraControls={(debug || interactive) && i === active}
-            onLoaded={() =>
-              setLoaded((prev) => {
-                if (prev.has(src)) return prev;
-                const next = new Set(prev);
-                next.add(src);
-                return next;
-              })
+      {/* Mount only the active src (+ outgoing during crossfade) so each card
+          consumes one WebGL context — Safari caps at ~8 and crashes beyond. */}
+      {mounted.map((src) => (
+        <ModelMount
+          key={src}
+          src={src}
+          alt={alt}
+          cameraOrbit={cameraOrbit}
+          cameraTarget={cameraTarget}
+          rotationPerSecond={rotationPerSecond}
+          visible={src === activeSrc && loaded.has(src)}
+          autoRotate={!debug && autoRotate && !breathe}
+          cameraControls={(debug || interactive) && src === activeSrc}
+          onLoaded={() =>
+            setLoaded((prev) => {
+              if (prev.has(src)) return prev;
+              const next = new Set(prev);
+              next.add(src);
+              return next;
+            })
+          }
+          onElRef={(el) => {
+            if (el) {
+              viewerRefs.current.set(src, el);
+              if (src === activeSrc) activeViewerRef.current = el;
+            } else {
+              viewerRefs.current.delete(src);
             }
-            onElRef={(el) => {
-              if (el) {
-                viewerRefs.current.set(src, el);
-                if (i === active) activeViewerRef.current = el;
-              } else {
-                viewerRefs.current.delete(src);
-              }
-            }}
-          />
-        ))}
+          }}
+        />
+      ))}
 
-      {/* Loader — only shown until the VERY FIRST model loads.
-          Subsequent cycle swaps reveal already-loaded models so the loader never reappears. */}
-      {!anyLoaded && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="relative h-10 w-10">
-            <span className="absolute inset-0 rounded-full border border-ink/10" />
-            <span
-              className="absolute inset-0 rounded-full border-2 border-transparent border-t-pop"
-              style={{ animation: "spin 1s linear infinite" }}
-            />
-          </div>
-        </div>
-      )}
+      {/* Loader — only shown until the VERY FIRST model loads, and only if loading
+          takes longer than 350ms so cached / prefetched models never flash one. */}
+      {!anyLoaded && inView && <DelayedSpinner />}
 
       {debug && <DebugPosition viewerRef={activeViewerRef} />}
+    </div>
+  );
+}
+
+function DelayedSpinner({ delay = 350 }: { delay?: number }) {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const id = window.setTimeout(() => setVisible(true), delay);
+    return () => window.clearTimeout(id);
+  }, [delay]);
+  if (!visible) return null;
+  return (
+    <div className="absolute inset-0 flex items-center justify-center">
+      <div className="relative h-10 w-10">
+        <span className="absolute inset-0 rounded-full border border-ink/10" />
+        <span
+          className="absolute inset-0 rounded-full border-2 border-transparent border-t-pop"
+          style={{ animation: "spin 1s linear infinite" }}
+        />
+      </div>
     </div>
   );
 }

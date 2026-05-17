@@ -8,6 +8,7 @@ import { Menu, Search, ShoppingBag } from "@esmate/shadcn/pkgs/lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@esmate/shadcn/components/ui/sheet";
 import { CountryCurrencyPicker } from "./country-currency-picker";
 import { SearchOverlay } from "./search-overlay";
+import { prefetchAllModels } from "@/lib/model-prefetch";
 
 const mainMenuItems: { text: string; href: string }[] = [
   { text: "Home", href: "/" },
@@ -45,6 +46,15 @@ export function Header() {
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Warm every 3D model into HTTP cache shortly after the header mounts. The
+  // hero already triggers this on its own once its first model finishes loading
+  // — this handles users who land on pages other than `/` (e.g. /buy-strap
+  // directly from a social link). The function is idempotent.
+  useEffect(() => {
+    const id = window.setTimeout(prefetchAllModels, 2000);
+    return () => window.clearTimeout(id);
   }, []);
 
   function isMenuItemActive(href: string) {

@@ -3,6 +3,7 @@
 import { createElement, useEffect, useRef, useState } from "react";
 
 import type { ModelAnimation } from "./animations";
+import { prefetchAllModels } from "@/lib/model-prefetch";
 
 export interface WatchModelItem {
   src: string;
@@ -63,6 +64,9 @@ export function WatchModel({
     firstReadyFiredRef.current = true;
     if (typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent("chronostrap:hero-ready"));
+      // Warm every other GLB into HTTP cache so /buy-strap, HowItWorks cards,
+      // and /custom-strap never show their loaders for first-time visitors.
+      prefetchAllModels();
     }
   }
 
@@ -153,6 +157,17 @@ export function WatchModel({
     }
   }, [currentSrc]);
 
+  // Delay the loader so fast-loading (cached) models never flash one.
+  const [loaderShown, setLoaderShown] = useState(false);
+  useEffect(() => {
+    if (isLoaded) {
+      setLoaderShown(false);
+      return;
+    }
+    const id = window.setTimeout(() => setLoaderShown(true), 350);
+    return () => window.clearTimeout(id);
+  }, [isLoaded, currentSrc]);
+
   function goTo(nextIdx: number) {
     if (nextIdx === active) return;
     setOutgoing({ src: models[active].src, color: models[active].color });
@@ -208,9 +223,9 @@ export function WatchModel({
       />
 
       <div
-        aria-hidden={isLoaded}
+        aria-hidden={isLoaded || !loaderShown}
         className={`pointer-events-none absolute inset-0 flex items-center justify-center transition-opacity duration-500 ${
-          isLoaded ? "opacity-0" : "opacity-100"
+          isLoaded || !loaderShown ? "opacity-0" : "opacity-100"
         }`}
       >
         <div className="flex flex-col items-center gap-5">
