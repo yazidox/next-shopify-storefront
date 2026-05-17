@@ -10337,6 +10337,15 @@ export type CustomStrapInfoQueryVariables = Exact<{
 
 export type CustomStrapInfoQuery = { __typename?: 'QueryRoot', product?: { __typename?: 'Product', id: string, variants: { __typename?: 'ProductVariantConnection', nodes: Array<{ __typename?: 'ProductVariant', id: string, priceV2: { __typename?: 'MoneyV2', amount: any, currencyCode: CurrencyCode } }> } } | null };
 
+export type RepairCartMutationVariables = Exact<{
+  input: CartInput;
+  country?: InputMaybe<CountryCode>;
+  language?: InputMaybe<LanguageCode>;
+}>;
+
+
+export type RepairCartMutation = { __typename?: 'Mutation', cartCreate?: { __typename?: 'CartCreatePayload', userErrors: Array<{ __typename?: 'CartUserError', field?: Array<string> | null, message: string, code?: CartErrorCode | null }>, cart?: { __typename?: 'Cart', id: string } | null } | null };
+
 export type CustomStrapVariantQueryVariables = Exact<{
   handle: Scalars['String']['input'];
 }>;
@@ -10418,6 +10427,20 @@ export const CustomStrapInfoDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<CustomStrapInfoQuery, CustomStrapInfoQueryVariables>;
+export const RepairCartDocument = new TypedDocumentString(`
+    mutation RepairCart($input: CartInput!, $country: CountryCode, $language: LanguageCode) @inContext(country: $country, language: $language) {
+  cartCreate(input: $input) {
+    userErrors {
+      field
+      message
+      code
+    }
+    cart {
+      id
+    }
+  }
+}
+    `) as unknown as TypedDocumentString<RepairCartMutation, RepairCartMutationVariables>;
 export const CustomStrapVariantDocument = new TypedDocumentString(`
     query CustomStrapVariant($handle: String!) {
   product(handle: $handle) {

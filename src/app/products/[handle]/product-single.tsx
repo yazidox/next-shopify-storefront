@@ -23,6 +23,7 @@ import { useVariantSelector } from "@/hooks/use-variant-selector";
 import { getProductSingle, getSiblingProducts } from "./service";
 import { analytics } from "@/lib/analytics";
 import { titleize } from "@esmate/utils/string";
+import { ProductProof } from "../../product-proof";
 
 interface Props {
   data: Awaited<ReturnType<typeof getProductSingle>>;
@@ -120,7 +121,7 @@ export function ProductSingle({ data, siblings }: Props) {
                 <p className="text-[11px] font-extrabold tracking-[0.18em] text-muted uppercase">
                   Color · <span className="text-ink">{colorOption.values.find((v) => v.selected)?.value}</span>
                 </p>
-                <div className="flex flex-wrap gap-2.5">
+                <div className="flex flex-wrap gap-3">
                   {colorOption.values.map(({ value, selected, disabled }) => (
                     <button
                       key={value}
@@ -129,7 +130,7 @@ export function ProductSingle({ data, siblings }: Props) {
                       onClick={() => selectOption(colorOption.name, value)}
                       aria-label={value}
                       title={value}
-                      className={`relative h-9 w-9 rounded-full border-2 transition-all ${
+                      className={`relative h-11 w-11 rounded-full border-2 transition-all ${
                         selected ? "scale-110 border-ink" : "border-line opacity-80 hover:border-ink/40 hover:opacity-100"
                       } disabled:cursor-not-allowed disabled:opacity-30`}
                       style={{ backgroundColor: nameToHex(value) }}
@@ -156,7 +157,7 @@ export function ProductSingle({ data, siblings }: Props) {
                         key={value}
                         disabled={disabled}
                         onClick={() => selectOption(name, value)}
-                        className={`min-w-[56px] rounded-md border px-4 py-2.5 text-sm font-medium transition-all ${
+                        className={`flex h-11 min-w-[64px] items-center justify-center rounded-md border px-4 text-sm font-medium transition-all ${
                           selected ? "border-ink bg-ink text-cream" : "border-line bg-surface text-ink hover:border-ink"
                         } disabled:cursor-not-allowed disabled:opacity-40 disabled:line-through`}
                       >
@@ -176,18 +177,18 @@ export function ProductSingle({ data, siblings }: Props) {
                   onClick={() => setQty((q) => Math.max(1, q - 1))}
                   disabled={qty <= 1}
                   aria-label="Decrease quantity"
-                  className="flex h-10 w-10 items-center justify-center text-ink transition-colors hover:bg-line/30 disabled:opacity-30"
+                  className="flex h-12 w-12 items-center justify-center text-ink transition-colors hover:bg-line/30 disabled:opacity-30"
                 >
-                  <Minus className="h-3.5 w-3.5" strokeWidth={2} />
+                  <Minus className="h-4 w-4" strokeWidth={2} />
                 </button>
-                <span className="w-10 text-center text-sm font-semibold tabular-nums text-ink">{qty}</span>
+                <span className="w-12 text-center text-base font-semibold tabular-nums text-ink">{qty}</span>
                 <button
                   type="button"
                   onClick={() => setQty((q) => q + 1)}
                   aria-label="Increase quantity"
-                  className="flex h-10 w-10 items-center justify-center text-ink transition-colors hover:bg-line/30"
+                  className="flex h-12 w-12 items-center justify-center text-ink transition-colors hover:bg-line/30"
                 >
-                  <Plus className="h-3.5 w-3.5" strokeWidth={2} />
+                  <Plus className="h-4 w-4" strokeWidth={2} />
                 </button>
               </div>
             </div>
@@ -241,10 +242,13 @@ export function ProductSingle({ data, siblings }: Props) {
         </aside>
       </section>
 
+      {/* Social proof — lifestyle videos + lambo (above the tabs) */}
+      <ProductProof />
+
       {/* ─── BOTTOM TABS — Description / Features / Specifications ─── */}
-      <section className="mt-12 border-t border-line bg-cream/50 lg:mt-16">
+      <section className="border-t border-line bg-cream/50 pb-24 lg:pb-0">
         <div className="mx-auto max-w-[900px] px-6 py-12 lg:px-10 lg:py-16">
-          <nav className="flex items-center justify-center gap-8 border-b border-line lg:gap-12">
+          <nav className="flex items-center justify-center gap-4 border-b border-line sm:gap-8 lg:gap-12">
             <TabButton active={tab === "description"} onClick={() => setTab("description")}>
               Description
             </TabButton>
@@ -675,7 +679,7 @@ function MobileStickyCTA({
 }) {
   const [show, setShow] = useState(false);
   useEffect(() => {
-    const onScroll = () => setShow(window.scrollY > 600);
+    const onScroll = () => setShow(window.scrollY > 280);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -683,9 +687,10 @@ function MobileStickyCTA({
 
   return (
     <div
-      className={`fixed inset-x-0 bottom-0 z-40 border-t border-line bg-cream p-3 transition-transform duration-300 lg:hidden ${
+      className={`fixed inset-x-0 bottom-0 z-40 border-t border-line bg-cream/95 px-3 pt-3 backdrop-blur-xl transition-transform duration-300 lg:hidden ${
         show ? "translate-y-0" : "translate-y-full"
       }`}
+      style={{ paddingBottom: "max(env(safe-area-inset-bottom), 0.75rem)" }}
     >
       <div className="flex items-center gap-3">
         <div className="flex min-w-0 flex-1 flex-col leading-tight">
@@ -701,7 +706,7 @@ function MobileStickyCTA({
           quantity={qty}
           disabled={!variantId || !available}
           onClick={onAdd}
-          className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-ink px-6 text-[11px] font-extrabold tracking-[0.18em] text-cream uppercase transition-colors hover:bg-pop disabled:opacity-50"
+          className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-md bg-ink px-5 text-[11px] font-extrabold tracking-[0.18em] text-cream uppercase transition-colors hover:bg-pop disabled:opacity-50"
         >
           {available ? "Add to Bag" : "Sold Out"}
           {available && <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} />}

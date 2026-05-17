@@ -186,7 +186,7 @@ function StrapCard({
               type="button"
               onClick={add}
               disabled={!variantId || busy}
-              className="pointer-events-auto inline-flex flex-1 items-center justify-center gap-2 rounded-md bg-ink px-6 py-3 text-[11px] font-bold tracking-[0.28em] text-cream uppercase transition-all duration-300 hover:bg-pop disabled:opacity-50"
+              className="pointer-events-auto inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-md bg-ink px-6 text-[11px] font-bold tracking-[0.28em] text-cream uppercase transition-all duration-300 hover:bg-pop disabled:opacity-50"
               aria-label={`Add ${colourway.name} strap to bag`}
             >
               {busy ? (
@@ -208,7 +208,7 @@ function StrapCard({
             </button>
             <Link
               href={`/buy-strap/${colourway.id}`}
-              className="pointer-events-auto inline-flex items-center justify-center gap-2 rounded-md border px-5 py-3 text-[11px] font-bold tracking-[0.28em] uppercase transition-colors hover:opacity-80"
+              className="pointer-events-auto inline-flex h-12 items-center justify-center gap-2 rounded-md border px-5 text-[11px] font-bold tracking-[0.28em] uppercase transition-colors hover:opacity-80"
               style={{ borderColor: fgMuted, color: fg }}
             >
               View

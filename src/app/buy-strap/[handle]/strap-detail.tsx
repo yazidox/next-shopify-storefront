@@ -7,6 +7,7 @@ import { ArrowRight, Check, Loader2, RotateCcw, Shield, Truck } from "@esmate/sh
 import { analytics } from "@/lib/analytics";
 import { CurrencyCode } from "@/lib/graphql/graphql";
 import { StepModel } from "../../step-model";
+import { ProductProof } from "../../product-proof";
 import { STRAP_COLOURWAYS, type Colourway } from "../colourways";
 
 type StrapMoney = { amount: string; currencyCode: CurrencyCode };
@@ -68,10 +69,10 @@ export function StrapDetail({
   const busy = adding || status === "creating" || status === "updating";
 
   return (
-    <section className="grid grid-cols-1 lg:grid-cols-[1fr_440px] xl:grid-cols-[1fr_520px]">
+    <section className="grid grid-cols-1 pb-24 lg:grid-cols-[1fr_440px] lg:pb-0 xl:grid-cols-[1fr_520px]">
       {/* ─── 3D VIEWPORT — edge to edge ─────────────── */}
       <div
-        className="relative aspect-square min-h-[60vh] overflow-hidden lg:aspect-auto lg:min-h-[calc(100vh-7rem)]"
+        className="relative h-[50svh] overflow-hidden lg:h-auto lg:min-h-[calc(100vh-7rem)]"
         style={{ backgroundColor: colourway.bg }}
       >
         <div
@@ -171,16 +172,16 @@ export function StrapDetail({
                 onClick={() => setQty((q) => Math.max(1, q - 1))}
                 disabled={qty <= 1}
                 aria-label="Decrease quantity"
-                className="flex h-10 w-10 items-center justify-center text-ink transition-colors hover:bg-line/30 disabled:opacity-30"
+                className="flex h-12 w-12 items-center justify-center text-lg text-ink transition-colors hover:bg-line/30 disabled:opacity-30"
               >
                 −
               </button>
-              <span className="w-10 text-center text-sm font-semibold tabular-nums text-ink">{qty}</span>
+              <span className="w-12 text-center text-base font-semibold tabular-nums text-ink">{qty}</span>
               <button
                 type="button"
                 onClick={() => setQty((q) => q + 1)}
                 aria-label="Increase quantity"
-                className="flex h-10 w-10 items-center justify-center text-ink transition-colors hover:bg-line/30"
+                className="flex h-12 w-12 items-center justify-center text-lg text-ink transition-colors hover:bg-line/30"
               >
                 +
               </button>
@@ -236,6 +237,53 @@ export function StrapDetail({
           </div>
         </div>
       </aside>
+
+      {/* Social proof — lifestyle videos + lambo */}
+      <div className="col-span-full">
+        <ProductProof />
+      </div>
+
+      {/* Mobile sticky CTA */}
+      <div
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-cream/95 px-3 pt-3 backdrop-blur-xl lg:hidden"
+        style={{ paddingBottom: "max(env(safe-area-inset-bottom), 0.75rem)" }}
+      >
+        <div className="flex items-center gap-3">
+          <div className="flex min-w-0 flex-1 flex-col leading-tight">
+            <span className="truncate text-[11px] font-extrabold tracking-[0.18em] text-muted uppercase">
+              {colourway.name}
+            </span>
+            {price && (
+              <span className="font-display text-lg text-ink">
+                <Money data={price} />
+              </span>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={add}
+            disabled={!variantId || busy}
+            className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-md bg-ink px-5 text-[11px] font-extrabold tracking-[0.18em] text-cream uppercase transition-colors hover:bg-pop disabled:opacity-50"
+          >
+            {busy ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Adding…
+              </>
+            ) : added ? (
+              <>
+                Added
+                <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
+              </>
+            ) : (
+              <>
+                Add to Bag
+                <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} />
+              </>
+            )}
+          </button>
+        </div>
+      </div>
     </section>
   );
 }

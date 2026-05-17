@@ -78,10 +78,10 @@ export function Header() {
         <div className="flex flex-1 items-center gap-1">
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger
-              className="rounded-full p-2 text-ink transition-colors hover:bg-ink/5 lg:hidden"
+              className="-ml-1 flex h-11 w-11 items-center justify-center rounded-full text-ink transition-colors hover:bg-ink/5 lg:hidden"
               aria-label="Open menu"
             >
-              <Menu className="h-5 w-5" strokeWidth={2} />
+              <Menu className="h-6 w-6" strokeWidth={2} />
             </SheetTrigger>
             <SheetContent side="left" className="w-full border-r border-black/10 bg-cream sm:max-w-md">
               <div className="flex h-full flex-col justify-between p-8 pt-16">
@@ -150,23 +150,25 @@ export function Header() {
             type="button"
             aria-label="Search"
             onClick={() => setSearchOpen(true)}
-            className="rounded-full p-2 text-ink/80 transition-colors hover:bg-ink/5 hover:text-ink"
+            className="flex h-11 w-11 items-center justify-center rounded-full text-ink/80 transition-colors hover:bg-ink/5 hover:text-ink"
           >
-            <Search className="h-4 w-4" strokeWidth={2} />
+            <Search className="h-5 w-5 lg:h-4 lg:w-4" strokeWidth={2} />
           </button>
           <span className="mx-1 hidden h-4 w-px bg-ink/15 lg:inline-block" />
           <Link
             href="/cart"
-            className="group relative flex items-center gap-2 rounded-full px-3 py-2 text-ink transition-colors hover:bg-ink/5"
-            aria-label="Cart"
+            className="group relative -mr-1 flex h-11 items-center gap-2 rounded-full px-3 text-ink transition-colors hover:bg-ink/5 lg:mr-0"
+            aria-label={totalQuantity ? `Cart, ${totalQuantity} items` : "Cart"}
           >
-            <ShoppingBag className="h-4 w-4" strokeWidth={2} />
+            <span className="relative">
+              <ShoppingBag className="h-5 w-5 lg:h-4 lg:w-4" strokeWidth={2} />
+              {!!totalQuantity && (
+                <span className="absolute -top-1.5 -right-2 flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 border-cream bg-pop px-1 text-[10px] font-extrabold leading-none text-white shadow-[0_2px_6px_rgba(194,24,91,0.4)]">
+                  {totalQuantity}
+                </span>
+              )}
+            </span>
             <span className="hidden text-[11px] font-medium tracking-[0.2em] uppercase lg:inline">Bag</span>
-            {!!totalQuantity && (
-              <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-pop px-1 text-[9px] font-bold text-white">
-                {totalQuantity}
-              </span>
-            )}
           </Link>
         </div>
       </nav>

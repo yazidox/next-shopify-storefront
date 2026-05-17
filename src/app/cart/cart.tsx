@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
 
 import {
   CartCheckoutButton,
@@ -11,6 +12,7 @@ import {
   Money,
   useCart,
   useCartLine,
+  useShop,
 } from "@shopify/hydrogen-react";
 
 import {
@@ -20,32 +22,180 @@ import {
   RotateCcw,
   Shield,
   ShoppingBag,
+  Sparkles,
   Truck,
   X,
 } from "@esmate/shadcn/pkgs/lucide-react";
 import { titleize } from "@esmate/utils/string";
 
+const STRAP_HANDLE = "chronostrap-custom-strap";
+const CART_ID_STORAGE_KEY = "shopifyCartId";
+
+type CrossSell = "watch" | "strap" | null;
+type CartLike = ReturnType<typeof useCart>;
+type ShopLike = ReturnType<typeof useShop>;
+type CartLineInput = {
+  merchandiseId: string;
+  quantity: number;
+  attributes?: { key: string; value: string }[];
+};
+
+const CART_REPAIR_MUTATION = /* GraphQL */ `
+  mutation RepairCart($input: CartInput!, $country: CountryCode, $language: LanguageCode)
+  @inContext(country: $country, language: $language) {
+    cartCreate(input: $input) {
+      userErrors {
+        field
+        message
+        code
+      }
+      cart {
+        id
+      }
+    }
+  }
+`;
+
+function detectMissing(lines: CartLike["lines"]): CrossSell {
+  if (!lines || lines.length === 0) return null;
+  let hasStrap = false;
+  let hasWatch = false;
+  for (const line of lines) {
+    const handle = line?.merchandise?.product?.handle;
+    if (!handle) continue;
+    if (handle === STRAP_HANDLE) hasStrap = true;
+    else hasWatch = true;
+  }
+  if (hasStrap && !hasWatch) return "watch";
+  if (hasWatch && !hasStrap) return "strap";
+  return null;
+}
+
+function readAmount(money: unknown): number | null {
+  const amount = (money as { amount?: string | number | null } | null | undefined)?.amount;
+  if (amount === null || amount === undefined || amount === "") return null;
+  const value = Number(amount);
+  return Number.isFinite(value) ? value : null;
+}
+
+function hasBrokenCartPricing(cart: CartLike): boolean {
+  const lines = cart.lines ?? [];
+  if (lines.length === 0) return false;
+
+  // Respect an explicit 100% discount code if one is ever used.
+  const hasApplicableDiscountCode = cart.discountCodes?.some((discount) => discount?.applicable);
+  if (hasApplicableDiscountCode) return false;
+
+  const hasBrokenLine = lines.some((line) => {
+    const quantity = Number(line?.quantity ?? 0);
+    const lineAmount = readAmount(line?.cost?.totalAmount);
+
+    return quantity <= 0 || (lineAmount !== null && lineAmount <= 0);
+  });
+
+  const subtotal = readAmount(cart.cost?.subtotalAmount);
+  return hasBrokenLine || (subtotal !== null && subtotal <= 0);
+}
+
+async function repairCart(cart: CartLike, shop: ShopLike) {
+  const lines: CartLineInput[] = (cart.lines ?? [])
+    .map((line) => {
+      const merchandiseId = line?.merchandise?.id;
+      if (!merchandiseId) return null;
+
+      const attributes = (line.attributes ?? []).filter((attribute): attribute is { key: string; value: string } =>
+        Boolean(attribute?.key && attribute?.value),
+      );
+
+      return {
+        merchandiseId,
+        quantity: Math.max(1, Number(line.quantity ?? 1)),
+        ...(attributes.length > 0 ? { attributes } : {}),
+      };
+    })
+    .filter((line): line is CartLineInput => Boolean(line));
+
+  if (lines.length === 0) {
+    window.localStorage.removeItem(CART_ID_STORAGE_KEY);
+    window.location.reload();
+    return;
+  }
+
+  const countryCode = (cart.buyerIdentity?.countryCode ?? shop.countryIsoCode ?? "US").toUpperCase();
+  const languageCode = (shop.languageIsoCode ?? "EN").toUpperCase();
+  const response = await fetch(shop.getStorefrontApiUrl(), {
+    method: "POST",
+    headers: shop.getPublicTokenHeaders({ contentType: "json" }),
+    body: JSON.stringify({
+      query: CART_REPAIR_MUTATION,
+      variables: {
+        country: countryCode,
+        language: languageCode,
+        input: {
+          lines,
+          buyerIdentity: { countryCode },
+        },
+      },
+    }),
+  });
+
+  const json = await response.json();
+  const userErrors = json.data?.cartCreate?.userErrors ?? [];
+  const cartId = json.data?.cartCreate?.cart?.id;
+
+  if (!response.ok || json.errors?.length || userErrors.length || !cartId) {
+    throw new Error("Shopify cart repair failed");
+  }
+
+  window.localStorage.setItem(CART_ID_STORAGE_KEY, cartId);
+  window.location.reload();
+}
+
 export function Cart() {
   const cart = useCart();
+  const shop = useShop();
   const lines = cart.lines ?? [];
   const isCartEmpty = lines.length === 0;
   const itemCount = cart.totalQuantity ?? 0;
+  const missing = detectMissing(cart.lines);
+  const [repairingCart, setRepairingCart] = useState(false);
+  const repairStartedRef = useRef(false);
+
+  const cartNeedsRepair = cart.status === "idle" && hasBrokenCartPricing(cart);
+
+  useEffect(() => {
+    if (!cartNeedsRepair || repairStartedRef.current) return;
+
+    repairStartedRef.current = true;
+    setRepairingCart(true);
+
+    repairCart(cart, shop).catch((error) => {
+      console.error("Failed to repair cart pricing", error);
+      try {
+        window.localStorage.removeItem(CART_ID_STORAGE_KEY);
+      } finally {
+        window.location.reload();
+      }
+    });
+  }, [cart, cartNeedsRepair, shop]);
+
+  if (repairingCart) {
+    return <RepairingCart />;
+  }
 
   if (isCartEmpty) {
     return <EmptyCart />;
   }
 
   return (
-    <section className="mx-auto max-w-[1400px]">
+    <section className="mx-auto max-w-[1400px] pb-24 lg:pb-0">
       {/* HEADER */}
       <header className="mb-8 flex items-end justify-between gap-6 border-b border-line pb-6 lg:mb-12 lg:pb-8">
         <div className="flex flex-col gap-3">
           <span className="text-[11px] font-extrabold tracking-[0.18em] text-muted uppercase">
             {itemCount} {itemCount === 1 ? "item" : "items"}
           </span>
-          <h1 className="font-display text-3xl leading-[0.95] uppercase md:text-4xl lg:text-5xl">
-            Your Bag
-          </h1>
+          <h1 className="font-display text-3xl leading-[0.95] uppercase md:text-4xl lg:text-5xl">Your Bag</h1>
         </div>
         <Link
           href="/products"
@@ -63,14 +213,16 @@ export function Cart() {
               <CartLineCard />
             </CartLineProvider>
           ))}
+          {missing && <CrossSellCard missing={missing} />}
         </div>
+
+        {/* Mobile sticky checkout — always visible on phones */}
+        <MobileStickyCheckout itemCount={itemCount} />
 
         {/* ─── SUMMARY ──────────────────────────────── */}
         <aside>
           <div className="flex flex-col gap-6 rounded-md border border-line bg-cream p-6 lg:sticky lg:top-28 lg:p-8">
-            <h2 className="text-[11px] font-extrabold tracking-[0.18em] text-muted uppercase">
-              Order Summary
-            </h2>
+            <h2 className="text-[11px] font-extrabold tracking-[0.18em] text-muted uppercase">Order Summary</h2>
 
             <dl className="flex flex-col gap-3 text-[14px]">
               <div className="flex items-baseline justify-between">
@@ -92,9 +244,7 @@ export function Cart() {
             <div className="h-px w-full bg-line" />
 
             <div className="flex items-baseline justify-between">
-              <span className="text-[11px] font-extrabold tracking-[0.18em] text-ink uppercase">
-                Total
-              </span>
+              <span className="text-[11px] font-extrabold tracking-[0.18em] text-ink uppercase">Total</span>
               <span className="font-display text-2xl leading-none text-ink lg:text-3xl">
                 <CartCost amountType="subtotal" />
               </span>
@@ -150,10 +300,7 @@ function CartLineCard() {
   return (
     <article className="grid grid-cols-[112px_1fr] gap-4 rounded-md border border-line bg-surface p-4 sm:grid-cols-[140px_1fr] sm:gap-6 sm:p-5">
       {/* Image */}
-      <Link
-        href={`/products/${handle}`}
-        className="relative aspect-square overflow-hidden rounded-md bg-canvas"
-      >
+      <Link href={`/products/${handle}`} className="relative aspect-square overflow-hidden rounded-md bg-canvas">
         {img?.url && (
           <Image
             src={img.url as string}
@@ -227,24 +374,137 @@ function QtyControl() {
     <div className="inline-flex items-center rounded-md border border-line bg-surface">
       <CartLineQuantityAdjustButton
         adjust="decrease"
-        className="flex h-9 w-9 items-center justify-center text-ink transition-colors hover:bg-line/30 disabled:opacity-30"
+        className="flex h-11 w-11 items-center justify-center text-ink transition-colors hover:bg-line/30 disabled:opacity-30"
       >
-        <Minus className="h-3.5 w-3.5" strokeWidth={2} />
+        <Minus className="h-4 w-4" strokeWidth={2} />
       </CartLineQuantityAdjustButton>
-      <span className="w-9 text-center text-sm font-semibold tabular-nums text-ink">{quantity}</span>
+      <span className="w-11 text-center text-base font-semibold text-ink tabular-nums">{quantity}</span>
       <CartLineQuantityAdjustButton
         adjust="increase"
-        className="flex h-9 w-9 items-center justify-center text-ink transition-colors hover:bg-line/30"
+        className="flex h-11 w-11 items-center justify-center text-ink transition-colors hover:bg-line/30"
       >
-        <Plus className="h-3.5 w-3.5" strokeWidth={2} />
+        <Plus className="h-4 w-4" strokeWidth={2} />
       </CartLineQuantityAdjustButton>
     </div>
   );
 }
 
 // ────────────────────────────────────────────────────────────────────
+// MOBILE STICKY CHECKOUT — always visible on phones
+// ────────────────────────────────────────────────────────────────────
+
+function MobileStickyCheckout({ itemCount }: { itemCount: number }) {
+  return (
+    <div
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-cream/95 px-3 pt-3 backdrop-blur-xl lg:hidden"
+      style={{ paddingBottom: "max(env(safe-area-inset-bottom), 0.75rem)" }}
+    >
+      <div className="flex items-center gap-3">
+        <div className="flex min-w-0 flex-1 flex-col leading-tight">
+          <span className="text-[11px] font-extrabold tracking-[0.18em] text-muted uppercase">
+            {itemCount} {itemCount === 1 ? "item" : "items"}
+          </span>
+          <span className="font-display text-lg text-ink">
+            <CartCost amountType="subtotal" />
+          </span>
+        </div>
+        <CartCheckoutButton className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-md bg-ink px-5 text-[11px] font-extrabold tracking-[0.18em] text-cream uppercase transition-colors hover:bg-pop disabled:opacity-50">
+          Checkout
+          <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} />
+        </CartCheckoutButton>
+      </div>
+    </div>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────
+// CROSS-SELL — "Complete your set" presale card
+// ────────────────────────────────────────────────────────────────────
+
+function CrossSellCard({ missing }: { missing: "watch" | "strap" }) {
+  const cfg =
+    missing === "watch"
+      ? {
+          eyebrow: "Complete your set",
+          headline: "Now pick a watch.",
+          subline: "Eight Swiss-made bioceramic cases. Bundle and ship together — save on shipping.",
+          image: "/collection/otto-rosso.webp",
+          imageAlt: "ChronoStrap watch",
+          cta: "Shop watches",
+          href: "/products",
+        }
+      : {
+          eyebrow: "Complete your set",
+          headline: "Now pick a strap.",
+          subline: "Swap colour anytime. Eight curated colourways — or design your own.",
+          image: "/collection/orenji-hachi.webp",
+          imageAlt: "ChronoStrap strap",
+          cta: "Shop straps",
+          href: "/buy-strap",
+        };
+
+  return (
+    <article className="relative overflow-hidden rounded-md border border-ink/15 bg-ink text-cream">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-60"
+        style={{
+          background: "radial-gradient(60% 80% at 90% 50%, rgba(194,24,91,0.5) 0%, transparent 70%)",
+        }}
+      />
+      <div className="relative grid grid-cols-[112px_1fr] gap-4 p-4 sm:grid-cols-[140px_1fr] sm:gap-6 sm:p-5">
+        <div className="relative aspect-square overflow-hidden rounded-md bg-cream/10">
+          <Image
+            src={cfg.image}
+            alt={cfg.imageAlt}
+            fill
+            sizes="(min-width: 640px) 140px, 112px"
+            className="object-cover"
+          />
+        </div>
+
+        <div className="flex min-w-0 flex-col justify-between gap-3">
+          <div className="flex flex-col gap-2">
+            <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-pop/20 px-2.5 py-1 text-[10px] font-extrabold tracking-[0.18em] text-cream uppercase">
+              <Sparkles className="h-3 w-3" strokeWidth={2.5} />
+              {cfg.eyebrow}
+            </span>
+            <h3 className="font-display text-xl leading-tight uppercase sm:text-2xl">{cfg.headline}</h3>
+            <p className="text-[12px] leading-relaxed text-cream/70 sm:text-[13px]">{cfg.subline}</p>
+          </div>
+
+          <Link
+            href={cfg.href}
+            className="group inline-flex h-10 w-fit items-center justify-center gap-2 rounded-md bg-cream px-4 text-[10px] font-extrabold tracking-[0.18em] text-ink uppercase transition-colors hover:bg-pop hover:text-cream sm:h-11 sm:px-5 sm:text-[11px]"
+          >
+            {cfg.cta}
+            <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" strokeWidth={2.5} />
+          </Link>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────
 // EMPTY STATE
 // ────────────────────────────────────────────────────────────────────
+
+function RepairingCart() {
+  return (
+    <section className="mx-auto flex max-w-xl flex-col items-center gap-6 py-20 text-center">
+      <div className="flex h-20 w-20 items-center justify-center rounded-full border border-line bg-cream">
+        <LoaderIcon />
+      </div>
+      <div className="flex flex-col gap-3">
+        <h1 className="font-display text-3xl leading-[0.95] uppercase md:text-4xl">Refreshing your bag</h1>
+        <p className="text-[15px] leading-relaxed text-muted">
+          We found stale cart pricing and are rebuilding it with the latest Shopify prices.
+        </p>
+      </div>
+    </section>
+  );
+}
 
 function EmptyCart() {
   return (
@@ -278,6 +538,10 @@ function EmptyCart() {
 }
 
 // ────────────────────────────────────────────────────────────────────
+
+function LoaderIcon() {
+  return <span className="h-7 w-7 animate-spin rounded-full border-2 border-ink/15 border-t-ink" aria-hidden />;
+}
 
 function Trust({ Icon, label, sub }: { Icon: typeof Truck; label: string; sub: string }) {
   return (

@@ -792,7 +792,7 @@ export function CustomStrapStudio({
   return (
     <div className="min-h-[100svh] overflow-x-hidden bg-cream text-ink">
       <section className="grid min-h-[100svh] grid-cols-1 lg:min-h-screen lg:grid-cols-[minmax(0,1fr)_560px] xl:grid-cols-[minmax(0,1fr)_620px] 2xl:grid-cols-[minmax(0,1fr)_660px]">
-        <div className="relative h-[58svh] max-h-[620px] min-h-[430px] overflow-hidden bg-[#e9edf0] sm:h-[64svh] sm:max-h-[720px] sm:min-h-[560px] lg:h-auto lg:max-h-none lg:min-h-screen">
+        <div className="sticky top-[68px] z-10 h-[55svh] max-h-[620px] min-h-[430px] overflow-hidden bg-canvas sm:h-[60svh] sm:max-h-[720px] sm:min-h-[560px] lg:static lg:top-auto lg:z-auto lg:h-auto lg:max-h-none lg:min-h-screen">
           <div
             aria-hidden
             className="pointer-events-none absolute inset-0"
