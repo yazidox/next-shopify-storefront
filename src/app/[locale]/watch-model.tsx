@@ -10,7 +10,6 @@ export interface WatchModelItem {
   src: string;
   color: string; // swatch dot color (strap colour)
   bg?: string; // hero background colour while this model is active
-  poster?: string; // lightweight mobile fallback image
   name?: string;
   durationMs?: number; // override how long this model stays visible
   // Y-shift applied to the shared cameraTarget (in meters). Positive moves the
@@ -35,10 +34,6 @@ function isMobileHeroViewport() {
   return typeof window !== "undefined" && window.matchMedia(MOBILE_HERO_QUERY).matches;
 }
 
-function getHeroRenderMode(): "fallback" | "model" {
-  return isMobileHeroViewport() ? "fallback" : "model";
-}
-
 function useMobileHeroViewport() {
   const [isMobile, setIsMobile] = useState(false);
 
@@ -57,26 +52,6 @@ function useMobileHeroViewport() {
   }, []);
 
   return isMobile;
-}
-
-function useHeroRenderMode() {
-  const [mode, setMode] = useState<"pending" | "fallback" | "model">("pending");
-
-  useEffect(() => {
-    const query = window.matchMedia(MOBILE_HERO_QUERY);
-    const update = () => setMode(getHeroRenderMode());
-
-    update();
-    if (typeof query.addEventListener === "function") {
-      query.addEventListener("change", update);
-      return () => query.removeEventListener("change", update);
-    }
-
-    query.addListener(update);
-    return () => query.removeListener(update);
-  }, []);
-
-  return mode;
 }
 
 type ModelViewerLike = HTMLElement & {
@@ -100,12 +75,12 @@ export function WatchModel({
   const [outgoing, setOutgoing] = useState<{ src: string; color: string } | null>(null);
   const [progress, setProgress] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [modelRuntimeReady, setModelRuntimeReady] = useState(false);
   const cachedRef = useRef<Set<string>>(new Set());
   const activeViewerRef = useRef<ModelViewerLike | null>(null);
   const firstReadyFiredRef = useRef(false);
   const mobileAutoMotionPaused = useMobileHeroViewport();
-  const heroRenderMode = useHeroRenderMode();
-  const useLightweightFallback = heroRenderMode !== "model";
+  const useLightweightFallback = false;
   // Mirrors `active` so the continuous animation closure can read the latest
   // index without restarting on every model switch.
   const activeRef = useRef(0);
@@ -133,15 +108,27 @@ export function WatchModel({
   }, []);
 
   useEffect(() => {
-    if (useLightweightFallback) return;
-    ensureModelViewerScript();
+    if (useLightweightFallback) {
+      setModelRuntimeReady(false);
+      return;
+    }
+
+    let alive = true;
+    setModelRuntimeReady(false);
+    ensureModelViewerScript().then(() => {
+      if (alive) setModelRuntimeReady(true);
+    });
+
+    return () => {
+      alive = false;
+    };
   }, [useLightweightFallback]);
 
   useEffect(() => {
-    if (!useLightweightFallback || heroRenderMode === "pending") return;
+    if (!useLightweightFallback) return;
     notifyHeroReady();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [heroRenderMode, useLightweightFallback]);
+  }, [useLightweightFallback]);
 
   // Notify parent of active model changes (for adaptive UI like text contrast)
   useEffect(() => {
@@ -232,6 +219,7 @@ export function WatchModel({
   // Reset load state when src changes
   useEffect(() => {
     if (useLightweightFallback) {
+      setOutgoing(null);
       setProgress(1);
       setIsLoaded(true);
       return;
@@ -259,14 +247,15 @@ export function WatchModel({
 
   function goTo(nextIdx: number) {
     if (nextIdx === active) return;
-    if (!useLightweightFallback) {
+    if (!useLightweightFallback && !mobileAutoMotionPaused && !isMobileHeroViewport()) {
       setOutgoing({ src: models[active].src, color: models[active].color });
     }
     setActive(nextIdx);
   }
 
   const currentBg = models[active]?.bg;
-  const currentModel = models[active];
+  const modelVisible = isLoaded;
+  const loaderHidden = useLightweightFallback || (modelRuntimeReady && isLoaded) || !loaderShown;
 
   return (
     <div className={`relative h-full w-full overflow-hidden ${className ?? ""}`}>
@@ -287,9 +276,7 @@ export function WatchModel({
         }}
       />
 
-      {useLightweightFallback ? (
-        <MobileHeroPoster model={currentModel} alt={alt} />
-      ) : (
+      {!useLightweightFallback && modelRuntimeReady && (
         <>
           {outgoing && (
             <ModelSlot key={`out-${outgoing.src}`} src={outgoing.src} alt={alt} state="exiting" autoRotate={false} />
@@ -299,7 +286,7 @@ export function WatchModel({
             key={`in-${currentSrc}`}
             src={currentSrc}
             alt={alt}
-            state={isLoaded ? "in" : "entering"}
+            state={modelVisible ? "in" : "entering"}
             autoRotate={!debug && !animation && !mobileAutoMotionPaused}
             onRef={(el) => (activeViewerRef.current = el)}
             onProgress={(p) => {
@@ -321,13 +308,13 @@ export function WatchModel({
       )}
 
       <div
-        aria-hidden={useLightweightFallback || isLoaded || !loaderShown}
+        aria-hidden={loaderHidden}
         className={`pointer-events-none absolute inset-0 flex items-center justify-center transition-opacity duration-500 ${
-          useLightweightFallback || isLoaded || !loaderShown ? "opacity-0" : "opacity-100"
+          loaderHidden ? "opacity-0" : "opacity-100"
         }`}
       >
         <div className="flex flex-col items-center gap-5">
-          <ThreeDLoader progress={isCached ? 1 : progress} />
+          <ThreeDLoader progress={modelRuntimeReady ? (isCached ? 1 : progress) : 0} />
           <div className="flex flex-col items-center gap-1">
             <span className="tracking-luxury text-[10px] font-bold text-ink/60 uppercase">Rendering Model</span>
             <span className="font-display text-2xl text-ink tabular-nums">
@@ -370,40 +357,6 @@ export function WatchModel({
 }
 
 type SlotState = "entering" | "in" | "exiting";
-
-function MobileHeroPoster({ model, alt }: { model?: WatchModelItem; alt: string }) {
-  const accent = model?.color ?? "#f15bb5";
-
-  return (
-    <div
-      role="img"
-      aria-label={model?.name ? `${alt} ${model.name}` : alt}
-      className="pointer-events-none absolute inset-0 overflow-hidden"
-    >
-      <div
-        aria-hidden
-        className="absolute top-[16%] right-[-18%] h-[54%] w-[70%] rounded-full blur-3xl"
-        style={{ backgroundColor: accent, opacity: 0.24 }}
-      />
-      {model?.poster ? (
-        <img
-          src={model.poster}
-          alt=""
-          aria-hidden
-          loading="eager"
-          decoding="async"
-          className="absolute top-1/2 left-1/2 h-[80%] max-h-[540px] w-auto -translate-x-[44%] -translate-y-[47%] object-contain drop-shadow-[0_28px_48px_rgba(0,0,0,0.24)]"
-        />
-      ) : (
-        <span
-          aria-hidden
-          className="absolute top-1/2 left-1/2 h-[46vh] w-[46vh] -translate-x-1/2 -translate-y-1/2 rounded-full border-[18px] opacity-85 shadow-[0_28px_48px_rgba(0,0,0,0.22)]"
-          style={{ borderColor: accent }}
-        />
-      )}
-    </div>
-  );
-}
 
 function ModelSlot({
   src,

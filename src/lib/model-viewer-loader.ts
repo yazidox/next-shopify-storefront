@@ -12,11 +12,18 @@ export function ensureModelViewerScript(): Promise<void> {
 
   if (loading) return loading;
 
+  const waitForDefinition = () => window.customElements.whenDefined("model-viewer").then(() => undefined);
+
   loading = new Promise((resolve, reject) => {
     const existing = document.getElementById(MODEL_VIEWER_SCRIPT_ID) as HTMLScriptElement | null;
 
     if (existing) {
-      existing.addEventListener("load", () => resolve(), { once: true });
+      if (existing.dataset.loaded === "true") {
+        waitForDefinition().then(resolve).catch(reject);
+        return;
+      }
+
+      existing.addEventListener("load", () => waitForDefinition().then(resolve).catch(reject), { once: true });
       existing.addEventListener("error", () => reject(new Error("model-viewer failed to load")), { once: true });
       return;
     }
@@ -26,7 +33,14 @@ export function ensureModelViewerScript(): Promise<void> {
     script.type = "module";
     script.async = true;
     script.src = MODEL_VIEWER_SRC;
-    script.addEventListener("load", () => resolve(), { once: true });
+    script.addEventListener(
+      "load",
+      () => {
+        script.dataset.loaded = "true";
+        waitForDefinition().then(resolve).catch(reject);
+      },
+      { once: true },
+    );
     script.addEventListener("error", () => reject(new Error("model-viewer failed to load")), { once: true });
     document.head.appendChild(script);
   });

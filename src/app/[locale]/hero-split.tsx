@@ -9,27 +9,14 @@ import { analytics } from "@/lib/analytics";
 import { Link } from "@/i18n/navigation";
 
 const models: WatchModelItem[] = [
-  { src: "/wristwatch.opt.glb", color: "#f15bb5", bg: "#941843", poster: "/collection/otg-roz.png", name: "Pink Pop" },
-  {
-    src: "/huit-blanc.opt.glb",
-    color: "#f4efe6",
-    bg: "#E5E2E5",
-    poster: "/collection/huit-blanc.png",
-    name: "Huit Blanc",
-  },
-  {
-    src: "/orenji-hachi.opt.glb",
-    color: "#ff7a1a",
-    bg: "#CD3C30",
-    poster: "/collection/orenji-hachi.png",
-    name: "Orenji Hachi",
-  },
-  { src: "/black.opt.glb", color: "#0a0a0a", bg: "#ffffff", poster: "/collection/ocho-negro.png", name: "Noir" },
+  { src: "/wristwatch.opt.glb", color: "#f15bb5", bg: "#941843", name: "Pink Pop" },
+  { src: "/huit-blanc.opt.glb", color: "#f4efe6", bg: "#E5E2E5", name: "Huit Blanc" },
+  { src: "/orenji-hachi.opt.glb", color: "#ff7a1a", bg: "#CD3C30", name: "Orenji Hachi" },
+  { src: "/black.opt.glb", color: "#0a0a0a", bg: "#ffffff", name: "Noir" },
   {
     src: "/green.opt.glb",
     color: "#10b981",
     bg: "#ECF0C2",
-    poster: "/collection/green-eight.png",
     name: "Vert",
     targetOffsetY: 0.1,
   },
@@ -37,7 +24,6 @@ const models: WatchModelItem[] = [
     src: "/yellow-sky.opt.glb",
     color: "#fde047",
     bg: "#DAE8EA",
-    poster: "/collection/lan-ba.png",
     name: "Yellow Sky",
     targetOffsetY: 0.1,
   },
@@ -125,7 +111,7 @@ export function HeroSplit() {
 
       {/* RIGHT — just the watch (video) */}
       <div className="relative flex min-h-[70vh] items-end justify-center overflow-hidden bg-ink text-cream lg:min-h-screen">
-        {renderDesktopVideo ? (
+        {renderDesktopVideo && (
           <video
             autoPlay
             loop
@@ -136,14 +122,14 @@ export function HeroSplit() {
           >
             <source src="/videos/hero-desktop.mp4" type="video/mp4" />
           </video>
-        ) : (
-          <img
-            src="/products/chronostrap-case-royal-purple.png"
-            alt=""
+        )}
+        {!renderDesktopVideo && (
+          <div
             aria-hidden
-            loading="lazy"
-            decoding="async"
-            className="absolute inset-0 h-full w-full object-cover opacity-95"
+            className="pointer-events-none absolute inset-0"
+            style={{
+              background: "radial-gradient(70% 55% at 50% 40%, rgba(194,24,91,0.45), rgba(10,10,10,0) 65%), #0a0a0a",
+            }}
           />
         )}
         <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/70 via-black/10 to-black/30" />
