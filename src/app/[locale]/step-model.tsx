@@ -29,26 +29,12 @@ type ModelViewerLike = HTMLElement & {
 
 const MOBILE_MODEL_QUERY = "(max-width: 1023px)";
 
-const STATIC_MODEL_POSTERS: Record<string, string> = {
-  "/ap-watch.opt.glb": "/products/chronostrap-case-royal-purple.png",
-  "/black.opt.glb": "/collection/ocho-negro.png",
-  "/blue-ap.opt.glb": "/products/chronostrap-case-sky-blue.png",
-  "/custom-strap.glb": "/products/chronostrap-strap-teal.png",
-  "/green.opt.glb": "/collection/green-eight.png",
-  "/huit-blanc.opt.glb": "/collection/huit-blanc.png",
-  "/orenji-hachi.opt.glb": "/collection/orenji-hachi.png",
-  "/white-ap.opt.glb": "/products/chronostrap-case-arctic-white.png",
-  "/wristwatch.opt.glb": "/collection/otg-roz.png",
-  "/yellow-ap.opt.glb": "/products/chronostrap-strap-hyper-yellow.png",
-  "/yellow-sky.opt.glb": "/collection/lan-ba.png",
-};
-
-function useMobileModelFallback() {
-  const [fallback, setFallback] = useState(false);
+function useMobileModelViewport() {
+  const [mobile, setMobile] = useState(false);
 
   useEffect(() => {
     const query = window.matchMedia(MOBILE_MODEL_QUERY);
-    const update = () => setFallback(query.matches);
+    const update = () => setMobile(query.matches);
 
     update();
     if (typeof query.addEventListener === "function") {
@@ -60,7 +46,7 @@ function useMobileModelFallback() {
     return () => query.removeListener(update);
   }, []);
 
-  return fallback;
+  return mobile;
 }
 
 /**
@@ -78,12 +64,6 @@ function useMobileModelFallback() {
  *   under the 350ms loader-delay threshold, so no spinner ever flashes.
  */
 export function StepModel({ srcs, alt = "Watch 3D", className, ...viewerProps }: Props) {
-  const useFallback = useMobileModelFallback();
-
-  if (useFallback) {
-    return <StaticModelFallback srcs={srcs} alt={alt} className={className} />;
-  }
-
   return <StepModelViewer srcs={srcs} alt={alt} className={className} {...viewerProps} />;
 }
 
@@ -100,48 +80,70 @@ function StepModelViewer({
   className,
 }: Props) {
   const wrapRef = useRef<HTMLDivElement>(null);
+  const isMobile = useMobileModelViewport();
   const [inView, setInView] = useState(false);
   const [active, setActive] = useState(0);
   const [outgoing, setOutgoing] = useState<string | null>(null);
   const [loaded, setLoaded] = useState<Set<string>>(new Set());
+  const [modelRuntimeReady, setModelRuntimeReady] = useState(false);
   const [debug, setDebug] = useState(false);
 
   useEffect(() => {
     setDebug(new URLSearchParams(window.location.search).get("debug") === "1");
   }, []);
 
-  // Mount only when scrolled into view (with generous margin so models begin
-  // loading well before they're visible).
+  // Mount only when scrolled into view. On mobile, unmount when it leaves view
+  // so Safari can release the WebGL context before the next card appears.
   useEffect(() => {
     if (!wrapRef.current) return;
     const obs = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting) {
+        const visible = entries[0]?.isIntersecting ?? false;
+
+        if (visible) {
           setInView(true);
-          obs.disconnect();
+          if (!isMobile) obs.disconnect();
+        } else if (isMobile) {
+          setInView(false);
+          setOutgoing(null);
         }
       },
-      { rootMargin: "800px" },
+      { rootMargin: isMobile ? "0px" : "800px", threshold: isMobile ? 0.2 : 0 },
     );
     obs.observe(wrapRef.current);
     return () => obs.disconnect();
-  }, []);
+  }, [isMobile]);
 
-  // Background-prefetch ALL srcs into the browser cache as soon as the card mounts in view.
-  // This way model-viewer's later fetches are served from cache instantly, even for srcs
-  // that haven't been rendered yet.
+  // Load the model-viewer runtime on demand. Desktop may warm the src list;
+  // mobile lets model-viewer fetch only the currently mounted GLB.
   useEffect(() => {
-    if (!inView) return;
-    ensureModelViewerScript();
-    srcs.forEach((src) => {
-      fetch(src, { cache: "force-cache" }).catch(() => {});
+    if (!inView) {
+      setModelRuntimeReady(false);
+      return;
+    }
+
+    let alive = true;
+    setModelRuntimeReady(false);
+    ensureModelViewerScript().then(() => {
+      if (!alive) return;
+      setModelRuntimeReady(true);
+
+      if (!isMobile) {
+        srcs.forEach((src) => {
+          fetch(src, { cache: "force-cache" }).catch(() => {});
+        });
+      }
     });
-  }, [inView, srcs]);
+
+    return () => {
+      alive = false;
+    };
+  }, [inView, isMobile, srcs]);
 
   // Cycle (paused in debug). Captures the previous src as "outgoing" so the
   // crossfade has something to fade FROM while the new src loads.
   useEffect(() => {
-    if (!inView || srcs.length < 2 || debug) return;
+    if (!inView || isMobile || srcs.length < 2 || debug) return;
     const id = window.setInterval(() => {
       setActive((i) => {
         const next = (i + 1) % srcs.length;
@@ -150,7 +152,7 @@ function StepModelViewer({
       });
     }, intervalMs);
     return () => window.clearInterval(id);
-  }, [inView, srcs, debug, intervalMs]);
+  }, [inView, isMobile, srcs, debug, intervalMs]);
 
   // Drop the outgoing viewer after the crossfade so its WebGL context is freed.
   useEffect(() => {
@@ -171,7 +173,7 @@ function StepModelViewer({
   // Subtle "breathe" — sine wave around the base camera orbit.
   // Disabled in debug so you can still pose.
   useEffect(() => {
-    if (!breathe || !inView || debug) return;
+    if (!breathe || !inView || isMobile || debug) return;
     const match = cameraOrbit.match(/(-?\d*\.?\d+)\s*deg\s+(-?\d*\.?\d+)\s*deg\s+(-?\d*\.?\d+)\s*(m|%)/);
     if (!match) return;
     const baseTheta = parseFloat(match[1]);
@@ -196,10 +198,13 @@ function StepModelViewer({
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [breathe, cameraOrbit, inView, srcs, debug]);
+  }, [breathe, cameraOrbit, inView, isMobile, srcs, debug]);
 
   const activeSrc = srcs[active];
-  const mounted = inView ? Array.from(new Set([outgoing, activeSrc].filter((s): s is string => Boolean(s)))) : [];
+  const mounted =
+    inView && modelRuntimeReady
+      ? Array.from(new Set([isMobile ? null : outgoing, activeSrc].filter((s): s is string => Boolean(s))))
+      : [];
 
   return (
     <div ref={wrapRef} className={`relative h-full w-full ${className ?? ""}`}>
@@ -214,7 +219,7 @@ function StepModelViewer({
           cameraTarget={cameraTarget}
           rotationPerSecond={rotationPerSecond}
           visible={src === activeSrc && loaded.has(src)}
-          autoRotate={!debug && autoRotate && !breathe}
+          autoRotate={!isMobile && !debug && autoRotate && !breathe}
           cameraControls={(debug || interactive) && src === activeSrc}
           onLoaded={() =>
             setLoaded((prev) => {
@@ -240,45 +245,6 @@ function StepModelViewer({
       {!anyLoaded && inView && <DelayedSpinner />}
 
       {debug && <DebugPosition viewerRef={activeViewerRef} />}
-    </div>
-  );
-}
-
-function StaticModelFallback({ srcs, alt, className }: { srcs: string[]; alt: string; className?: string }) {
-  const posters = srcs.map((src) => STATIC_MODEL_POSTERS[src]).filter((src): src is string => Boolean(src));
-  const display = posters.length ? posters.slice(0, 3) : [];
-
-  return (
-    <div
-      role="img"
-      aria-label={alt}
-      className={`relative flex h-full w-full items-center justify-center overflow-hidden ${className ?? ""}`}
-    >
-      {display.length ? (
-        display.map((src, index) => {
-          const center = index === Math.floor(display.length / 2);
-          const offset = display.length === 1 ? 0 : (index - Math.floor(display.length / 2)) * 22;
-
-          return (
-            <img
-              key={`${src}-${index}`}
-              src={src}
-              alt=""
-              aria-hidden
-              loading="lazy"
-              decoding="async"
-              className="absolute h-[82%] w-auto object-contain drop-shadow-[0_24px_44px_rgba(0,0,0,0.25)]"
-              style={{
-                transform: `translateX(${offset}%) scale(${center ? 1.04 : 0.84})`,
-                zIndex: center ? 20 : 10,
-                opacity: center ? 0.98 : 0.72,
-              }}
-            />
-          );
-        })
-      ) : (
-        <span aria-hidden className="h-[48%] w-[48%] rounded-full border-[16px] border-current opacity-50" />
-      )}
     </div>
   );
 }
