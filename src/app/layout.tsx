@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import { ReactNode } from "react";
 import Script from "next/script";
 import { cookies } from "next/headers";
+import { Analytics } from "@vercel/analytics/next";
 import { Header } from "./header";
 import { ConditionalFooter } from "./conditional-footer";
 import { LoadingScreen } from "./loading-screen";
+import { VercelInteractionTracker } from "./vercel-interaction-tracker";
 import TopLoader from "nextjs-toploader";
 import Providers from "./providers";
 import { COUNTRY_COOKIE, resolveCountryCode } from "@/lib/localization";
@@ -151,7 +153,11 @@ export default async function Layout(props: Props) {
         />
         {/* Module preload for model-viewer itself */}
         <link rel="modulepreload" href="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js" />
-        <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js" async />
+        <script
+          type="module"
+          src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"
+          async
+        />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
       </head>
       <body className="min-h-screen bg-cream text-ink">
@@ -184,10 +190,12 @@ export default async function Layout(props: Props) {
         <LoadingScreen />
         <TopLoader color="#c2185b" showSpinner={false} />
         <Providers countryCode={countryCode} localizationOptions={localization.options}>
+          <VercelInteractionTracker />
           <Header />
           <main>{props.children}</main>
           <ConditionalFooter />
         </Providers>
+        <Analytics />
       </body>
     </html>
   );

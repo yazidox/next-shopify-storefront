@@ -19,7 +19,10 @@
  * fbq queues events. They're also safe on the server (no-op).
  */
 
+import { track } from "@vercel/analytics";
+
 type Money = { amount: string | number; currencyCode?: string };
+type VercelEventValue = string | number | boolean | null;
 
 declare global {
   interface Window {
@@ -33,6 +36,42 @@ function fbq(...args: unknown[]) {
   window.fbq(...args);
 }
 
+function toVercelProperties(params?: Record<string, unknown>) {
+  if (!params) return undefined;
+
+  return Object.fromEntries(
+    Object.entries(params)
+      .map(([key, value]) => {
+        if (value === undefined) return null;
+        if (value === null || typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+          return [key, typeof value === "string" ? value.slice(0, 120) : value] as const;
+        }
+        if (Array.isArray(value)) {
+          return [
+            key,
+            value
+              .map((item) => String(item))
+              .join(",")
+              .slice(0, 120),
+          ] as const;
+        }
+
+        return [key, JSON.stringify(value).slice(0, 120)] as const;
+      })
+      .filter((entry): entry is readonly [string, VercelEventValue] => Boolean(entry)),
+  );
+}
+
+function vercelTrack(name: string, params?: Record<string, unknown>) {
+  if (typeof window === "undefined") return;
+
+  try {
+    track(name, toVercelProperties(params));
+  } catch {
+    // Analytics should never break shopping flows.
+  }
+}
+
 const money = (m?: Money) => ({
   value: m ? parseFloat(String(m.amount)) : undefined,
   currency: m?.currencyCode ?? "USD",
@@ -40,17 +79,7 @@ const money = (m?: Money) => ({
 
 export const analytics = {
   /** Product detail page viewed. */
-  viewContent({
-    id,
-    name,
-    category,
-    price,
-  }: {
-    id: string;
-    name: string;
-    category?: string;
-    price?: Money;
-  }) {
+  viewContent({ id, name, category, price }: { id: string; name: string; category?: string; price?: Money }) {
     const { value, currency } = money(price);
     fbq("track", "ViewContent", {
       content_ids: [id],
@@ -60,20 +89,11 @@ export const analytics = {
       value,
       currency,
     });
+    vercelTrack("View Content", { id, name, category, value, currency });
   },
 
   /** Item added to cart. */
-  addToCart({
-    id,
-    name,
-    quantity = 1,
-    price,
-  }: {
-    id: string;
-    name: string;
-    quantity?: number;
-    price?: Money;
-  }) {
+  addToCart({ id, name, quantity = 1, price }: { id: string; name: string; quantity?: number; price?: Money }) {
     const { value, currency } = money(price);
     fbq("track", "AddToCart", {
       content_ids: [id],
@@ -83,18 +103,17 @@ export const analytics = {
       value: value !== undefined ? value * quantity : undefined,
       currency,
     });
+    vercelTrack("Add To Cart", {
+      id,
+      name,
+      quantity,
+      value: value !== undefined ? value * quantity : undefined,
+      currency,
+    });
   },
 
   /** Product saved to wishlist. */
-  addToWishlist({
-    id,
-    name,
-    price,
-  }: {
-    id: string;
-    name: string;
-    price?: Money;
-  }) {
+  addToWishlist({ id, name, price }: { id: string; name: string; price?: Money }) {
     const { value, currency } = money(price);
     fbq("track", "AddToWishlist", {
       content_ids: [id],
@@ -103,34 +122,22 @@ export const analytics = {
       value,
       currency,
     });
+    vercelTrack("Add To Wishlist", { id, name, value, currency });
   },
 
   /** User changed a config option in the strap customizer. Debounce in caller. */
-  customizeProduct({
-    id,
-    detail,
-  }: {
-    id: string;
-    detail?: string;
-  }) {
+  customizeProduct({ id, detail }: { id: string; detail?: string }) {
     fbq("track", "CustomizeProduct", {
       content_ids: [id],
       content_name: detail,
       content_type: "product",
     });
+    vercelTrack("Customize Product", { id, detail });
   },
 
   /** Checkout button clicked. NOTE: Shopify Customer Events also fires this on
    * the hosted checkout page. Don't call from both places to avoid double-count. */
-  initiateCheckout({
-    ids,
-    quantity,
-    subtotal,
-  }: {
-    ids: string[];
-    quantity: number;
-    subtotal?: Money;
-  }) {
+  initiateCheckout({ ids, quantity, subtotal }: { ids: string[]; quantity: number; subtotal?: Money }) {
     const { value, currency } = money(subtotal);
     fbq("track", "InitiateCheckout", {
       content_ids: ids,
@@ -139,11 +146,13 @@ export const analytics = {
       value,
       currency,
     });
+    vercelTrack("Initiate Checkout", { ids, quantity, value, currency });
   },
 
   /** Newsletter form submitted. */
   lead(source: string) {
     fbq("track", "Lead", { content_name: source });
+    vercelTrack("Lead", { source });
   },
 
   /** Customer account created (Shopify account / sign-up). */
@@ -152,20 +161,24 @@ export const analytics = {
       content_name: method ?? "account",
       status: true,
     });
+    vercelTrack("Complete Registration", { method: method ?? "account" });
   },
 
   /** Contact form submitted / email-to-team event. */
   contact({ source }: { source?: string } = {}) {
     fbq("track", "Contact", { content_name: source ?? "contact-form" });
+    vercelTrack("Contact", { source: source ?? "contact-form" });
   },
 
   /** Search bar query submitted. */
   search(query: string) {
     fbq("track", "Search", { search_string: query });
+    vercelTrack("Search", { query });
   },
 
   /** Free-form custom event for anything else (e.g. "InitiateBuild"). */
   custom(name: string, params?: Record<string, unknown>) {
     fbq("trackCustom", name, params);
+    vercelTrack(name, params);
   },
 };
