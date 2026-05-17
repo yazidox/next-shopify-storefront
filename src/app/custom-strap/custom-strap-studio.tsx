@@ -802,7 +802,7 @@ export function CustomStrapStudio({ customStrapVariantId }: { customStrapVariant
   }
 
   return (
-    <div className="min-h-[100svh] overflow-x-hidden bg-cream text-ink">
+    <div className="min-h-[100svh] bg-cream text-ink">
       <section className="grid min-h-[100svh] grid-cols-1 lg:min-h-screen lg:grid-cols-[minmax(0,1fr)_560px] xl:grid-cols-[minmax(0,1fr)_620px] 2xl:grid-cols-[minmax(0,1fr)_660px]">
         <div
           className="relative h-[58svh] max-h-[620px] min-h-[430px] overflow-hidden transition-colors duration-700 sm:h-[64svh] sm:max-h-[720px] sm:min-h-[560px] lg:h-auto lg:max-h-none lg:min-h-screen"

@@ -225,7 +225,7 @@ export function WatchModel({
       </div>
 
       {models.length > 1 && (
-        <div className="absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 items-center gap-3 rounded-full border border-ink/10 bg-white/40 px-3 py-2 backdrop-blur-xl">
+        <div className="absolute right-4 bottom-8 z-20 flex items-center gap-2 rounded-full border border-ink/10 bg-white/40 px-2 py-1.5 backdrop-blur-xl sm:right-6 lg:right-auto lg:bottom-6 lg:left-1/2 lg:-translate-x-1/2 lg:gap-3 lg:px-3 lg:py-2">
           {models.map((m, i) => {
             const isActive = i === active;
             return (
@@ -239,7 +239,9 @@ export function WatchModel({
               >
                 <span
                   className={`block rounded-full border border-ink/15 shadow-[inset_0_0_0_1.5px_rgba(255,255,255,0.65),0_2px_6px_rgba(0,0,0,0.15)] transition-all duration-500 ${
-                    isActive ? "h-5 w-5" : "h-3.5 w-3.5 opacity-70 group-hover:opacity-100"
+                    isActive
+                      ? "h-4 w-4 lg:h-5 lg:w-5"
+                      : "h-2.5 w-2.5 opacity-70 group-hover:opacity-100 lg:h-3.5 lg:w-3.5"
                   }`}
                   style={{ background: m.color }}
                 />
