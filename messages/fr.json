@@ -242,6 +242,14 @@
     "descriptionTemplate": "Le bracelet {name} — un bracelet bioceramic à clip {tone}, fini à la main en Suisse. Compatible avec toutes les ChronoStrap et se change en trois secondes.",
     "strapAriaLabel": "Ajouter le bracelet {name} au panier"
   },
+  "WhatsApp": {
+    "ariaLabel": "Discutez avec nous sur WhatsApp",
+    "eyebrow": "Support en direct",
+    "headline": "Besoin d'aide pour choisir ?",
+    "subline": "Discutez avec un conseiller ChronoStrap — réponse en quelques minutes.",
+    "closeTooltip": "Fermer",
+    "prefill": "Bonjour ChronoStrap ! J'ai une petite question sur vos montres."
+  },
   "Fomo": {
     "topEyebrow": "Offre flash",
     "topEyebrowShort": "Flash",

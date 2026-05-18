@@ -7,6 +7,7 @@ import { Header } from "./header";
 import { ConditionalFooter } from "./conditional-footer";
 import { LoadingScreen } from "./loading-screen";
 import { FomoTopBar } from "./fomo-offer";
+import { WhatsAppBubble } from "./whatsapp-bubble";
 import { VercelInteractionTracker } from "./vercel-interaction-tracker";
 import TopLoader from "nextjs-toploader";
 import Providers from "./providers";
@@ -42,6 +43,7 @@ export default async function LocaleLayout({ children, params }: Props) {
         <Header />
         <main>{children}</main>
         <ConditionalFooter />
+        <WhatsAppBubble />
       </Providers>
     </NextIntlClientProvider>
   );

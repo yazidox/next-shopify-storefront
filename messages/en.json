@@ -242,6 +242,14 @@
     "descriptionTemplate": "The {name} strap — a {tone} bioceramic snap-fit strap, hand-finished in Switzerland. Fits every ChronoStrap watch and swaps in three seconds.",
     "strapAriaLabel": "Add {name} strap to bag"
   },
+  "WhatsApp": {
+    "ariaLabel": "Chat with us on WhatsApp",
+    "eyebrow": "Live support",
+    "headline": "Need help choosing?",
+    "subline": "Chat with a ChronoStrap advisor — usually replies in minutes.",
+    "closeTooltip": "Dismiss",
+    "prefill": "Hi ChronoStrap! I have a quick question about your watches."
+  },
   "Fomo": {
     "topEyebrow": "Flash offer",
     "topEyebrowShort": "Flash",

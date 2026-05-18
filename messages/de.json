@@ -242,6 +242,14 @@
     "descriptionTemplate": "Das Armband {name} — ein {tone} Bioceramic-Snap-Armband, von Hand in der Schweiz gefertigt. Passt auf jede ChronoStrap und ist in drei Sekunden gewechselt.",
     "strapAriaLabel": "Armband {name} in den Warenkorb"
   },
+  "WhatsApp": {
+    "ariaLabel": "Chatte mit uns auf WhatsApp",
+    "eyebrow": "Live-Support",
+    "headline": "Brauchst du Hilfe bei der Auswahl?",
+    "subline": "Chatte mit einem ChronoStrap-Berater — meist in wenigen Minuten Antwort.",
+    "closeTooltip": "Schließen",
+    "prefill": "Hallo ChronoStrap! Ich habe eine kurze Frage zu euren Uhren."
+  },
   "Fomo": {
     "topEyebrow": "Blitzangebot",
     "topEyebrowShort": "Blitz",
